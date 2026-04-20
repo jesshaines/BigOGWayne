@@ -67,3 +67,11 @@ amount: BigInt(Math.round(item.price * 100)),
 app.listen(4242, () => {
   console.log("Server running on http://localhost:4242");
 });
+
+const path = require("path");
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
