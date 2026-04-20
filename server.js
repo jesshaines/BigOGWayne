@@ -1,25 +1,29 @@
 import express from "express";
 import cors from "cors";
-import square from "square";
-import dotenv from 'dotenv';
-const { Client, Environment } = square;
-dotenv.config();
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+import { SquareClient } from "square";
 
+dotenv.config();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-import { SquareClient } from "square";
+// ✅ Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// ✅ Square client
 const squareClient = new SquareClient({
   token: process.env.SQUARE_ACCESS_TOKEN,
-  baseUrl: "https://connect.squareupsandbox.com", // ✅ THIS FIXES IT
+  baseUrl: "https://connect.squareupsandbox.com",
 });
 
-
-app.post('/create-checkout', async (req, res) => {
+// ✅ API route
+app.post("/create-checkout", async (req, res) => {
   try {
     const { cart } = req.body;
 
@@ -28,31 +32,27 @@ app.post('/create-checkout', async (req, res) => {
     }
 
     const lineItems = cart.map(item => ({
-      name: `${item.name} ${item.size || ''} ${item.color || ''}`,
+      name: `${item.name} ${item.size || ""} ${item.color || ""}`,
       quantity: item.quantity.toString(),
       basePriceMoney: {
-amount: BigInt(Math.round(item.price * 100)),
-        currency: "USD"
-      }
+        amount: BigInt(Math.round(item.price * 100)),
+        currency: "USD",
+      },
     }));
 
     const response = await squareClient.checkout.paymentLinks.create({
       idempotencyKey: Date.now().toString(),
       order: {
         locationId: "LR7K2G01EY6CW",
-        lineItems
-      }
+        lineItems,
+      },
     });
-
-    console.log("FULL SQUARE RESPONSE:");
-    console.dir(response, { depth: null });
 
     const url =
       response.result?.paymentLink?.url ||
       response.paymentLink?.url;
 
     if (!url) {
-      console.error("No URL found in Square response");
       return res.status(500).json({ error: "No checkout URL returned" });
     }
 
@@ -64,14 +64,15 @@ amount: BigInt(Math.round(item.price * 100)),
   }
 });
 
-app.listen(4242, () => {
-  console.log("Server running on http://localhost:4242");
-});
-
-const path = require("path");
-
+// ✅ Serve frontend
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ✅ ONE listener only
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
