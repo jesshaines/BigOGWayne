@@ -1,0 +1,36 @@
+[
+  {
+    "id": "stinky-pinky-hoodie",
+    "name": "Stinky Pinky Hoodie",
+    "price": 85,
+    "image": "/assets/images/products/collections/stinkypinky/whitehoodie.png",
+    "collection": "stinky-pinky"
+  },
+  {
+    "id": "stinky-pinky-tee",
+    "name": "Stinky Pinky Tee",
+    "price": 35,
+    "image": "/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png",
+    "collection": "stinky-pinky"
+  },
+  {
+    "id": "stinky-pinky-boxers",
+    "name": "Stinky Pinky Boxer Briefs",
+    "price": 35,
+    "image": "/assets/images/products/collections/stinkypinky/mensboxerbriefs.png",
+    "collection": "stinky-pinky"
+  },
+   {
+    "id": "stinky-pinky-hoodie",
+    "name": "Stinky Pinky Hat",
+    "price": 85,
+    "image": "/assets/images/products/collections/stinkypinky/stinkypinky-pinksnapback.png",
+    "collection": "stinky-pinky"
+  },
+   {
+    "id": "stinky-pinky-hoodie",
+    "name": "Stinky Pinky Hat",
+    "price": 85,
+    "image": "/assets/images/products/collections/stinkypinky/stinkypinky-pinksnapback.png",
+    "collection": "stinky-pinky"
+  }]

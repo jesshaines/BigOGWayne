@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Checkout — Big OG Wayne</title>
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+.checkout-header{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  padding:2rem 1rem 1.5rem;
+  border-bottom:1px solid var(--iron);
+
+  background:linear-gradient(to bottom, rgba(255,0,0,0.05), transparent);
+}
+
+.checkout-header img{
+  width:140px;
+  height:auto;
+
+  filter:drop-shadow(0 0 10px rgba(255,0,0,0.15));
+  transition:transform .2s ease;
+  filter:
+    drop-shadow(0 0 12px rgba(255,0,0,0.25))
+    drop-shadow(0 0 30px rgba(255,0,0,0.15));
+}
+
+
+.checkout-header img:hover{
+  transform:scale(1.03);
+}
+.checkout-brand-tagline{
+  margin-top:.5rem;
+  font-size:.65rem;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  color:var(--chrome);
+  text-align:center;
+}
+
+.checkout-banner{
+  border-bottom:1px solid var(--iron);
+  background:linear-gradient(to right, rgba(255,0,0,0.08), transparent);
+  margin-bottom:2rem;
+}
+
+.checkout-banner-inner{
+  max-width:1200px;
+  margin:0 auto;
+  padding:.75rem 1.5rem;
+  display:flex;
+  gap:.75rem;
+  align-items:center;
+
+  font-size:.7rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--chrome);
+}
+
+.checkout-banner .dot{
+  width:4px;
+  height:4px;
+  background:var(--red);
+  border-radius:50%;
+}
+.checkout-trust{
+  margin-top:1rem;
+  font-size:.7rem;
+  color:var(--chrome);
+  line-height:1.6;
+}
+
+/*CHECKOUT ITEM STYLE*/
+.checkout-item-media img{
+  width:90px;
+  height:110px;
+  object-fit:cover;
+  border:1px solid var(--iron);
+}
+
+.checkout-item-name{
+  font-family:var(--font-display);
+  font-weight:900;
+  text-transform:uppercase;
+  color:var(--white);
+  font-size:.85rem;
+  margin-bottom:.25rem;
+}
+
+.checkout-item-meta{
+  font-size:.7rem;
+  color:var(--chrome);
+  line-height:1.4;
+}
+
+.checkout-item-qty{
+  font-size:.7rem;
+  color:var(--mist);
+  margin-top:.4rem;
+}
+/*empty lootbag*/
+.checkout-empty{
+  padding:2rem;
+  text-align:center;
+  color:var(--chrome);
+  font-size:.85rem;
+  border:1px dashed var(--iron);
+}
+.checkout-form{
+  display:flex;
+  flex-direction:column;
+  gap:.75rem;
+  margin-bottom:1rem;
+}
+
+.checkout-form input{
+  background:var(--graphite);
+  border:1px solid var(--iron);
+  color:var(--white);
+
+  padding:.85rem .9rem;
+  font-size:.8rem;
+  letter-spacing:.05em;
+
+  transition:border-color .15s ease, background .15s ease;
+}
+
+.checkout-form input::placeholder{
+  color:var(--chrome);
+  text-transform:uppercase;
+  font-size:.65rem;
+  letter-spacing:.12em;
+}
+
+.checkout-form input:focus{
+  outline:none;
+  border-color:var(--red);
+  background:rgba(255,255,255,0.02);
+}
+#checkoutStep1,
+#checkoutStep2{
+  transition:opacity .25s ease;
+}
+
+
+</style>
+</head>
+
+<body>
+
+
+<header class="checkout-header">
+  <img src="assets/images/logo/bow_logo.png" alt="Big OG Wayne">
+</header>
+  <div class="checkout-brand-tagline">
+  LILLIWAUP'S FINEST
+</div>
+
+
+
+<main class="checkout-page">
+    <div class="checkout-banner">
+  <div class="checkout-banner-inner">
+    <span>Secure Checkout</span>
+    <span class="dot"></span>
+    <span>Big OG Wayne Official Merch</span>
+  </div>
+</div>
+  <div class="checkout-inner">
+
+<h1>Checkout</h1>
+
+<h2 class="checkout-section-title">Your Loot Bag</h2>
+
+<div class="checkout-layout">
+    <div class="checkout-items" id="checkoutItems"></div>
+
+
+    <!--CHECKOUT FORM-->      
+<div class="checkout-form">
+<input type="email" id="email" placeholder="Email" required>
+<input type="text" id="name" placeholder="Full Name" required>
+<input type="text" id="address" placeholder="Shipping Address" required>
+
+</div>
+      <!-- RIGHT: SUMMARY -->
+<div class="checkout-summary">
+  <h2>Summary</h2>
+
+  <div class="checkout-row">
+    <span>Subtotal</span>
+    <span id="checkoutSubtotal">$0.00</span>
+  </div>
+
+  <div class="checkout-row">
+    <span>Shipping</span>
+    <span id="checkoutShipping">Calculated at next step</span>
+  </div>
+
+  <div class="checkout-row">
+    <span>Estimated Tax</span>
+    <span id="checkoutTax">—</span>
+  </div>
+
+  <div class="checkout-row checkout-total">
+    <span>Total</span>
+    <strong id="checkoutTotal">$0.00</strong>
+  </div>
+
+<button class="checkout-btn" id="checkoutBtn" onclick="goToCheckout()">Continue to Payment</button>
+
+
+  <div class="checkout-trust">
+  <div>✔ Secure checkout powered by Square</div>
+  <div>✔ Orders ship within 4 weeks</div>
+</div>
+</div>
+
+    </div>
+  </div>
+</main>
+
+<script src="/assets/js/globalcart.js"></script>
+
+<script>
+function renderCheckout() {
+  const cart = getLootBag();
+  const container = document.getElementById('checkoutItems');
+  const subtotalEl = document.getElementById('checkoutSubtotal');
+  const taxEl = document.getElementById('checkoutTax');
+  const totalEl = document.getElementById('checkoutTotal');
+
+  if (!cart.length) {
+    container.innerHTML = "<p>Your bag is empty</p>";
+    subtotalEl.textContent = "$0.00";
+    taxEl.textContent = "—";
+    totalEl.textContent = "$0.00";
+    return;
+  }
+
+  let subtotal = 0;
+
+  container.innerHTML = cart.map(item => {
+    subtotal += item.price * item.quantity;
+
+    return `
+      <div class="checkout-item">
+        <img src="${item.image}" />
+
+        <div>
+          <div>${item.name}</div>
+          <div>${item.color || ''} ${item.size || ''}</div>
+          <div>Qty: ${item.quantity}</div>
+        </div>
+
+        <div>$${item.price}</div>
+      </div>
+    `;
+  }).join("");
+
+  const tax = subtotal * 0.08;
+  const total = subtotal + tax;
+
+  subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+  taxEl.textContent = `$${tax.toFixed(2)}`;
+  totalEl.textContent = `$${total.toFixed(2)}`;
+}
+renderCheckout();
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const hamburger = document.querySelector(".hamburger-btn");
+  const nav = document.querySelector(".nav");
+
+  if (!hamburger || !nav) return;
+
+  hamburger.addEventListener("click", () => {
+    hamburger.classList.toggle("active");
+    nav.classList.toggle("open");
+  });
+});
+
+</script>
+
+<script>
+const continueBtn = document.getElementById('continueBtn');
+
+continueBtn.addEventListener('click', () => {
+  const email = document.getElementById('email').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const address = document.getElementById('address').value.trim();
+
+  if (!email || !name || !address) {
+    alert("Fill out all fields.");
+    return;
+  }
+
+  // Save for later (Stripe step)
+  localStorage.setItem('checkout_customer', JSON.stringify({
+    email, name, address
+  }));
+
+  // Transition steps
+  document.getElementById('checkoutStep1').style.display = 'none';
+  document.getElementById('checkoutStep2').style.display = 'block';
+});
+</script>
+
+
+
+<script>
+document.getElementById('checkoutBtn').addEventListener('click', () => {
+
+  const email = document.getElementById('email')?.value.trim();
+  const name = document.getElementById('name')?.value.trim();
+  const address = document.getElementById('address')?.value.trim();
+
+  if (!email || !name || !address) {
+    alert("Please complete your info first.");
+    return;
+  }
+
+  // Save customer info
+  localStorage.setItem('checkout_customer', JSON.stringify({
+    email, name, address
+  }));
+
+  const cart = getLootBag();
+
+  if (!cart.length) {
+    alert("Your bag is empty.");
+    return;
+  }
+
+  // 🔥 TEMP: redirect to Stripe Payment Link
+ // window.location.href = "https://buy.stripe.com/test_28EeVc4dj6ls08a7t89IQ00"; // ← paste your link
+});
+</script>
+
+<script>
+async function goToCheckout() {
+  const cart = getLootBag();
+
+  if (!cart.length) {
+    alert("Your bag is empty.");
+    return;
+  }
+
+  try {
+    const res = await fetch('http://localhost:4242/create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ cart })
+    });
+
+    const data = await res.json();
+
+    console.log("SERVER RESPONSE:", data); // 👈 debug
+
+    if (!data.url) {
+      alert("Checkout failed. No URL returned.");
+      return;
+    }
+
+    window.location.href = data.url;
+
+  } catch (err) {
+    console.error("Checkout error:", err);
+    alert("Something went wrong.");
+  }
+}
+</script>
+</body>
+</html>
+
+
+
+<!--
+<div class="checkout-container">
+  <div class="order-summary">
+    <h2>Your Order</h2>
+    <p>Big OG Wayne Tee</p>
+    <p>Total: $35.00</p>
+  </div>
+
+  <form id="payment-form">
+    <input type="text" placeholder="Full Name" required />
+    <input type="email" placeholder="Email" required />
+    <input type="text" placeholder="Shipping Address" required />
+
+    <div id="card-element"></div>
+
+    <button id="submit">Complete Order</button>
+  </form>
+
+  <p id="payment-message"></p>
+</div>-->
