@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Big OG Wayne — Product Template</title>
-<link rel="stylesheet" href="public/assets/css/site.css">
+<link rel="stylesheet" href="/public/assets/css/site.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -398,7 +398,7 @@
 <header class="header">
   <div class="header-inner">
     <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
-      <img src="public/assets/images/logo/bow_logo.png" alt="Big OG Wayne — Lilliwaup's Finest">
+      <img src="/public/assets/images/logo/bow_logo.png" alt="Big OG Wayne — Lilliwaup's Finest">
     </a>
     <nav class="nav" aria-label="Main navigation">
       <a href="/shop" class="nav-link">Shop</a>
@@ -428,9 +428,9 @@
     <div class="product-layout">
       <div class="product-gallery">
         <div class="product-thumbs">
-          <button class="product-thumb active" type="button"><img src="public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie front"></button>
-          <button class="product-thumb" type="button"><img src="public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie back"></button>
-          <button class="product-thumb" type="button"><img src="public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie detail"></button>
+          <button class="product-thumb active" type="button"><img src="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie front"></button>
+          <button class="product-thumb" type="button"><img src="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie back"></button>
+          <button class="product-thumb" type="button"><img src="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie detail"></button>
         </div>
 
         <div class="product-main-image">
@@ -533,7 +533,7 @@
 
         <article class="shop-card">
           <div class="shop-card-media">
-            <img src="public/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png">SP</div>
+            <img src="/public/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png">SP</div>
           <div class="shop-card-info">
             <div class="shop-card-collection">Stinky Pinky</div>
             <div class="shop-card-name">Stinky Pinky Tee</div>
@@ -544,7 +544,7 @@
 
         <article class="shop-card">
           <div class="shop-card-media">
-            <img src="public/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
+            <img src="/public/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
           <div class="shop-card-info">
             <div class="shop-card-collection">Stinky Pinky</div>
             <div class="shop-card-name">Stinky Pinky Poster</div>
@@ -608,7 +608,7 @@ async function loadRelatedProducts() {
       titleEl.textContent = `More from the ${formatted} Collection`;
     }
 
-    const res = await fetch("/public/public/data/products.json");
+    const res = await fetch("/public/data/products.json");
     if (!res.ok) {
       throw new Error("Failed to load products.json");
     }
