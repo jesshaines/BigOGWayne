@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Big OG Wayne — Product Template</title>
-<link rel="stylesheet" href="/public/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/site.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -391,14 +391,14 @@
   data-product-id="stinky-pinky-hoodie"
   data-product-name="Stinky Pinky Hoodie"
   data-product-price="85"
-  data-product-image="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png"
+  data-product-image="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png"
   data-product-url="/products/stinky-pinky-hoodie.html"
   data-product-collection="stinky-pinky"
 >
 <header class="header">
   <div class="header-inner">
     <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
-      <img src="/public/assets/images/logo/bow_logo.png" alt="Big OG Wayne — Lilliwaup's Finest">
+      <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne — Lilliwaup's Finest">
     </a>
     <nav class="nav" aria-label="Main navigation">
       <a href="/shop" class="nav-link">Shop</a>
@@ -428,14 +428,14 @@
     <div class="product-layout">
       <div class="product-gallery">
         <div class="product-thumbs">
-          <button class="product-thumb active" type="button"><img src="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie front"></button>
-          <button class="product-thumb" type="button"><img src="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie back"></button>
-          <button class="product-thumb" type="button"><img src="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie detail"></button>
+          <button class="product-thumb active" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie front"></button>
+          <button class="product-thumb" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie back"></button>
+          <button class="product-thumb" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie detail"></button>
         </div>
 
         <div class="product-main-image">
           <div class="product-badge">Featured</div>
-          <img id="mainProductImage" src="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie">
+          <img id="mainProductImage" src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie">
         </div>
       </div>
 
@@ -533,7 +533,7 @@
 
         <article class="shop-card">
           <div class="shop-card-media">
-            <img src="/public/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png">SP</div>
+            <img src="/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png">SP</div>
           <div class="shop-card-info">
             <div class="shop-card-collection">Stinky Pinky</div>
             <div class="shop-card-name">Stinky Pinky Tee</div>
@@ -544,7 +544,7 @@
 
         <article class="shop-card">
           <div class="shop-card-media">
-            <img src="/public/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
+            <img src="/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
           <div class="shop-card-info">
             <div class="shop-card-collection">Stinky Pinky</div>
             <div class="shop-card-name">Stinky Pinky Poster</div>
@@ -608,7 +608,7 @@ async function loadRelatedProducts() {
       titleEl.textContent = `More from the ${formatted} Collection`;
     }
 
-    const res = await fetch("/public/data/products.json");
+    const res = await fetch("/data/products.json");
     if (!res.ok) {
       throw new Error("Failed to load products.json");
     }
@@ -661,7 +661,7 @@ loadRelatedProducts();
 
 </script>
 <!-- GLOBAL LOOT BAG -->
-<script src="/public/assets/js/globalcart.js"></script>
+<script src="/assets/js/globalcart.js"></script>
 
 <!-- BUTTON HOOK -->
 <script>
