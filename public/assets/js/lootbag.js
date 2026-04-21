@@ -163,8 +163,43 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('lootbagClose')?.addEventListener('click', closeLootBag);
     document.getElementById('lootbagBackdrop')?.addEventListener('click', closeLootBag);
     document.getElementById('addToLootBagBtn')?.addEventListener('click', addCurrentProductToLootBag);
-    document.getElementById('lootbagCheckoutBtn')?.addEventListener('click', () => {
-      alert('Next step: connect this button to Stripe Checkout.');
+    document.getElementById('lootbagCheckoutBtn')?.addEventListener('click', async () => {
+  const cart = getLootBag();
+
+  if (!cart.length) {
+    alert("Your cart is empty");
+    return;
+  }
+
+  try {
+    const res = await fetch("/create-checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        cart: cart.map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color
+        }))
+      })
     });
+
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Checkout failed");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong");
+  }
+});
   }, 0);
 });
