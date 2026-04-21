@@ -559,8 +559,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
 
-  console.log("URL product id:", id);
-
   if (!id) {
     document.body.innerHTML = "<h1>No product ID provided</h1>";
     return;
@@ -573,61 +571,132 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const product = products.find(p => String(p.id) === String(id));
 
-    console.log("Matched product:", product);
-
     if (!product) {
       document.body.innerHTML = "<h1>Product not found</h1>";
       return;
     }
 
-const variants = product.variants;
+    const variants = product.variants;
 
-// Split safely
-const parsed = variants.map(v => {
-  const parts = v.title.split(" / ");
+    // 🔥 Parse variants safely
+    const parsed = variants.map(v => {
+      const parts = v.title.split(" / ");
+      return {
+        id: v.id,
+        price: v.price,
+        color: parts[0] || null,
+        size: parts[1] || null
+      };
+    });
 
-  return {
-    id: v.id,
-    price: v.price,
-    color: parts[0] || null,
-    size: parts[1] || null
-  };
-});
+    const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
+    const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
 
-// Get unique values
-const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
-const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
+    let selectedColor = colors[0] || null;
+    let selectedSize = sizes[0] || null;
 
-// Get containers
-const colorGroup = document.getElementById("colorOptions")?.closest(".product-option-group");
-const sizeGroup = document.getElementById("sizeOptions")?.closest(".product-option-group");
-
-const colorContainer = document.getElementById("colorOptions");
-const sizeContainer = document.getElementById("sizeOptions");
-
-// 🔥 SHOW / HIDE GROUPS
-if (!colors.length || colors.length === 1 && colors[0] === "Default") {
-  if (colorGroup) colorGroup.style.display = "none";
-}
-
-if (!sizes.length) {
-  if (sizeGroup) sizeGroup.style.display = "none";
-}
-    // 🔥 Update UI
-    document.querySelector(".product-title").textContent = product.title;
-    document.querySelector(".product-price").textContent =
-      "$" + (variant.price / 100).toFixed(2);
-
-    const mainImage = document.getElementById("mainProductImage");
-    if (mainImage && product.images?.length) {
-      mainImage.src = product.images[0].src;
+    function findVariant() {
+      return parsed.find(v =>
+        (selectedColor ? v.color === selectedColor : true) &&
+        (selectedSize ? v.size === selectedSize : true)
+      );
     }
 
-    // 🔥 THIS FIXES CART + CHECKOUT
+    function updateVariant() {
+      const variant = findVariant();
+      if (!variant) return;
+
+      document.querySelector(".product-price").textContent =
+        "$" + (variant.price / 100).toFixed(2);
+
+      document.body.dataset.variantId = variant.id;
+      document.body.dataset.productPrice = variant.price / 100;
+    }
+
+    // 🔥 Update basic UI
+    document.querySelector(".product-title").textContent = product.title;
+
+    // 🔥 FIX 1: Dynamic Images (Gallery + Main)
+    const thumbContainer = document.querySelector(".product-thumbs");
+    const mainImage = document.getElementById("mainProductImage");
+
+    if (product.images?.length) {
+      mainImage.src = product.images[0].src;
+
+      thumbContainer.innerHTML = product.images.map((img, i) => `
+        <button class="product-thumb ${i === 0 ? 'active' : ''}" type="button">
+          <img src="${img.src}" alt="${product.title}">
+        </button>
+      `).join("");
+
+      const thumbs = thumbContainer.querySelectorAll(".product-thumb");
+
+      thumbs.forEach(btn => {
+        btn.addEventListener("click", () => {
+          thumbs.forEach(t => t.classList.remove("active"));
+          btn.classList.add("active");
+
+          const img = btn.querySelector("img");
+          mainImage.src = img.src;
+        });
+      });
+    }
+
+    // 🔥 FIX 2: Dynamic Variant UI
+    const colorGroup = document.querySelectorAll(".product-option-group")[0];
+    const sizeGroup = document.querySelectorAll(".product-option-group")[1];
+
+    const colorContainer = colorGroup.querySelector(".product-option-values");
+    const sizeContainer = sizeGroup.querySelector(".product-option-values");
+
+    // COLORS
+    if (colors.length > 1 || (colors.length === 1 && colors[0] !== "Default")) {
+      colorContainer.innerHTML = colors.map(color => `
+        <button class="product-chip ${color === selectedColor ? 'active' : ''}" data-color="${color}">
+          ${color}
+        </button>
+      `).join("");
+
+      colorContainer.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedColor = btn.dataset.color;
+          colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          updateVariant();
+        });
+      });
+    } else {
+      colorGroup.style.display = "none";
+    }
+
+    // SIZES
+    if (sizes.length > 0) {
+      sizeContainer.innerHTML = sizes.map(size => `
+        <button class="product-chip ${size === selectedSize ? 'active' : ''}" data-size="${size}">
+          ${size}
+        </button>
+      `).join("");
+
+      sizeContainer.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          selectedSize = btn.dataset.size;
+          sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          updateVariant();
+        });
+      });
+    } else {
+      sizeGroup.style.display = "none";
+    }
+
+    // 🔥 Set dataset for cart
+    const firstVariant = findVariant();
     document.body.dataset.productId = product.id;
-    document.body.dataset.variantId = variant.id;
+    document.body.dataset.variantId = firstVariant.id;
     document.body.dataset.productName = product.title;
-    document.body.dataset.productPrice = variant.price / 100;
+    document.body.dataset.productPrice = firstVariant.price / 100;
+
+    updateVariant();
 
   } catch (err) {
     console.error(err);
@@ -746,7 +815,6 @@ loadRelatedProducts();
 document.getElementById('addToLootBagBtn')?.addEventListener('click', () => {
   window.addToCartFromProductPage();
 });
-console.log(product.id);
 </script>
 
 
