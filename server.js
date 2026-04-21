@@ -88,12 +88,12 @@ const printify = axios.create({
   }
 });
 
-app.get("/printify-shops", async (req, res) => {
+app.get("/products", async (req, res) => {
   try {
-    const response = await printify.get("/shops.json");
+    const response = await printify.get(`/shops/27239381/products.json`);
     res.json(response.data);
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: "Failed to fetch shops" });
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch products" });
   }
 });
