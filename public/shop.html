@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shop — Big OG Wayne</title>
+
+<link rel="stylesheet" href="/assets/css/site.css">
+
+<style>
+.shop-page{
+  background:var(--obsidian);
+  padding:clamp(3rem,6vw,5rem) 0;
+}
+
+.shop-inner{
+  max-width:1320px;
+  margin:0 auto;
+  padding:0 clamp(1rem,4vw,2rem);
+}
+
+.shop-header{
+  margin-bottom:2.5rem;
+}
+
+.shop-title{
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:clamp(2rem,4vw,3.5rem);
+  text-transform:uppercase;
+  letter-spacing:-.03em;
+  color:var(--white);
+}
+
+.shop-sub{
+  color:var(--chrome);
+  font-size:.85rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.shop-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1px;
+  background:var(--iron);
+  border:1px solid var(--iron);
+}
+
+/* CARD */
+.shop-card{
+  background:var(--carbon);
+  display:flex;
+  flex-direction:column;
+  transition:transform .15s ease;
+}
+
+.shop-card:hover{
+  transform:translateY(-2px);
+}
+
+.shop-card-media{
+  aspect-ratio:4/5;
+  background:var(--graphite);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.shop-card-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.shop-card-info{
+  padding:1rem;
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+}
+
+.shop-card-name{
+  font-family:var(--font-display);
+  font-weight:900;
+  text-transform:uppercase;
+  font-size:.85rem;
+  color:var(--white);
+}
+
+.shop-card-price{
+  color:var(--white);
+  font-weight:700;
+}
+
+.shop-card-btn{
+  margin-top:.75rem;
+  display:inline-block;
+  text-align:center;
+  padding:.7rem;
+  border:1px solid var(--red);
+  color:var(--white);
+  text-transform:uppercase;
+  font-size:.7rem;
+  letter-spacing:.15em;
+  transition:all .15s ease;
+}
+
+.shop-card-btn:hover{
+  background:var(--red);
+}
+
+.shop-empty{
+  padding:3rem;
+  text-align:center;
+  color:var(--chrome);
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="header-logo">
+      <img src="/assets/images/logo/bow_logo.png">
+    </a>
+  </div>
+</header>
+
+<section class="shop-page">
+  <div class="shop-inner">
+
+    <div class="shop-header">
+      <div class="shop-sub">Official Merch</div>
+      <h1 class="shop-title">Shop</h1>
+    </div>
+
+    <div id="shopGrid" class="shop-grid"></div>
+
+  </div>
+</section>
+
+<script>
+async function loadShop() {
+  try {
+    const res = await fetch("/products");
+    const json = await res.json();
+
+    const products = json.data || json;
+    const grid = document.getElementById("shopGrid");
+
+    if (!products.length) {
+      grid.innerHTML = `<div class="shop-empty">No products available</div>`;
+      return;
+    }
+
+    grid.innerHTML = products.map(product => {
+      const image = product.images?.[0]?.src || "";
+      const variant = product.variants?.[0];
+
+      return `
+        <div class="shop-card">
+
+          <div class="shop-card-media">
+            <img src="${image}" alt="${product.title}">
+          </div>
+
+          <div class="shop-card-info">
+            <div class="shop-card-name">${product.title}</div>
+
+            <div class="shop-card-price">
+              $${(variant.price / 100).toFixed(2)}
+            </div>
+
+            <a href="/product.html?id=${product.id}" class="shop-card-btn">
+              View Product
+            </a>
+          </div>
+
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("shopGrid").innerHTML =
+      `<div class="shop-empty">Failed to load products</div>`;
+  }
+}
+
+loadShop();
+</script>
+
+</body>
+</html>
