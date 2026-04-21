@@ -556,15 +556,15 @@
 </section>
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
-
-  if (!id) {
-    document.body.innerHTML = "<h1>No product ID provided</h1>";
-    return;
-  }
-
   try {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    if (!id) {
+      console.error("No product ID");
+      return;
+    }
+
     const res = await fetch("/products");
     const json = await res.json();
     const products = json.data || json;
@@ -572,14 +572,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const product = products.find(p => String(p.id) === String(id));
 
     if (!product) {
-      document.body.innerHTML = "<h1>Product not found</h1>";
+      console.error("Product not found");
       return;
     }
 
-    const variants = product.variants;
+    // 🔥 BASIC INFO
+    const titleEl = document.querySelector(".product-title");
+    const priceEl = document.querySelector(".product-price");
 
-    // 🔥 Parse variants safely
-    const parsed = variants.map(v => {
+    if (titleEl) titleEl.textContent = product.title;
+
+    // 🔥 VARIANTS
+    const parsed = product.variants.map(v => {
       const parts = v.title.split(" / ");
       return {
         id: v.id,
@@ -606,51 +610,54 @@ document.addEventListener("DOMContentLoaded", async () => {
       const variant = findVariant();
       if (!variant) return;
 
-      document.querySelector(".product-price").textContent =
-        "$" + (variant.price / 100).toFixed(2);
+      if (priceEl) {
+        priceEl.textContent = "$" + (variant.price / 100).toFixed(2);
+      }
 
       document.body.dataset.variantId = variant.id;
       document.body.dataset.productPrice = variant.price / 100;
     }
 
-    // 🔥 Update basic UI
-    document.querySelector(".product-title").textContent = product.title;
-
-    // 🔥 FIX 1: Dynamic Images (Gallery + Main)
-    const thumbContainer = document.querySelector(".product-thumbs");
+    // 🔥 IMAGES (SAFE)
     const mainImage = document.getElementById("mainProductImage");
+    const thumbContainer = document.querySelector(".product-thumbs");
 
-    if (product.images?.length) {
+    if (product.images?.length && mainImage && thumbContainer) {
       mainImage.src = product.images[0].src;
 
       thumbContainer.innerHTML = product.images.map((img, i) => `
-        <button class="product-thumb ${i === 0 ? 'active' : ''}" type="button">
+        <button class="product-thumb ${i === 0 ? 'active' : ''}">
           <img src="${img.src}" alt="${product.title}">
         </button>
       `).join("");
 
-      const thumbs = thumbContainer.querySelectorAll(".product-thumb");
-
-      thumbs.forEach(btn => {
+      thumbContainer.querySelectorAll(".product-thumb").forEach(btn => {
         btn.addEventListener("click", () => {
-          thumbs.forEach(t => t.classList.remove("active"));
+          thumbContainer.querySelectorAll(".product-thumb").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
 
           const img = btn.querySelector("img");
-          mainImage.src = img.src;
+          if (img) mainImage.src = img.src;
         });
       });
     }
 
-    // 🔥 FIX 2: Dynamic Variant UI
-    const colorGroup = document.querySelectorAll(".product-option-group")[0];
-    const sizeGroup = document.querySelectorAll(".product-option-group")[1];
+    // 🔥 OPTIONS (SAFE TARGETING)
+    const optionGroups = document.querySelectorAll(".product-option-group");
 
-    const colorContainer = colorGroup.querySelector(".product-option-values");
-    const sizeContainer = sizeGroup.querySelector(".product-option-values");
+    const colorGroup = [...optionGroups].find(g =>
+      g.textContent.toLowerCase().includes("color")
+    );
+
+    const sizeGroup = [...optionGroups].find(g =>
+      g.textContent.toLowerCase().includes("size")
+    );
+
+    const colorContainer = colorGroup?.querySelector(".product-option-values");
+    const sizeContainer = sizeGroup?.querySelector(".product-option-values");
 
     // COLORS
-    if (colors.length > 1 || (colors.length === 1 && colors[0] !== "Default")) {
+    if (colorContainer && colors.length > 1 && colors[0] !== "Default") {
       colorContainer.innerHTML = colors.map(color => `
         <button class="product-chip ${color === selectedColor ? 'active' : ''}" data-color="${color}">
           ${color}
@@ -665,12 +672,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           updateVariant();
         });
       });
-    } else {
+    } else if (colorGroup) {
       colorGroup.style.display = "none";
     }
 
     // SIZES
-    if (sizes.length > 0) {
+    if (sizeContainer && sizes.length > 0) {
       sizeContainer.innerHTML = sizes.map(size => `
         <button class="product-chip ${size === selectedSize ? 'active' : ''}" data-size="${size}">
           ${size}
@@ -685,11 +692,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           updateVariant();
         });
       });
-    } else {
+    } else if (sizeGroup) {
       sizeGroup.style.display = "none";
     }
 
-    // 🔥 Set dataset for cart
+    // 🔥 DATASET (CRITICAL FOR CART)
     const firstVariant = findVariant();
     document.body.dataset.productId = product.id;
     document.body.dataset.variantId = firstVariant.id;
@@ -699,8 +706,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateVariant();
 
   } catch (err) {
-    console.error(err);
-    document.body.innerHTML = "<h1>Error loading product</h1>";
+    console.error("PRODUCT LOAD ERROR:", err);
   }
 });
 </script>
