@@ -580,8 +580,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const variant = product.variants[0];
+const variants = product.variants;
 
+// Split safely
+const parsed = variants.map(v => {
+  const parts = v.title.split(" / ");
+
+  return {
+    id: v.id,
+    price: v.price,
+    color: parts[0] || null,
+    size: parts[1] || null
+  };
+});
+
+// Get unique values
+const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
+const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
+
+// Get containers
+const colorGroup = document.getElementById("colorOptions")?.closest(".product-option-group");
+const sizeGroup = document.getElementById("sizeOptions")?.closest(".product-option-group");
+
+const colorContainer = document.getElementById("colorOptions");
+const sizeContainer = document.getElementById("sizeOptions");
+
+// 🔥 SHOW / HIDE GROUPS
+if (!colors.length || colors.length === 1 && colors[0] === "Default") {
+  if (colorGroup) colorGroup.style.display = "none";
+}
+
+if (!sizes.length) {
+  if (sizeGroup) sizeGroup.style.display = "none";
+}
     // 🔥 Update UI
     document.querySelector(".product-title").textContent = product.title;
     document.querySelector(".product-price").textContent =
