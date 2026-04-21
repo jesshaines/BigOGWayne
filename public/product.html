@@ -595,15 +595,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (titleEl) titleEl.textContent = product.title;
 
     // 🔥 VARIANTS
-    const parsed = product.variants.map(v => {
-      const parts = v.title.split(" / ");
-      return {
-        id: v.id,
-        price: v.price,
-        color: parts[0] || null,
-        size: parts[1] || null
-      };
-    });
+    const parsed = product.variants
+  .filter(v => v.is_enabled) // ONLY enabled variants
+  .filter(v => v.title !== "Default")
+  .map(v => {
+    const parts = v.title.split(" / ");
+    return {
+      id: v.id,
+      price: v.price,
+      color: parts[0] || null,
+      size: parts[1] || null
+    };
+  });
 
     const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
     const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
@@ -676,38 +679,69 @@ document.addEventListener("DOMContentLoaded", async () => {
         </button>
       `).join("");
 
-      colorContainer.querySelectorAll("button").forEach(btn => {
-        btn.addEventListener("click", () => {
-          selectedColor = btn.dataset.color;
-          colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          updateVariant();
-        });
-      });
+     colorContainer.querySelectorAll("button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedColor = btn.dataset.color;
+
+    colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    renderSizes();
+    updateVariant();
+    
+  });
+});
     } else if (colorGroup) {
       colorGroup.style.display = "none";
     }
 
     // SIZES
-    if (sizeContainer && sizes.length > 0) {
-      sizeContainer.innerHTML = sizes.map(size => `
-        <button class="product-chip ${size === selectedSize ? 'active' : ''}" data-size="${size}">
-          ${size}
-        </button>
-      `).join("");
+    function getAvailableSizes(color) {
+  return [...new Set(
+    parsed
+      .filter(v => v.color === color)
+      .map(v => v.size)
+      .filter(Boolean)
+  )];
+}
 
-      sizeContainer.querySelectorAll("button").forEach(btn => {
-        btn.addEventListener("click", () => {
-          selectedSize = btn.dataset.size;
-          sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          updateVariant();
-        });
-      });
-    } else if (sizeGroup) {
-      sizeGroup.style.display = "none";
-    }
+function renderSizes() {
+  if (!sizeContainer) return;
 
+  const availableSizes = selectedColor
+    ? getAvailableSizes(selectedColor)
+    : [...new Set(parsed.map(v => v.size).filter(Boolean))];
+
+  // If no sizes exist at all → hide
+  if (!availableSizes.length) {
+    sizeGroup.style.display = "none";
+    return;
+  }
+
+  sizeGroup.style.display = "flex";
+
+  // If current selected size is invalid, reset it
+  if (!availableSizes.includes(selectedSize)) {
+    selectedSize = availableSizes[0];
+  }
+
+  sizeContainer.innerHTML = availableSizes.map(size => `
+    <button class="product-chip ${size === selectedSize ? 'active' : ''}" data-size="${size}">
+      ${size}
+    </button>
+  `).join("");
+
+  sizeContainer.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedSize = btn.dataset.size;
+
+      sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      updateVariant();
+    });
+  });
+}
     const collection = product.tags?.[0] || "Collection";
 
 // Format collection nicely
