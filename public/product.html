@@ -390,12 +390,9 @@
 <body
   data-product-id="REAL_PRINTIFY_PRODUCT_ID"
   data-variant-id="REAL_PRINTIFY_VARIANT_ID"
-  data-product-name="Stinky Pinky Hoodie"
-  data-product-price="85"
-  data-product-image="/public/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png"
-  data-product-url="/products/stinky-pinky-hoodie.html"
-  data-product-collection="stinky-pinky"
->
+  data-product-url="/product.html?id=${product.id}"
+  data-product-collection="stinky-pinky">
+  
 <header class="header">
   <div class="header-inner">
     <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
@@ -669,6 +666,7 @@ loadRelatedProducts();
 document.getElementById('addToLootBagBtn')?.addEventListener('click', () => {
   window.addToCartFromProductPage();
 });
+console.log(product.id);
 </script>
 
 
