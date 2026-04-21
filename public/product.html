@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Big OG Wayne — Product Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product</title>
 
 <link rel="stylesheet" href="/assets/css/site.css">
 
 <style>
-.product-page{opacity:0;transition:opacity .2s ease;}
+.product-page{opacity:0;transition:.2s;}
 .product-page.loaded{opacity:1;}
 </style>
 </head>
@@ -21,28 +21,29 @@
     <h1 class="product-title"></h1>
     <div class="product-price"></div>
 
-    <div class="product-meta-row">
+    <div class="product-option-group">
+      <div>Color</div>
+      <div id="colorOptions"></div>
+    </div>
 
-      <div class="product-option-group">
-        <div class="product-option-label">Color</div>
-        <div class="product-option-values" id="colorOptions"></div>
-      </div>
-
-      <div class="product-option-group">
-        <div class="product-option-label">Size</div>
-        <div class="product-option-values" id="sizeOptions"></div>
-      </div>
-
+    <div class="product-option-group">
+      <div>Size</div>
+      <div id="sizeOptions"></div>
     </div>
 
     <img id="mainProductImage" style="width:300px">
+
+    <!-- IMPORTANT: thumbnail container -->
+    <div class="product-thumbs"></div>
 
   </div>
 </section>
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
+
   try {
+
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
 
@@ -51,7 +52,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const products = json.data || json;
 
     const product = products.find(p => String(p.id) === String(id));
-    if (!product) return;
+    if (!product) {
+      console.error("Product not found");
+      return;
+    }
 
     const titleEl = document.querySelector(".product-title");
     const priceEl = document.querySelector(".product-price");
@@ -64,7 +68,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const parsed = product.variants
       .filter(v => v.is_enabled)
-      .filter(v => v.title !== "Default")
       .map(v => {
         const parts = v.title.split(" / ");
         return {
@@ -101,12 +104,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!v) return;
 
       priceEl.textContent = "$" + (v.price / 100).toFixed(2);
-      document.body.dataset.variantId = v.id;
     }
 
     // 🔥 IMAGE FILTERING
-    function getImagesForColor() {
-      if (!product.images?.length) return [];
+    function getImages() {
+      if (!product.images) return [];
 
       if (!colors.length) return product.images;
 
@@ -118,25 +120,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderImages() {
-      const images = getImagesForColor();
-      if (!images.length) return;
+      if (!thumbContainer || !mainImage) return;
 
-      mainImage.src = images[0].src;
+      const imgs = getImages();
+      if (!imgs.length) return;
 
-      thumbContainer.innerHTML = images.map((img, i) => `
-        <button class="product-thumb ${i === 0 ? 'active' : ''}">
-          <img src="${img.src}">
+      mainImage.src = imgs[0].src;
+
+      thumbContainer.innerHTML = imgs.map((img, i) => `
+        <button class="${i===0?'active':''}">
+          <img src="${img.src}" width="50">
         </button>
       `).join("");
 
-      thumbContainer.querySelectorAll(".product-thumb").forEach(btn => {
-        btn.addEventListener("click", () => {
-          thumbContainer.querySelectorAll(".product-thumb").forEach(b => b.classList.remove("active"));
+      thumbContainer.querySelectorAll("button").forEach(btn=>{
+        btn.onclick = ()=>{
+          thumbContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
           btn.classList.add("active");
 
           const img = btn.querySelector("img");
           if (img) mainImage.src = img.src;
-        });
+        };
       });
     }
 
@@ -148,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      sizeContainer.parentElement.style.display = "flex";
+      sizeContainer.parentElement.style.display = "block";
 
       const SIZE_ORDER = ["XS","S","M","L","XL","2XL","3XL","4XL"];
 
@@ -163,13 +167,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       sizeContainer.innerHTML = sizes.map(size => `
-        <button class="product-chip ${size===selectedSize?'active':''}" data-size="${size}">
+        <button class="${size===selectedSize?'active':''}" data-size="${size}">
           ${size}
         </button>
       `).join("");
 
       sizeContainer.querySelectorAll("button").forEach(btn=>{
-        btn.onclick = () => {
+        btn.onclick = ()=>{
           selectedSize = btn.dataset.size;
 
           sizeContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
@@ -187,13 +191,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       colorContainer.innerHTML = colors.map(color => `
-        <button class="product-chip ${color===selectedColor?'active':''}" data-color="${color}">
+        <button class="${color===selectedColor?'active':''}" data-color="${color}">
           ${color}
         </button>
       `).join("");
 
       colorContainer.querySelectorAll("button").forEach(btn=>{
-        btn.onclick = () => {
+        btn.onclick = ()=>{
           selectedColor = btn.dataset.color;
           selectedSize = null;
 
@@ -212,9 +216,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderImages();
     updateVariant();
 
+    document.querySelector(".product-page").classList.add("loaded");
+
   } catch (err) {
-    console.error("PRODUCT LOAD ERROR:", err);
+    console.error("CRASH:", err);
   }
+
 });
 </script>
 
