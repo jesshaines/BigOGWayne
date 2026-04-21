@@ -76,3 +76,24 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+import axios from "axios";
+
+const PRINTIFY_API = "https://api.printify.com/v1";
+
+const printify = axios.create({
+  baseURL: PRINTIFY_API,
+  headers: {
+    Authorization: `Bearer ${process.env.PRINTIFY_API_KEY}`,
+    "Content-Type": "application/json"
+  }
+});
+
+app.get("/printify-shops", async (req, res) => {
+  try {
+    const response = await printify.get("/shops.json");
+    res.json(response.data);
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: "Failed to fetch shops" });
+  }
+});
