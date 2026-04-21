@@ -708,9 +708,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 function renderSizes() {
   if (!sizeContainer) return;
 
-  const availableSizes = selectedColor
-    ? getAvailableSizes(selectedColor)
-    : [...new Set(parsed.map(v => v.size).filter(Boolean))];
+  let availableSizes = selectedColor
+  ? getAvailableSizes(selectedColor)
+  : [...new Set(parsed.map(v => v.size).filter(Boolean))];
+
+// 🔥 SORT SIZES PROPERLY
+availableSizes = availableSizes.sort((a, b) => {
+  const aIndex = SIZE_ORDER.indexOf(a);
+  const bIndex = SIZE_ORDER.indexOf(b);
+
+  return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+});
 
   // If no sizes exist at all → hide
   if (!availableSizes.length) {
@@ -719,6 +727,7 @@ function renderSizes() {
   }
 
   sizeGroup.style.display = "flex";
+  const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
   // If current selected size is invalid, reset it
   if (!availableSizes.includes(selectedSize)) {
