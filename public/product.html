@@ -384,6 +384,13 @@
   .related-products-grid{
     grid-template-columns:1fr;
   }
+  .product-page {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  }
+  .product-page.loaded {
+  opacity: 1;
+  }
 }
 </style>
 </head>
@@ -439,11 +446,11 @@
 
       <div class="product-info-panel">
         <div class="product-collection">Stinky Pinky</div>
-        <h1 class="product-title">Stinky Pinky Hoodie</h1>
-        <div class="product-price">$85.00</div>
+        <h1 class="product-title"></h1>
+        
         <div class="product-description">
-          Heavyweight comfort with loud collection energy. Built for fans who want the drop front and center, with a fit that feels solid and easy to wear.
-        </div>
+****        </div>
+        <img id="mainProductImage" src="">
 
         <div class="product-meta-row">
           <div class="product-option-group">
@@ -821,6 +828,7 @@ loadRelatedProducts();
 document.getElementById('addToLootBagBtn')?.addEventListener('click', () => {
   window.addToCartFromProductPage();
 });
+document.querySelector(".product-page")?.classList.add("loaded");
 </script>
 
 
