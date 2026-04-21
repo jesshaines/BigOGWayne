@@ -445,6 +445,7 @@
       </div>
 
       <div class="product-info-panel">
+        <div id="loadingState">Loading product...</div>
         <div class="product-collection">Stinky Pinky</div>
         <h1 class="product-title"></h1>
         
@@ -829,7 +830,9 @@ document.getElementById('addToLootBagBtn')?.addEventListener('click', () => {
   window.addToCartFromProductPage();
 });
 document.querySelector(".product-page")?.classList.add("loaded");
+document.getElementById("loadingState").style.display = "none";
 </script>
+
 
 
 <!-- LOOT BAG DRAWER -->
