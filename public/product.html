@@ -3,936 +3,185 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Big OG Wayne — Product Template</title>
-<link rel="stylesheet" href="/assets/css/site.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Big OG Wayne — Product</title>
 
+<link rel="stylesheet" href="/assets/css/site.css">
 
 <style>
-.product-page{
-  background:var(--obsidian);
-  padding:clamp(2.5rem,5vw,4rem) 0 clamp(4rem,8vw,6rem);
-}
-
-.product-page-inner{
-  max-width:1320px;
-  margin:0 auto;
-  padding:0 clamp(1rem,4vw,2rem);
-}
-
-.product-breadcrumbs{
-  display:flex;
-  flex-wrap:wrap;
-  gap:.5rem;
-  font-size:.72rem;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--fog);
-  margin-bottom:1.5rem;
-}
-
-.product-breadcrumbs a{
-  color:var(--mist);
-}
-
-.product-breadcrumbs a:hover{
-  color:var(--white);
-}
-
-.product-layout{
-  display:grid;
-  grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);
-  gap:2rem;
-  align-items:start;
-}
-
-.product-gallery{
-  display:grid;
-  grid-template-columns:96px minmax(0,1fr);
-  gap:1rem;
-}
-
-.product-thumbs{
-  display:flex;
-  flex-direction:column;
-  gap:.75rem;
-}
-
-.product-thumb{
-  border:1px solid var(--iron);
-  background:var(--graphite);
-  aspect-ratio:1/1;
-  overflow:hidden;
-  cursor:pointer;
-  transition:border-color .15s ease,transform .15s ease;
-}
-
-.product-thumb:hover,
-.product-thumb.active{
-  border-color:var(--red);
-  transform:translateY(-1px);
-}
-
-.product-thumb img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.product-main-image{
-  position:relative;
-  background:var(--carbon);
-  border:1px solid var(--iron);
-  aspect-ratio:4/5;
-  overflow:hidden;
-}
-
-.product-main-image img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.product-badge{
-  position:absolute;
-  top:1rem;
-  left:1rem;
-  z-index:2;
-  background:var(--red);
-  color:var(--white);
-  font-size:.62rem;
-  font-weight:700;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  padding:.35rem .55rem;
-}
-
-.product-info-panel{
-  background:var(--carbon);
-  border:1px solid var(--iron);
-  padding:1.5rem;
-}
-
-.product-collection{
-  display:flex;
-  align-items:center;
-  gap:.7rem;
-  font-size:.68rem;
-  font-weight:700;
-  letter-spacing:.18em;
-  text-transform:uppercase;
-  color:var(--red);
-  margin-bottom:.9rem;
-}
-
-.product-collection::before{
-  content:'';
-  width:20px;
-  height:2px;
-  background:var(--red);
-  display:block;
-}
-
-.product-title{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:clamp(1.75rem,3vw,2.8rem);
-  line-height:.95;
-  letter-spacing:-.03em;
-  text-transform:uppercase;
-  color:var(--white);
-  margin-bottom:.75rem;
-}
-
-.product-price{
-  font-size:1.25rem;
-  font-weight:700;
-  color:var(--white);
-  margin-bottom:1rem;
-}
-
-.product-description{
-  font-size:.95rem;
-  line-height:1.7;
-  color:var(--mist);
-  margin-bottom:1.5rem;
-}
-
-.product-meta-row{
-  display:grid;
-  gap:1rem;
-  margin-bottom:1.25rem;
-}
-
-.product-option-group{
-  display:flex;
-  flex-direction:column;
-  gap:.65rem;
-}
-
-.product-option-label{
-  font-size:.68rem;
-  font-weight:700;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:var(--chrome);
-}
-
-.product-option-values{
-  display:flex;
-  flex-wrap:wrap;
-  gap:.6rem;
-}
-
-.product-chip{
-  border:1px solid var(--steel);
-  color:var(--chrome);
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:.65rem;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  padding:.7rem .9rem;
-  transition:border-color .15s ease,color .15s ease,background .15s ease;
-}
-
-.product-chip:hover{
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.product-chip.active{
-  background:var(--red);
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.product-qty-row{
-  display:flex;
-  align-items:center;
-  gap:.75rem;
-  margin-bottom:1.5rem;
-}
-
-.product-qty-box{
-  display:inline-flex;
-  align-items:center;
-  border:1px solid var(--steel);
-  background:var(--graphite);
-}
-
-.product-qty-btn{
-  width:40px;
-  height:40px;
-  color:var(--white);
-  font-size:1rem;
-}
-
-.product-qty-value{
-  min-width:44px;
-  text-align:center;
-  color:var(--white);
-  font-weight:700;
-}
-
-.product-buy-actions{
-  display:flex;
-  flex-direction:column;
-  gap:.75rem;
-  margin-bottom:1.5rem;
-}
-
-.product-buy-btn{
-  width:100%;
-  padding:1rem 1.1rem;
-  font-size:.78rem;
-  letter-spacing:.16em;
-}
-
-.product-secondary-btn{
-  width:100%;
-  padding:.9rem 1rem;
-  font-size:.72rem;
-  letter-spacing:.14em;
-}
-
-.product-notes{
-  border-top:1px solid var(--iron);
-  padding-top:1rem;
-  display:grid;
-  gap:.85rem;
-}
-
-.product-note{
-  font-size:.82rem;
-  line-height:1.55;
-  color:var(--mist);
-}
-
-.product-note strong{
-  color:var(--white);
-  font-weight:600;
-}
-
-.product-extra{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:1rem;
-  margin-top:2rem;
-}
-
-.product-panel{
-  background:var(--carbon);
-  border:1px solid var(--iron);
-  padding:1.25rem;
-}
-
-.product-panel-title{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:.9rem;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:var(--white);
-  margin-bottom:.9rem;
-}
-
-.product-panel-text{
-  font-size:.86rem;
-  line-height:1.65;
-  color:var(--mist);
-}
-
-.size-chart-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:.78rem;
-  color:var(--chrome);
-}
-
-.size-chart-table th,
-.size-chart-table td{
-  border:1px solid var(--iron);
-  padding:.75rem;
-  text-align:left;
-}
-
-.size-chart-table th{
-  color:var(--white);
-  background:var(--graphite);
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  font-size:.68rem;
-}
-
-.related-products{
-  margin-top:3rem;
-}
-
-.related-products-header{
-  display:flex;
-  align-items:end;
-  justify-content:space-between;
-  gap:1rem;
-  flex-wrap:wrap;
-  margin-bottom:1.5rem;
-}
-
-.related-products-title{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:clamp(1.25rem,2vw,2rem);
-  letter-spacing:-.03em;
-  text-transform:uppercase;
-  color:var(--white);
-}
-
-.related-products-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:1px;
-  background:var(--iron);
-  border:1px solid var(--iron);
-}
-
-@media (max-width:980px){
-  .product-layout{
-    grid-template-columns:1fr;
-  }
-
-  .product-extra{
-    grid-template-columns:1fr;
-  }
-}
-
-@media (max-width:768px){
-  .product-gallery{
-    grid-template-columns:1fr;
-  }
-
-  .product-thumbs{
-    order:2;
-    flex-direction:row;
-  }
-
-  .product-main-image{
-    order:1;
-  }
-
-  .related-products-grid{
-    grid-template-columns:1fr;
-  }
-  .product-page {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  }
-  .product-page.loaded {
-  opacity: 1;
-  }
-}
+.product-page{opacity:0;transition:opacity .2s ease;}
+.product-page.loaded{opacity:1;}
 </style>
 </head>
-<body
-  data-product-id="REAL_PRINTIFY_PRODUCT_ID"
-  data-variant-id="REAL_PRINTIFY_VARIANT_ID"
-  data-product-url="/product.html?id=${product.id}"
-  data-product-collection="stinky-pinky">
-  
+
+<body>
+
 <header class="header">
   <div class="header-inner">
-    <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
-      <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne — Lilliwaup's Finest">
+    <a href="/" class="header-logo">
+      <img src="/assets/images/logo/bow_logo.png">
     </a>
-    <nav class="nav" aria-label="Main navigation">
-      <a href="/shop" class="nav-link">Shop</a>
-      <a href="/collections" class="nav-link">Collections</a>
-      <a href="#social" class="nav-link">Connect</a>
-      <a href="/about" class="nav-link">About</a>
-    </nav>
-    <div class="header-actions">
-      <a href="/order-lookup" class="header-action">Orders</a>
-      <button class="cart-btn" type="button" aria-label="Open cart">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
-        </svg>
-        <span class="cart-dot">0</span>
-      </button>
-      <button class="hamburger-btn" aria-label="Toggle menu"><span></span><span></span><span></span></button>
-    </div>
   </div>
 </header>
 
 <section class="product-page">
   <div class="product-page-inner">
-   <nav class="product-breadcrumbs" id="breadcrumbs" aria-label="Breadcrumb">
-  <a href="/">Home</a>
-  <span>/</span>
-  <a id="breadcrumbCollection" href="#">Collection</a>
-  <span>/</span>
-  <span id="breadcrumbProduct">Product</span>
-</nav>
 
-    <div class="product-layout">
-      <div class="product-gallery">
-        <div class="product-thumbs">
-          <button class="product-thumb active" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie front"></button>
-          <button class="product-thumb" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie back"></button>
-          <button class="product-thumb" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie detail"></button>
-        </div>
+    <h1 class="product-title"></h1>
+    <div class="product-price"></div>
 
-        <div class="product-main-image">
-          <div class="product-badge">Featured</div>
-          <img id="mainProductImage" src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie">
-        </div>
+    <div class="product-meta-row">
+
+      <!-- COLOR -->
+      <div class="product-option-group">
+        <div class="product-option-label">Color</div>
+        <div class="product-option-values" id="colorOptions"></div>
       </div>
 
-      <div class="product-info-panel">
-        <div id="loadingState">Loading product...</div>
-        <div class="product-collection">Stinky Pinky</div>
-        <h1 class="product-title"></h1>
-        
-        <div class="product-description">
-****        </div>
-
-        <div class="product-meta-row">
-          <div class="product-option-group">
-            <div class="product-option-label">Color</div>
-            <div class="product-option-values" id="colorOptions"></div>
-              <button class="product-chip active" type="button">Black</button>
-              <button class="product-chip" type="button">Red</button>
-            </div>
-          </div>
-          <div class="product-option-group">
-            <div class="product-option-label">Size</div>
-            <div class="product-option-values" id="sizeOptions"></div>
-              <button class="product-chip" type="button">S</button>
-              <button class="product-chip active" type="button">M</button>
-              <button class="product-chip" type="button">L</button>
-              <button class="product-chip" type="button">XL</button>
-              <button class="product-chip" type="button">2XL</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-qty-row">
-          <div class="product-option-label">Qty</div>
-          <div class="product-qty-box">
-            <button class="product-qty-btn" type="button" id="qtyMinus">−</button>
-            <div class="product-qty-value" id="qtyValue">1</div>
-            <button class="product-qty-btn" type="button" id="qtyPlus">+</button>
-          </div>
-        </div>
-
-        <div class="product-buy-actions">
-          <button class="product-buy-btn" id="addToLootBagBtn" type="button">Add to Loot Bag</button>
-          <button class="product-secondary-btn" type="button" onclick="document.getElementById('size-chart').scrollIntoView({behavior:'smooth'});">Size Chart Below</button>
-        </div>
-
-        <div class="product-notes">
-          <div class="product-note"><strong>Turnaround:</strong> Orders typically ship within 4 weeks.</div>
-          <div class="product-note"><strong>Cancellations:</strong> Orders may be cancelled within 12 hours.</div>
-          <div class="product-note"><strong>Returns:</strong> Unworn and unwashed items with tags may be returned within 30 days after pre-authorization.</div>
-
-        </div>
+      <!-- SIZE -->
+      <div class="product-option-group">
+        <div class="product-option-label">Size</div>
+        <div class="product-option-values" id="sizeOptions"></div>
       </div>
+
     </div>
 
-    <div class="product-extra">
-      <div class="product-panel" id="size-chart">
-        <div class="product-panel-title">Sizing Chart</div>
-        <table class="size-chart-table">
-          <thead><tr><th>Size</th><th>Chest</th><th>Length</th></tr></thead>
-          <tbody>
-            <tr><td>S</td><td>34–36</td><td>27</td></tr>
-            <tr><td>M</td><td>38–40</td><td>28</td></tr>
-            <tr><td>L</td><td>42–44</td><td>29</td></tr>
-            <tr><td>XL</td><td>46–48</td><td>30</td></tr>
-            <tr><td>2XL</td><td>50–52</td><td>31</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <img id="mainProductImage" style="width:300px">
 
-      <div class="product-panel">
-        <div class="product-panel-title">Drop Details</div>
-        <div class="product-panel-text">
-          Part of the Stinky Pinky collection. This piece is designed to carry the humor, attitude, and standout visual identity of the track into something wearable. Keep this panel for collection-specific notes, material details, or vendor sizing notes.
-        </div>
-      </div>
-    </div>
-<div class="more-from">
-  <h2 id="related-title">More from this collection</h2>
-<div id="related-products" class="related-products-grid"></div>
-</div>
-<!-- <div class="related-products">
-      <div class="related-products-header">
-        <h2 class="related-products-title">More from Stinky Pinky</h2>
-      </div>
-      <div class="related-products-grid">
-        <article class="shop-card">
-          <div class="shop-card-media"><div class="shop-card-placeholder">SP</div></div>
-          <div class="shop-card-info">
-            <div class="shop-card-collection">Stinky Pinky</div>
-            <div class="shop-card-name">Stinky Pinky Snapback</div>
-            <div class="shop-card-meta"><div class="shop-card-price">$40.00</div><div class="shop-card-tag">Hat</div></div>
-            <div class="shop-card-actions"><a href="/products/stinky-pinky-snapback" class="shop-card-btn primary">View Product</a></div>
-          </div>
-        </article>
-
-        <article class="shop-card">
-          <div class="shop-card-media">
-            <img src="/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png">SP</div>
-          <div class="shop-card-info">
-            <div class="shop-card-collection">Stinky Pinky</div>
-            <div class="shop-card-name">Stinky Pinky Tee</div>
-            <div class="shop-card-meta"><div class="shop-card-price">$35.00</div><div class="shop-card-tag">Tee</div></div>
-            <div class="shop-card-actions"><a href="/products/stinky-pinky-tee" class="shop-card-btn primary">View Product</a></div>
-          </div>
-        </article>
-
-        <article class="shop-card">
-          <div class="shop-card-media">
-            <img src="/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
-          <div class="shop-card-info">
-            <div class="shop-card-collection">Stinky Pinky</div>
-            <div class="shop-card-name">Stinky Pinky Poster</div>
-            <div class="shop-card-meta"><div class="shop-card-price">$24.00</div><div class="shop-card-tag">Poster</div></div>
-            <div class="shop-card-actions"><a href="/products/stinky-pinky-poster" class="shop-card-btn primary">View Product</a></div>
-          </div>
-        </article>
-      </div>
-    </div-->
   </div>
 </section>
+
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
 
-    if (!id) {
-      console.error("No product ID");
-      return;
-    }
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
 
-    const res = await fetch("/products");
-    const json = await res.json();
-    const products = json.data || json;
+  const res = await fetch("/products");
+  const data = await res.json();
+  const products = data.data || data;
 
-    const product = products.find(p => String(p.id) === String(id));
+  const product = products.find(p => String(p.id) === String(id));
+  if (!product) return;
 
-    if (!product) {
-      console.error("Product not found");
-      return;
-    }
+  const titleEl = document.querySelector(".product-title");
+  const priceEl = document.querySelector(".product-price");
+  const colorContainer = document.getElementById("colorOptions");
+  const sizeContainer = document.getElementById("sizeOptions");
 
-    // 🔥 BASIC INFO
-    const titleEl = document.querySelector(".product-title");
-    const priceEl = document.querySelector(".product-price");
+  titleEl.textContent = product.title;
 
-    if (titleEl) titleEl.textContent = product.title;
-
-    // 🔥 VARIANTS
-    const parsed = product.variants
-  .filter(v => v.is_enabled) // ONLY enabled variants
-  .filter(v => v.title !== "Default")
-  .map(v => {
-    const parts = v.title.split(" / ");
-    return {
-      id: v.id,
-      price: v.price,
-      color: parts[0] || null,
-      size: parts[1] || null
-    };
-  });
-
-    const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
-    const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
-
-    let selectedColor = colors[0] || null;
-    let selectedSize = sizes[0] || null;
-
-    function findVariant() {
-      return parsed.find(v =>
-        (selectedColor ? v.color === selectedColor : true) &&
-        (selectedSize ? v.size === selectedSize : true)
-      );
-    }
-
-    function updateVariant() {
-      const variant = findVariant();
-      if (!variant) return;
-
-      if (priceEl) {
-        priceEl.textContent = "$" + (variant.price / 100).toFixed(2);
-      }
-
-      document.body.dataset.variantId = variant.id;
-      document.body.dataset.productPrice = variant.price / 100;
-    }
-
-    // 🔥 IMAGES (SAFE)
-    const mainImage = document.getElementById("mainProductImage");
-    const thumbContainer = document.querySelector(".product-thumbs");
-
-    if (product.images?.length && mainImage && thumbContainer) {
-      mainImage.src = product.images[0].src;
-
-      thumbContainer.innerHTML = product.images.map((img, i) => `
-        <button class="product-thumb ${i === 0 ? 'active' : ''}">
-          <img src="${img.src}" alt="${product.title}">
-        </button>
-      `).join("");
-
-      thumbContainer.querySelectorAll(".product-thumb").forEach(btn => {
-        btn.addEventListener("click", () => {
-          thumbContainer.querySelectorAll(".product-thumb").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-
-          const img = btn.querySelector("img");
-          if (img) mainImage.src = img.src;
-        });
-      });
-    }
-
-    // 🔥 OPTIONS (SAFE TARGETING)
-    const optionGroups = document.querySelectorAll(".product-option-group");
-
-    const colorGroup = [...optionGroups].find(g =>
-      g.textContent.toLowerCase().includes("color")
-    );
-
-    const sizeGroup = [...optionGroups].find(g =>
-      g.textContent.toLowerCase().includes("size")
-    );
-
-    const colorContainer = document.getElementById("colorOptions");
-const sizeContainer = document.getElementById("sizeOptions");
-
-    // COLORS
-    if (colorContainer && colors.length > 1 && colors[0] !== "Default") {
-      colorContainer.innerHTML = colors.map(color => `
-        <button class="product-chip ${color === selectedColor ? 'active' : ''}" data-color="${color}">
-          ${color}
-        </button>
-      `).join("");
-
-     colorContainer.querySelectorAll("button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedColor = btn.dataset.color;
-
-    colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    renderSizes();
-    updateVariant();
-    
-  });
-});
-    } else if (colorGroup) {
-      colorGroup.style.display = "none";
-    }
-
-    // SIZES
-    function getAvailableSizes(color) {
-  return [...new Set(
-    parsed
-      .filter(v => v.color === color)
-      .map(v => v.size)
-      .filter(Boolean)
-  )];
-}
-
-function renderSizes() {
-  if (!sizeContainer || !sizeGroup) return;
-
-  let availableSizes = selectedColor
-    ? getAvailableSizes(selectedColor)
-    : [...new Set(parsed.map(v => v.size).filter(Boolean))];
-
-  if (!availableSizes.length) {
-    sizeGroup.style.display = "none";
-    return;
-  }
-
-  sizeGroup.style.display = "flex";
-
-  // 🔥 Sort sizes
-  const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
-
-  availableSizes = availableSizes.sort((a, b) => {
-    const aIndex = SIZE_ORDER.indexOf(a);
-    const bIndex = SIZE_ORDER.indexOf(b);
-    return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
-  });
-
-  // 🔥 Ensure selectedSize is valid
-  if (!availableSizes.includes(selectedSize)) {
-    selectedSize = availableSizes[0];
-  }
-
-  // 🔥 Build buttons
-  sizeContainer.innerHTML = availableSizes.map(size => `
-    <button 
-      type="button"
-      class="product-chip ${size === selectedSize ? 'active' : ''}" 
-      data-size="${size}">
-      ${size}
-    </button>
-  `).join("");
-
-  // 🔥 Attach listeners AFTER render
-  sizeContainer.querySelectorAll("button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      selectedSize = btn.dataset.size;
-
-      // update UI
-      sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      renderSizes();
-      updateVariant();
+  const parsed = product.variants
+    .filter(v => v.is_enabled)
+    .map(v => {
+      const parts = v.title.split(" / ");
+      return {
+        id: v.id,
+        price: v.price,
+        color: parts[0] || null,
+        size: parts[1] || null
+      };
     });
-  });
-}
-    const collection = product.tags?.[0] || "Collection";
 
-// Format collection nicely
-const formattedCollection = collection
-  .replace(/-/g, " ")
-  .replace(/\b\w/g, l => l.toUpperCase());
+  const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
+  let selectedColor = colors[0];
 
-// Update breadcrumb text
-const collectionEl = document.getElementById("breadcrumbCollection");
-const productEl = document.getElementById("breadcrumbProduct");
-
-if (collectionEl) {
-  collectionEl.textContent = formattedCollection;
-  collectionEl.href = `/shop#${collection}`;
-}
-
-
-if (productEl) {
-  productEl.textContent = product.title;
-}
-
-    // 🔥 DATASET (CRITICAL FOR CART)
-    const firstVariant = findVariant();
-    document.body.dataset.productId = product.id;
-    document.body.dataset.variantId = firstVariant.id;
-    document.body.dataset.productName = product.title;
-    document.body.dataset.productPrice = firstVariant.price / 100;
-    
-    renderSizes();
-    updateVariant();
-
-  } catch (err) {
-    console.error("PRODUCT LOAD ERROR:", err);
+  function getSizes(color) {
+    return [...new Set(parsed.filter(v => v.color === color).map(v => v.size).filter(Boolean))];
   }
-});
-</script>
 
-<!-- <script>
-const thumbs = document.querySelectorAll('.product-thumb');
-const mainImage = document.getElementById('mainProductImage');
-thumbs.forEach(btn => {
-  btn.addEventListener('click', () => {
-    thumbs.forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    const img = btn.querySelector('img');
-    if (img && mainImage) {
-      mainImage.src = img.src;
-      mainImage.alt = img.alt.replace(' front', '').replace(' back', '').replace(' detail', '');
+  let selectedSize = getSizes(selectedColor)[0];
+
+  function findVariant() {
+    return parsed.find(v =>
+      v.color === selectedColor &&
+      (v.size ? v.size === selectedSize : true)
+    );
+  }
+
+  function updateVariant() {
+    const v = findVariant();
+    if (!v) return;
+
+    priceEl.textContent = "$" + (v.price / 100).toFixed(2);
+
+    document.body.dataset.variantId = v.id;
+  }
+
+  function renderSizes() {
+    const sizes = getSizes(selectedColor);
+
+    if (!sizes.length) {
+      sizeContainer.parentElement.style.display = "none";
+      return;
     }
-  });
-});
 
-const qtyValue = document.getElementById('qtyValue');
-document.getElementById('qtyMinus').addEventListener('click', () => {
-  qtyValue.textContent = Math.max(1, parseInt(qtyValue.textContent, 10) - 1);
-});
-document.getElementById('qtyPlus').addEventListener('click', () => {
-  qtyValue.textContent = parseInt(qtyValue.textContent, 10) + 1;
-});
+    sizeContainer.parentElement.style.display = "block";
 
-document.querySelectorAll('.product-option-values').forEach(group => {
-  group.querySelectorAll('.product-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      group.querySelectorAll('.product-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
+    const SIZE_ORDER = ["XS","S","M","L","XL","2XL","3XL","4XL"];
+
+    sizes.sort((a,b)=>{
+      const ai = SIZE_ORDER.indexOf(a);
+      const bi = SIZE_ORDER.indexOf(b);
+      return (ai===-1?999:ai)-(bi===-1?999:bi);
     });
-  });
-});
-</script> -->
 
-
-<!-- RELATED PRODUCTS/MORE FROM COLLECTION -->
-<script>
-async function loadRelatedProducts() {
-  try {
-    const currentCollection = document.body.dataset.productCollection;
-
-    const titleEl = document.getElementById("related-title");
-
-    if (titleEl && currentCollection) {
-      const formatted = currentCollection
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, l => l.toUpperCase());
-
-      titleEl.textContent = `More from the ${formatted} Collection`;
+    if (!sizes.includes(selectedSize)) {
+      selectedSize = sizes[0];
     }
 
-    const res = await fetch("/data/products.json");
-    if (!res.ok) {
-      throw new Error("Failed to load products.json");
-    }
+    sizeContainer.innerHTML = sizes.map(size => `
+      <button class="product-chip ${size===selectedSize?'active':''}" data-size="${size}">
+        ${size}
+      </button>
+    `).join("");
 
-    const products = await res.json();
+    sizeContainer.querySelectorAll("button").forEach(btn=>{
+      btn.onclick = () => {
+        selectedSize = btn.dataset.size;
 
-    const container = document.getElementById("related-products");
+        sizeContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
 
-    if (!container) {
-      console.error("Missing #related-products container");
-      return;
-    }
-    
-    const currentProductId = document.body.dataset.productId;
-    const filtered = products.filter(p => p.collection === currentCollection && true);
-    if (!filtered.length) {
-      container.innerHTML = "<p style='color:white;'>No related products found.</p>";
-      return;
-    }
-
-    container.innerHTML = filtered.map(p => `
-  <div class="shop-card">
-    <div class="shop-card-media">
-      <img src="${p.image}" alt="${p.name}">
-    </div>
-
-    <div class="shop-card-info">
-      <div class="shop-card-collection">${p.collection}</div>
-      <div class="shop-card-name">${p.name}</div>
-
-      <div class="shop-card-meta">
-        <div class="shop-card-price">$${p.price}</div>
-      </div>
-
-      <div class="shop-card-actions">
-        <a href="product.html?id=${p.id}" class="shop-card-btn">
-          View Product
-        </a>
-      </div>
-    </div>
-  </div>
-`).join("");
-
-  } catch (err) {
-    console.error("Related products error:", err);
+        updateVariant();
+      };
+    });
   }
-}
 
-loadRelatedProducts();
+  function renderColors() {
+    colorContainer.innerHTML = colors.map(color => `
+      <button class="product-chip ${color===selectedColor?'active':''}" data-color="${color}">
+        ${color}
+      </button>
+    `).join("");
 
-</script>
-<!-- GLOBAL LOOT BAG -->
-<script src="/assets/js/globalcart.js"></script>
+    colorContainer.querySelectorAll("button").forEach(btn=>{
+      btn.onclick = () => {
+        selectedColor = btn.dataset.color;
+        selectedSize = null;
 
-<!-- BUTTON HOOK -->
-<script>
-document.getElementById('addToLootBagBtn')?.addEventListener('click', () => {
-  window.addToCartFromProductPage();
+        renderSizes();
+        updateVariant();
+
+        colorContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+      };
+    });
+  }
+
+  // image
+  const img = document.getElementById("mainProductImage");
+  if (product.images?.length) {
+    img.src = product.images[0].src;
+  }
+
+  renderColors();
+  renderSizes();
+  updateVariant();
+
+  document.querySelector(".product-page").classList.add("loaded");
+
 });
-document.querySelector(".product-page")?.classList.add("loaded");
-document.getElementById("loadingState").style.display = "none";
 </script>
-
-
-
-<!-- LOOT BAG DRAWER -->
-<aside class="lootbag-drawer" id="lootbagDrawer" aria-hidden="true">
-  <div class="lootbag-backdrop" id="lootbagBackdrop"></div>
-
-  <div class="lootbag-panel">
-    <div class="lootbag-header">
-      <h2 class="lootbag-title">Loot Bag</h2>
-      <button class="lootbag-close" id="lootbagClose" type="button">✕</button>
-    </div>
-
-    <div class="lootbag-body" id="lootbagItems"></div>
-
-    <div class="lootbag-footer">
-      <div class="lootbag-total-row">
-        <span>Subtotal</span>
-        <strong id="lootbagSubtotal">$0.00</strong>
-      </div>
-
-      <button id="lootbagCheckoutBtn" class="checkout-trigger lootbag-checkout-btn">
-  Checkout
-</button>
-    </div>
-  </div>
-</aside>
 
 </body>
 </html>
