@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Big OG Wayne — Product</title>
+<title>Big OG Wayne — Product Template</title>
 
 <link rel="stylesheet" href="/assets/css/site.css">
 
@@ -15,14 +15,6 @@
 
 <body>
 
-<header class="header">
-  <div class="header-inner">
-    <a href="/" class="header-logo">
-      <img src="/assets/images/logo/bow_logo.png">
-    </a>
-  </div>
-</header>
-
 <section class="product-page">
   <div class="product-page-inner">
 
@@ -31,13 +23,11 @@
 
     <div class="product-meta-row">
 
-      <!-- COLOR -->
       <div class="product-option-group">
         <div class="product-option-label">Color</div>
         <div class="product-option-values" id="colorOptions"></div>
       </div>
 
-      <!-- SIZE -->
       <div class="product-option-group">
         <div class="product-option-label">Size</div>
         <div class="product-option-values" id="sizeOptions"></div>
@@ -52,134 +42,179 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
 
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
+    const res = await fetch("/products");
+    const json = await res.json();
+    const products = json.data || json;
 
-  const res = await fetch("/products");
-  const data = await res.json();
-  const products = data.data || data;
+    const product = products.find(p => String(p.id) === String(id));
+    if (!product) return;
 
-  const product = products.find(p => String(p.id) === String(id));
-  if (!product) return;
+    const titleEl = document.querySelector(".product-title");
+    const priceEl = document.querySelector(".product-price");
+    const colorContainer = document.getElementById("colorOptions");
+    const sizeContainer = document.getElementById("sizeOptions");
+    const mainImage = document.getElementById("mainProductImage");
+    const thumbContainer = document.querySelector(".product-thumbs");
 
-  const titleEl = document.querySelector(".product-title");
-  const priceEl = document.querySelector(".product-price");
-  const colorContainer = document.getElementById("colorOptions");
-  const sizeContainer = document.getElementById("sizeOptions");
+    titleEl.textContent = product.title;
 
-  titleEl.textContent = product.title;
+    const parsed = product.variants
+      .filter(v => v.is_enabled)
+      .filter(v => v.title !== "Default")
+      .map(v => {
+        const parts = v.title.split(" / ");
+        return {
+          id: v.id,
+          price: v.price,
+          color: parts[0] || null,
+          size: parts[1] || null
+        };
+      });
 
-  const parsed = product.variants
-    .filter(v => v.is_enabled)
-    .map(v => {
-      const parts = v.title.split(" / ");
-      return {
-        id: v.id,
-        price: v.price,
-        color: parts[0] || null,
-        size: parts[1] || null
-      };
-    });
+    const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
 
-  const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
-  let selectedColor = colors[0];
+    let selectedColor = colors[0] || null;
+    let selectedSize = null;
 
-  function getSizes(color) {
-    return [...new Set(parsed.filter(v => v.color === color).map(v => v.size).filter(Boolean))];
-  }
-
-  let selectedSize = getSizes(selectedColor)[0];
-
-  function findVariant() {
-    return parsed.find(v =>
-      v.color === selectedColor &&
-      (v.size ? v.size === selectedSize : true)
-    );
-  }
-
-  function updateVariant() {
-    const v = findVariant();
-    if (!v) return;
-
-    priceEl.textContent = "$" + (v.price / 100).toFixed(2);
-
-    document.body.dataset.variantId = v.id;
-  }
-
-  function renderSizes() {
-    const sizes = getSizes(selectedColor);
-
-    if (!sizes.length) {
-      sizeContainer.parentElement.style.display = "none";
-      return;
+    function getSizes(color) {
+      return [...new Set(
+        parsed
+          .filter(v => !color || v.color === color)
+          .map(v => v.size)
+          .filter(Boolean)
+      )];
     }
 
-    sizeContainer.parentElement.style.display = "block";
-
-    const SIZE_ORDER = ["XS","S","M","L","XL","2XL","3XL","4XL"];
-
-    sizes.sort((a,b)=>{
-      const ai = SIZE_ORDER.indexOf(a);
-      const bi = SIZE_ORDER.indexOf(b);
-      return (ai===-1?999:ai)-(bi===-1?999:bi);
-    });
-
-    if (!sizes.includes(selectedSize)) {
-      selectedSize = sizes[0];
+    function findVariant() {
+      return parsed.find(v =>
+        (selectedColor ? v.color === selectedColor : true) &&
+        (selectedSize ? v.size === selectedSize : true)
+      );
     }
 
-    sizeContainer.innerHTML = sizes.map(size => `
-      <button class="product-chip ${size===selectedSize?'active':''}" data-size="${size}">
-        ${size}
-      </button>
-    `).join("");
+    function updateVariant() {
+      const v = findVariant();
+      if (!v) return;
 
-    sizeContainer.querySelectorAll("button").forEach(btn=>{
-      btn.onclick = () => {
-        selectedSize = btn.dataset.size;
+      priceEl.textContent = "$" + (v.price / 100).toFixed(2);
+      document.body.dataset.variantId = v.id;
+    }
 
-        sizeContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
+    // 🔥 IMAGE FILTERING
+    function getImagesForColor() {
+      if (!product.images?.length) return [];
 
-        updateVariant();
-      };
-    });
+      if (!colors.length) return product.images;
+
+      const filtered = product.images.filter(img =>
+        img.src.toLowerCase().includes(selectedColor?.toLowerCase())
+      );
+
+      return filtered.length ? filtered : product.images;
+    }
+
+    function renderImages() {
+      const images = getImagesForColor();
+      if (!images.length) return;
+
+      mainImage.src = images[0].src;
+
+      thumbContainer.innerHTML = images.map((img, i) => `
+        <button class="product-thumb ${i === 0 ? 'active' : ''}">
+          <img src="${img.src}">
+        </button>
+      `).join("");
+
+      thumbContainer.querySelectorAll(".product-thumb").forEach(btn => {
+        btn.addEventListener("click", () => {
+          thumbContainer.querySelectorAll(".product-thumb").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          const img = btn.querySelector("img");
+          if (img) mainImage.src = img.src;
+        });
+      });
+    }
+
+    function renderSizes() {
+      const sizes = getSizes(selectedColor);
+
+      if (!sizes.length) {
+        sizeContainer.parentElement.style.display = "none";
+        return;
+      }
+
+      sizeContainer.parentElement.style.display = "flex";
+
+      const SIZE_ORDER = ["XS","S","M","L","XL","2XL","3XL","4XL"];
+
+      sizes.sort((a,b)=>{
+        const ai = SIZE_ORDER.indexOf(a);
+        const bi = SIZE_ORDER.indexOf(b);
+        return (ai===-1?999:ai)-(bi===-1?999:bi);
+      });
+
+      if (!selectedSize || !sizes.includes(selectedSize)) {
+        selectedSize = sizes[0];
+      }
+
+      sizeContainer.innerHTML = sizes.map(size => `
+        <button class="product-chip ${size===selectedSize?'active':''}" data-size="${size}">
+          ${size}
+        </button>
+      `).join("");
+
+      sizeContainer.querySelectorAll("button").forEach(btn=>{
+        btn.onclick = () => {
+          selectedSize = btn.dataset.size;
+
+          sizeContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+          btn.classList.add("active");
+
+          updateVariant();
+        };
+      });
+    }
+
+    function renderColors() {
+      if (!colors.length) {
+        colorContainer.parentElement.style.display = "none";
+        return;
+      }
+
+      colorContainer.innerHTML = colors.map(color => `
+        <button class="product-chip ${color===selectedColor?'active':''}" data-color="${color}">
+          ${color}
+        </button>
+      `).join("");
+
+      colorContainer.querySelectorAll("button").forEach(btn=>{
+        btn.onclick = () => {
+          selectedColor = btn.dataset.color;
+          selectedSize = null;
+
+          renderSizes();
+          renderImages();
+          updateVariant();
+
+          colorContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+          btn.classList.add("active");
+        };
+      });
+    }
+
+    renderColors();
+    renderSizes();
+    renderImages();
+    updateVariant();
+
+  } catch (err) {
+    console.error("PRODUCT LOAD ERROR:", err);
   }
-
-  function renderColors() {
-    colorContainer.innerHTML = colors.map(color => `
-      <button class="product-chip ${color===selectedColor?'active':''}" data-color="${color}">
-        ${color}
-      </button>
-    `).join("");
-
-    colorContainer.querySelectorAll("button").forEach(btn=>{
-      btn.onclick = () => {
-        selectedColor = btn.dataset.color;
-        selectedSize = null;
-
-        renderSizes();
-        updateVariant();
-
-        colorContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
-      };
-    });
-  }
-
-  // image
-  const img = document.getElementById("mainProductImage");
-  if (product.images?.length) {
-    img.src = product.images[0].src;
-  }
-
-  renderColors();
-  renderSizes();
-  updateVariant();
-
-  document.querySelector(".product-page").classList.add("loaded");
-
 });
 </script>
 
