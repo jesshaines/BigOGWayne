@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Product</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Big OG Wayne — Product Template</title>
 
 <link rel="stylesheet" href="/assets/css/site.css">
 
 <style>
-.product-page{opacity:0;transition:.2s;}
+.product-page{opacity:0;transition:opacity .2s ease;}
 .product-page.loaded{opacity:1;}
 </style>
 </head>
@@ -21,20 +21,21 @@
     <h1 class="product-title"></h1>
     <div class="product-price"></div>
 
-    <div class="product-option-group">
-      <div>Color</div>
-      <div id="colorOptions"></div>
-    </div>
+    <div class="product-meta-row">
 
-    <div class="product-option-group">
-      <div>Size</div>
-      <div id="sizeOptions"></div>
+      <div class="product-option-group">
+        <div class="product-option-label">Color</div>
+        <div class="product-option-values" id="colorOptions"></div>
+      </div>
+
+      <div class="product-option-group">
+        <div class="product-option-label">Size</div>
+        <div class="product-option-values" id="sizeOptions"></div>
+      </div>
+
     </div>
 
     <img id="mainProductImage" style="width:300px">
-
-    <!-- IMPORTANT: thumbnail container -->
-    <div class="product-thumbs"></div>
 
   </div>
 </section>
@@ -42,185 +43,150 @@
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
 
-  try {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
 
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+  const res = await fetch("/products");
+  const data = await res.json();
+  const products = data.data || data;
 
-    const res = await fetch("/products");
-    const json = await res.json();
-    const products = json.data || json;
+  const product = products.find(p => String(p.id) === String(id));
+  if (!product) return;
 
-    const product = products.find(p => String(p.id) === String(id));
-    if (!product) {
-      console.error("Product not found");
+  const titleEl = document.querySelector(".product-title");
+  const priceEl = document.querySelector(".product-price");
+  const colorContainer = document.getElementById("colorOptions");
+  const sizeContainer = document.getElementById("sizeOptions");
+  const img = document.getElementById("mainProductImage");
+
+  titleEl.textContent = product.title;
+
+  const parsed = product.variants
+    .filter(v => v.is_enabled)
+    .map(v => {
+      const parts = v.title.split(" / ");
+      return {
+        id: v.id,
+        price: v.price,
+        color: parts[0] || null,
+        size: parts[1] || null
+      };
+    });
+
+  const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
+  let selectedColor = colors[0];
+
+  function getSizes(color) {
+    return [...new Set(parsed.filter(v => v.color === color).map(v => v.size).filter(Boolean))];
+  }
+
+  let selectedSize = getSizes(selectedColor)[0];
+
+  function findVariant() {
+    return parsed.find(v =>
+      v.color === selectedColor &&
+      (v.size ? v.size === selectedSize : true)
+    );
+  }
+
+  function updateVariant() {
+    const v = findVariant();
+    if (!v) return;
+
+    priceEl.textContent = "$" + (v.price / 100).toFixed(2);
+    document.body.dataset.variantId = v.id;
+  }
+
+  // 🔥 IMAGE SWITCHING LOGIC
+  function updateImage() {
+    if (!product.images?.length) return;
+
+    // try to find image that matches color name
+    const match = product.images.find(img =>
+      img.src.toLowerCase().includes(selectedColor.toLowerCase())
+    );
+
+    if (match) {
+      img.src = match.src;
+    } else {
+      // fallback
+      img.src = product.images[0].src;
+    }
+  }
+
+  function renderSizes() {
+    const sizes = getSizes(selectedColor);
+
+    if (!sizes.length) {
+      sizeContainer.parentElement.style.display = "none";
       return;
     }
 
-    const titleEl = document.querySelector(".product-title");
-    const priceEl = document.querySelector(".product-price");
-    const colorContainer = document.getElementById("colorOptions");
-    const sizeContainer = document.getElementById("sizeOptions");
-    const mainImage = document.getElementById("mainProductImage");
-    const thumbContainer = document.querySelector(".product-thumbs");
+    sizeContainer.parentElement.style.display = "block";
 
-    titleEl.textContent = product.title;
+    const SIZE_ORDER = ["XS","S","M","L","XL","2XL","3XL","4XL"];
 
-    const parsed = product.variants
-      .filter(v => v.is_enabled)
-      .map(v => {
-        const parts = v.title.split(" / ");
-        return {
-          id: v.id,
-          price: v.price,
-          color: parts[0] || null,
-          size: parts[1] || null
-        };
-      });
+    sizes.sort((a,b)=>{
+      const ai = SIZE_ORDER.indexOf(a);
+      const bi = SIZE_ORDER.indexOf(b);
+      return (ai===-1?999:ai)-(bi===-1?999:bi);
+    });
 
-    const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
-
-    let selectedColor = colors[0] || null;
-    let selectedSize = null;
-
-    function getSizes(color) {
-      return [...new Set(
-        parsed
-          .filter(v => !color || v.color === color)
-          .map(v => v.size)
-          .filter(Boolean)
-      )];
+    if (!sizes.includes(selectedSize)) {
+      selectedSize = sizes[0];
     }
 
-    function findVariant() {
-      return parsed.find(v =>
-        (selectedColor ? v.color === selectedColor : true) &&
-        (selectedSize ? v.size === selectedSize : true)
-      );
-    }
+    sizeContainer.innerHTML = sizes.map(size => `
+      <button class="product-chip ${size===selectedSize?'active':''}" data-size="${size}">
+        ${size}
+      </button>
+    `).join("");
 
-    function updateVariant() {
-      const v = findVariant();
-      if (!v) return;
+    sizeContainer.querySelectorAll("button").forEach(btn=>{
+      btn.onclick = () => {
+        selectedSize = btn.dataset.size;
 
-      priceEl.textContent = "$" + (v.price / 100).toFixed(2);
-    }
+        sizeContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
 
-    // 🔥 IMAGE FILTERING
-    function getImages() {
-      if (!product.images) return [];
-
-      if (!colors.length) return product.images;
-
-      const filtered = product.images.filter(img =>
-        img.src.toLowerCase().includes(selectedColor?.toLowerCase())
-      );
-
-      return filtered.length ? filtered : product.images;
-    }
-
-    function renderImages() {
-      if (!thumbContainer || !mainImage) return;
-
-      const imgs = getImages();
-      if (!imgs.length) return;
-
-      mainImage.src = imgs[0].src;
-
-      thumbContainer.innerHTML = imgs.map((img, i) => `
-        <button class="${i===0?'active':''}">
-          <img src="${img.src}" width="50">
-        </button>
-      `).join("");
-
-      thumbContainer.querySelectorAll("button").forEach(btn=>{
-        btn.onclick = ()=>{
-          thumbContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
-          btn.classList.add("active");
-
-          const img = btn.querySelector("img");
-          if (img) mainImage.src = img.src;
-        };
-      });
-    }
-
-    function renderSizes() {
-      const sizes = getSizes(selectedColor);
-
-      if (!sizes.length) {
-        sizeContainer.parentElement.style.display = "none";
-        return;
-      }
-
-      sizeContainer.parentElement.style.display = "block";
-
-      const SIZE_ORDER = ["XS","S","M","L","XL","2XL","3XL","4XL"];
-
-      sizes.sort((a,b)=>{
-        const ai = SIZE_ORDER.indexOf(a);
-        const bi = SIZE_ORDER.indexOf(b);
-        return (ai===-1?999:ai)-(bi===-1?999:bi);
-      });
-
-      if (!selectedSize || !sizes.includes(selectedSize)) {
-        selectedSize = sizes[0];
-      }
-
-      sizeContainer.innerHTML = sizes.map(size => `
-        <button class="${size===selectedSize?'active':''}" data-size="${size}">
-          ${size}
-        </button>
-      `).join("");
-
-      sizeContainer.querySelectorAll("button").forEach(btn=>{
-        btn.onclick = ()=>{
-          selectedSize = btn.dataset.size;
-
-          sizeContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
-          btn.classList.add("active");
-
-          updateVariant();
-        };
-      });
-    }
-
-    function renderColors() {
-      if (!colors.length) {
-        colorContainer.parentElement.style.display = "none";
-        return;
-      }
-
-      colorContainer.innerHTML = colors.map(color => `
-        <button class="${color===selectedColor?'active':''}" data-color="${color}">
-          ${color}
-        </button>
-      `).join("");
-
-      colorContainer.querySelectorAll("button").forEach(btn=>{
-        btn.onclick = ()=>{
-          selectedColor = btn.dataset.color;
-          selectedSize = null;
-
-          renderSizes();
-          renderImages();
-          updateVariant();
-
-          colorContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
-          btn.classList.add("active");
-        };
-      });
-    }
-
-    renderColors();
-    renderSizes();
-    renderImages();
-    updateVariant();
-
-    document.querySelector(".product-page").classList.add("loaded");
-
-  } catch (err) {
-    console.error("CRASH:", err);
+        updateVariant();
+      };
+    });
   }
+
+  function renderColors() {
+    colorContainer.innerHTML = colors.map(color => `
+      <button class="product-chip ${color===selectedColor?'active':''}" data-color="${color}">
+        ${color}
+      </button>
+    `).join("");
+
+    colorContainer.querySelectorAll("button").forEach(btn=>{
+      btn.onclick = () => {
+        selectedColor = btn.dataset.color;
+        selectedSize = null;
+
+        renderSizes();
+        updateVariant();
+        updateImage(); // 🔥 NEW
+
+        colorContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+      };
+    });
+  }
+
+  // initial image
+  if (product.images?.length) {
+    img.src = product.images[0].src;
+  }
+
+  renderColors();
+  renderSizes();
+  updateVariant();
+  updateImage(); // 🔥 ensure correct on load
+
+  document.querySelector(".product-page").classList.add("loaded");
 
 });
 </script>
