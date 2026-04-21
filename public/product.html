@@ -426,9 +426,13 @@
 
 <section class="product-page">
   <div class="product-page-inner">
-    <nav class="product-breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Home</a><span>/</span><a href="/collections/stinky-pinky">Stinky Pinky</a><span>/</span><span>Stinky Pinky Hoodie</span>
-    </nav>
+   <nav class="product-breadcrumbs" id="breadcrumbs" aria-label="Breadcrumb">
+  <a href="/">Home</a>
+  <span>/</span>
+  <a id="breadcrumbCollection" href="#">Collection</a>
+  <span>/</span>
+  <span id="breadcrumbProduct">Product</span>
+</nav>
 
     <div class="product-layout">
       <div class="product-gallery">
@@ -703,6 +707,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else if (sizeGroup) {
       sizeGroup.style.display = "none";
     }
+
+    const collection = product.tags?.[0] || "Collection";
+
+// Format collection nicely
+const formattedCollection = collection
+  .replace(/-/g, " ")
+  .replace(/\b\w/g, l => l.toUpperCase());
+
+// Update breadcrumb text
+const collectionEl = document.getElementById("breadcrumbCollection");
+const productEl = document.getElementById("breadcrumbProduct");
+
+if (collectionEl) {
+  collectionEl.textContent = formattedCollection;
+  collectionEl.href = `/shop#${collection}`;
+}
+
+
+if (productEl) {
+  productEl.textContent = product.title;
+}
 
     // 🔥 DATASET (CRITICAL FOR CART)
     const firstVariant = findVariant();
