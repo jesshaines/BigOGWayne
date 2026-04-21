@@ -554,9 +554,58 @@
     </div-->
   </div>
 </section>
-
-
 <script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+
+  console.log("URL product id:", id);
+
+  if (!id) {
+    document.body.innerHTML = "<h1>No product ID provided</h1>";
+    return;
+  }
+
+  try {
+    const res = await fetch("/products");
+    const json = await res.json();
+    const products = json.data || json;
+
+    const product = products.find(p => String(p.id) === String(id));
+
+    console.log("Matched product:", product);
+
+    if (!product) {
+      document.body.innerHTML = "<h1>Product not found</h1>";
+      return;
+    }
+
+    const variant = product.variants[0];
+
+    // 🔥 Update UI
+    document.querySelector(".product-title").textContent = product.title;
+    document.querySelector(".product-price").textContent =
+      "$" + (variant.price / 100).toFixed(2);
+
+    const mainImage = document.getElementById("mainProductImage");
+    if (mainImage && product.images?.length) {
+      mainImage.src = product.images[0].src;
+    }
+
+    // 🔥 THIS FIXES CART + CHECKOUT
+    document.body.dataset.productId = product.id;
+    document.body.dataset.variantId = variant.id;
+    document.body.dataset.productName = product.title;
+    document.body.dataset.productPrice = variant.price / 100;
+
+  } catch (err) {
+    console.error(err);
+    document.body.innerHTML = "<h1>Error loading product</h1>";
+  }
+});
+</script>
+
+<!-- <script>
 const thumbs = document.querySelectorAll('.product-thumb');
 const mainImage = document.getElementById('mainProductImage');
 thumbs.forEach(btn => {
@@ -587,7 +636,7 @@ document.querySelectorAll('.product-option-values').forEach(group => {
     });
   });
 });
-</script>
+</script> -->
 
 
 <!-- RELATED PRODUCTS/MORE FROM COLLECTION -->
