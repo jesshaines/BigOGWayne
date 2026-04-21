@@ -154,7 +154,7 @@
 
 
 <header class="checkout-header">
-  <img src="public/assets/images/logo/bow_logo.png" alt="Big OG Wayne">
+  <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne">
 </header>
   <div class="checkout-brand-tagline">
   LILLIWAUP'S FINEST
@@ -289,56 +289,25 @@ document.addEventListener("DOMContentLoaded", () => {
 <script>
 const continueBtn = document.getElementById('continueBtn');
 
-continueBtn.addEventListener('click', () => {
-  const email = document.getElementById('email').value.trim();
-  const name = document.getElementById('name').value.trim();
-  const address = document.getElementById('address').value.trim();
+if (continueBtn) {
+  continueBtn.addEventListener('click', () => {
+    const email = document.getElementById('email').value.trim();
+    const name = document.getElementById('name').value.trim();
+    const address = document.getElementById('address').value.trim();
 
-  if (!email || !name || !address) {
-    alert("Fill out all fields.");
-    return;
-  }
+    if (!email || !name || !address) {
+      alert("Fill out all fields.");
+      return;
+    }
 
-  // Save for later (Stripe step)
-  localStorage.setItem('checkout_customer', JSON.stringify({
-    email, name, address
-  }));
+    localStorage.setItem('checkout_customer', JSON.stringify({
+      email, name, address
+    }));
 
-  // Transition steps
-  document.getElementById('checkoutStep1').style.display = 'none';
-  document.getElementById('checkoutStep2').style.display = 'block';
-});
-</script>
-
-
-
-<script>
-document.getElementById('checkoutBtn').addEventListener('click', () => {
-
-  const email = document.getElementById('email')?.value.trim();
-  const name = document.getElementById('name')?.value.trim();
-  const address = document.getElementById('address')?.value.trim();
-
-  if (!email || !name || !address) {
-    alert("Please complete your info first.");
-    return;
-  }
-
-  // Save customer info
-  localStorage.setItem('checkout_customer', JSON.stringify({
-    email, name, address
-  }));
-
-  const cart = getLootBag();
-
-  if (!cart.length) {
-    alert("Your bag is empty.");
-    return;
-  }
-
-  // 🔥 TEMP: redirect to Stripe Payment Link
- // window.location.href = "https://buy.stripe.com/test_28EeVc4dj6ls08a7t89IQ00"; // ← paste your link
-});
+    document.getElementById('checkoutStep1')?.style.display = 'none';
+    document.getElementById('checkoutStep2')?.style.display = 'block';
+  });
+}
 </script>
 
 <script>
@@ -351,7 +320,7 @@ async function goToCheckout() {
   }
 
   try {
-    const res = await fetch('http://localhost:4242/create-checkout', {
+    const res = await fetch('/create-checkout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
