@@ -291,7 +291,7 @@ const continueBtn = document.getElementById('continueBtn');
 
 if (continueBtn) {
   continueBtn.addEventListener('click', () => {
-    // your code
+  
   });
 }
 </script>
@@ -316,7 +316,7 @@ async function goToCheckout() {
 
     const data = await res.json();
 
-    console.log("SERVER RESPONSE:", data); // 👈 debug
+    console.log("SERVER RESPONSE:", data); // debug line
 
     if (!data.url) {
       alert("Checkout failed. No URL returned.");
@@ -331,28 +331,52 @@ async function goToCheckout() {
   }
 }
 </script>
+<script>
+async function loadProduct() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+
+  if (!id) {
+    document.body.innerHTML = "<h1>No product specified</h1>";
+    return;
+  }
+
+  try {
+    const res = await fetch("/products");
+    const json = await res.json();
+    const products = json.data || json;
+
+    const product = products.find(p => String(p.id) === String(id));
+
+    if (!product) {
+      document.body.innerHTML = "<h1>Product not found</h1>";
+      return;
+    }
+
+    const variant = product.variants[0];
+
+    document.querySelector(".product-title").textContent = product.title;
+    document.querySelector(".product-price").textContent =
+      "$" + (variant.price / 100).toFixed(2);
+
+    const mainImage = document.getElementById("mainProductImage");
+    if (mainImage && product.images?.length) {
+      mainImage.src = product.images[0].src;
+    }
+
+    // Dataset for cart system
+    document.body.dataset.productId = product.id;
+    document.body.dataset.variantId = variant.id;
+    document.body.dataset.productName = product.title;
+    document.body.dataset.productPrice = variant.price / 100;
+
+  } catch (err) {
+    console.error(err);
+    document.body.innerHTML = "<h1>Error loading product</h1>";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadProduct);
+</script>
 </body>
 </html>
-
-
-
-<!--
-<div class="checkout-container">
-  <div class="order-summary">
-    <h2>Your Order</h2>
-    <p>Big OG Wayne Tee</p>
-    <p>Total: $35.00</p>
-  </div>
-
-  <form id="payment-form">
-    <input type="text" placeholder="Full Name" required />
-    <input type="email" placeholder="Email" required />
-    <input type="text" placeholder="Shipping Address" required />
-
-    <div id="card-element"></div>
-
-    <button id="submit">Complete Order</button>
-  </form>
-
-  <p id="payment-message"></p>
-</div>-->
