@@ -455,19 +455,18 @@
         
         <div class="product-description">
 ****        </div>
-        <img id="mainProductImage" src="">
 
         <div class="product-meta-row">
           <div class="product-option-group">
             <div class="product-option-label">Color</div>
-            <div class="product-option-values">
+            <div class="product-option-values" id="colorOptions"></div>
               <button class="product-chip active" type="button">Black</button>
               <button class="product-chip" type="button">Red</button>
             </div>
           </div>
           <div class="product-option-group">
             <div class="product-option-label">Size</div>
-            <div class="product-option-values">
+            <div class="product-option-values" id="sizeOptions"></div>
               <button class="product-chip" type="button">S</button>
               <button class="product-chip active" type="button">M</button>
               <button class="product-chip" type="button">L</button>
@@ -668,8 +667,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       g.textContent.toLowerCase().includes("size")
     );
 
-    const colorContainer = colorGroup?.querySelector(".product-option-values");
-    const sizeContainer = sizeGroup?.querySelector(".product-option-values");
+    const colorContainer = document.getElementById("colorOptions");
+const sizeContainer = document.getElementById("sizeOptions");
 
     // COLORS
     if (colorContainer && colors.length > 1 && colors[0] !== "Default") {
@@ -784,7 +783,8 @@ if (productEl) {
     document.body.dataset.variantId = firstVariant.id;
     document.body.dataset.productName = product.title;
     document.body.dataset.productPrice = firstVariant.price / 100;
-
+    
+    renderSizes();
     updateVariant();
 
   } catch (err) {
