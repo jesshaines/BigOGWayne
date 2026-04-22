@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Big OG Wayne — Product Template</title>
+<title>Big OG Wayne — Product</title>
 
 <link rel="stylesheet" href="/assets/css/site.css">
 
@@ -15,6 +15,14 @@
 
 <body>
 
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="header-logo">
+      <img src="/assets/images/logo/bow_logo.png">
+    </a>
+  </div>
+</header>
+
 <section class="product-page">
   <div class="product-page-inner">
 
@@ -23,11 +31,13 @@
 
     <div class="product-meta-row">
 
+      <!-- COLOR -->
       <div class="product-option-group">
         <div class="product-option-label">Color</div>
         <div class="product-option-values" id="colorOptions"></div>
       </div>
 
+      <!-- SIZE -->
       <div class="product-option-group">
         <div class="product-option-label">Size</div>
         <div class="product-option-values" id="sizeOptions"></div>
@@ -57,7 +67,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const priceEl = document.querySelector(".product-price");
   const colorContainer = document.getElementById("colorOptions");
   const sizeContainer = document.getElementById("sizeOptions");
-  const img = document.getElementById("mainProductImage");
 
   titleEl.textContent = product.title;
 
@@ -94,24 +103,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!v) return;
 
     priceEl.textContent = "$" + (v.price / 100).toFixed(2);
+
     document.body.dataset.variantId = v.id;
-  }
-
-  // 🔥 IMAGE SWITCHING LOGIC
-  function updateImage() {
-    if (!product.images?.length) return;
-
-    // try to find image that matches color name
-    const match = product.images.find(img =>
-      img.src.toLowerCase().includes(selectedColor.toLowerCase())
-    );
-
-    if (match) {
-      img.src = match.src;
-    } else {
-      // fallback
-      img.src = product.images[0].src;
-    }
   }
 
   function renderSizes() {
@@ -168,7 +161,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         renderSizes();
         updateVariant();
-        updateImage(); // 🔥 NEW
 
         colorContainer.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
         btn.classList.add("active");
@@ -176,7 +168,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // initial image
+  // image
+  const img = document.getElementById("mainProductImage");
   if (product.images?.length) {
     img.src = product.images[0].src;
   }
@@ -184,7 +177,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderColors();
   renderSizes();
   updateVariant();
-  updateImage(); // 🔥 ensure correct on load
 
   document.querySelector(".product-page").classList.add("loaded");
 
