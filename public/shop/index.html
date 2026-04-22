@@ -127,6 +127,52 @@
       <img src="/assets/images/logo/bow_logo.png">
     </a>
   </div>
+  <!-- Desktop navigation -->
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/shop"        class="nav-link">Shop</a>
+      <a href="/collections" class="nav-link">Collections</a>
+      <a href="#social"      class="nav-link">Connect</a>
+      <a href="/about"       class="nav-link">About</a>
+    </nav>
+
+    <!-- Right-side actions -->
+    <div class="header-actions">
+      <a href="/order-lookup" class="header-action orders-link">Orders</a>
+      <button class="cart-btn" aria-label="Open cart">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.75"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+          <line x1="3" x2="21" y1="6" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span class="cart-dot" aria-live="polite">0</span>
+      </button>
+      <button class="hamburger-btn" id="hamburgerBtn"
+              aria-label="Toggle menu" aria-expanded="false"
+              aria-controls="mobileNavDrawer">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<!-- Mobile navigation drawer -->
+<nav class="mobile-nav-drawer" id="mobileNavDrawer"
+     aria-label="Mobile navigation" aria-hidden="true">
+  <a href="/shop"        class="mobile-nav-link">Shop</a>
+  <a href="/collections" class="mobile-nav-link">Collections</a>
+  <a href="#social"      class="mobile-nav-link">Connect</a>
+  <a href="/about"       class="mobile-nav-link">About</a>
+  <div class="mobile-nav-actions">
+    <a href="/order-lookup" class="btn-secondary">Track Orders</a>
+  </div>
+</nav>
+
+<!-- Spacer prevents body content from hiding under fixed header -->
+<div style="height:var(--header-h);background:var(--obsidian);display:flex;align-items:center;justify-content:center;color:var(--fog);font-family:var(--font-body);font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;">Page content begins here</div>
+
 </header>
 
 <section class="shop-page">
