@@ -170,7 +170,6 @@
   display:flex;
   flex-direction:column;
   gap:.65rem;
-  
 }
 
 .product-option-label{
@@ -705,7 +704,7 @@ function renderSizes() {
     return;
   }
 
-sizeGroup.style.display = availableSizes.length ? "flex" : "none";
+  sizeGroup.style.display = "flex";
 
   // 🔥 Sort sizes
   const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
