@@ -590,11 +590,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (titleEl) titleEl.textContent = product.title;
 
     // 🔥 VARIANTS
-    const parsed = product.variants
-  .filter(v => v.is_enabled) // ONLY enabled variants
-  .filter(v => v.title !== "Default")
-  .map(v => {
-    const parsed = product.variants
+  const parsed = product.variants
   .filter(v => v.is_enabled)
   .filter(v => v.title !== "Default")
   .map(v => {
@@ -617,7 +613,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       color,
       size
     };
-  });
   });
 
     const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
@@ -646,28 +641,53 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // 🔥 IMAGES (SAFE)
-    const mainImage = document.getElementById("mainProductImage");
-    const thumbContainer = document.querySelector(".product-thumbs");
+ const mainImage = document.getElementById("mainProductImage");
+const thumbContainer = document.querySelector(".product-thumbs");
 
-    if (product.images?.length && mainImage && thumbContainer) {
-      mainImage.src = product.images[0].src;
+// 🔥 Get images tied to selected variant
+function getImagesForSelection() {
+  if (!product.images?.length) return [];
 
-      thumbContainer.innerHTML = product.images.map((img, i) => `
-        <button class="product-thumb ${i === 0 ? 'active' : ''}">
-          <img src="${img.src}" alt="${product.title}">
-        </button>
-      `).join("");
+  const matchingVariants = parsed.filter(v =>
+    (selectedColor ? v.color === selectedColor : true) &&
+    (selectedSize ? v.size === selectedSize : true)
+  );
 
-      thumbContainer.querySelectorAll(".product-thumb").forEach(btn => {
-        btn.addEventListener("click", () => {
-          thumbContainer.querySelectorAll(".product-thumb").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
+  const variantIds = matchingVariants.map(v => v.id);
 
-          const img = btn.querySelector("img");
-          if (img) mainImage.src = img.src;
-        });
-      });
-    }
+  // 🔥 match images that belong to those variants
+  const filtered = product.images.filter(img =>
+    img.variant_ids?.some(id => variantIds.includes(id))
+  );
+
+  return filtered.length ? filtered : product.images;
+}
+
+// 🔥 render images
+function renderImages() {
+  if (!mainImage || !thumbContainer) return;
+
+  const images = getImagesForSelection();
+  if (!images.length) return;
+
+  mainImage.src = images[0].src;
+
+  thumbContainer.innerHTML = images.map((img, i) => `
+    <button class="product-thumb ${i === 0 ? 'active' : ''}">
+      <img src="${img.src}" alt="${product.title}">
+    </button>
+  `).join("");
+
+  thumbContainer.querySelectorAll(".product-thumb").forEach(btn => {
+    btn.addEventListener("click", () => {
+      thumbContainer.querySelectorAll(".product-thumb").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const img = btn.querySelector("img");
+      if (img) mainImage.src = img.src;
+    });
+  });
+}
 
     // 🔥 OPTIONS (SAFE TARGETING)
    const colorGroup = document.getElementById("colorGroup");
@@ -692,7 +712,7 @@ if (colorContainer && colors.length) {
 
       colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-
+      renderImages(); 
       renderSizes();
       updateVariant();
     });
@@ -789,7 +809,7 @@ if (productEl) {
     document.body.dataset.variantId = firstVariant.id;
     document.body.dataset.productName = product.title;
     document.body.dataset.productPrice = firstVariant.price / 100;
-    
+    renderImages();
     renderSizes();
     updateVariant();
 
