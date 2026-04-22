@@ -191,10 +191,12 @@
   color:var(--chrome);
   font-family:var(--font-display);
   font-weight:900;
-  font-size:.65rem;
-  letter-spacing:.12em;
+  font-size:.6rem;            /* smaller text */
+  letter-spacing:.1em;
   text-transform:uppercase;
-  padding:.7rem .9rem;
+  padding:.45rem .6rem;       /* 🔥 smaller buttons */
+  min-width:42px;             /* keeps consistency */
+  text-align:center;
   transition:border-color .15s ease,color .15s ease,background .15s ease;
 }
 
@@ -460,18 +462,14 @@
           <div class="product-option-group">
             <div class="product-option-label">Color</div>
             <div class="product-option-values" id="colorOptions"></div>
-              <button class="product-chip active" type="button">Black</button>
-              <button class="product-chip" type="button">Red</button>
+              
+            
             </div>
           </div>
           <div class="product-option-group">
             <div class="product-option-label">Size</div>
             <div class="product-option-values" id="sizeOptions"></div>
-              <button class="product-chip" type="button">S</button>
-              <button class="product-chip active" type="button">M</button>
-              <button class="product-chip" type="button">L</button>
-              <button class="product-chip" type="button">XL</button>
-              <button class="product-chip" type="button">2XL</button>
+             
             </div>
           </div>
         </div>
@@ -748,10 +746,9 @@ function renderSizes() {
       selectedSize = btn.dataset.size;
 
       // update UI
-      sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
+       sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
 
-      renderSizes();
       updateVariant();
     });
   });
