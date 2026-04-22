@@ -82,11 +82,14 @@
 }
 
 .product-main-image{
+  width: 100%;
+  height: 100%;
   position:relative;
   background:var(--carbon);
   border:1px solid var(--iron);
   aspect-ratio:4/5;
-  overflow:hidden;
+  /*overflow:hidden;*/
+  object-fit: contain; 
 }
 
 .product-main-image img{
@@ -670,8 +673,13 @@ function renderImages() {
   const images = getImagesForSelection();
   if (!images.length) return;
 
-  mainImage.src = images[0].src;
+const first = images[0].src;
+mainImage.src = first;
 
+const isSizeChart = first.includes("size-chart");
+
+mainImage.style.objectFit = isSizeChart ? "contain" : "cover";
+mainImage.style.background = isSizeChart ? "#111" : "transparent";
   thumbContainer.innerHTML = images.map((img, i) => `
     <button class="product-thumb ${i === 0 ? 'active' : ''}">
       <img src="${img.src}" alt="${product.title}">
@@ -684,8 +692,19 @@ function renderImages() {
       btn.classList.add("active");
 
       const img = btn.querySelector("img");
-      if (img) mainImage.src = img.src;
-    });
+if (img) {
+  mainImage.src = img.src;
+
+  const isSizeChart = img.src.includes("size-chart");
+
+  if (isSizeChart) {
+    mainImage.style.objectFit = "contain";
+    mainImage.style.background = "#111";
+  } else {
+    mainImage.style.objectFit = "cover";
+    mainImage.style.background = "transparent";
+  }
+}    });
   });
 }
 
