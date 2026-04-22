@@ -169,8 +169,10 @@
 .product-option-group{
   display:flex;
   flex-direction:column;
-  gap:.65rem;
+  gap:.4rem;
+
 }
+
 
 .product-option-label{
   font-size:.68rem;
@@ -592,43 +594,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (titleEl) titleEl.textContent = product.title;
 
     // 🔥 VARIANTS
-    const parsed = product.variants
-  .filter(v => v.is_enabled) // ONLY enabled variants
+   const parsed = product.variants
+  .filter(v => v.is_enabled)
   .filter(v => v.title !== "Default")
   .map(v => {
-    const parts = v.title.split(" / ");
+    const parts = v.title.split(" / ").map(p => p.trim());
+
+    let color = null;
+    let size = null;
+
+    parts.forEach(part => {
+      // detect size
+      if (["XS","S","M","L","XL","2XL","3XL","4XL","5XL"].includes(part)) {
+        size = part;
+      } else {
+        color = part;
+      }
+    });
+
     return {
       id: v.id,
       price: v.price,
-      color: parts[0] || null,
-      size: parts[1] || null
+      color,
+      size
     };
   });
-
-    const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
-    const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
-
-    let selectedColor = colors[0] || null;
-    let selectedSize = sizes[0] || null;
-
-    function findVariant() {
-      return parsed.find(v =>
-        (selectedColor ? v.color === selectedColor : true) &&
-        (selectedSize ? v.size === selectedSize : true)
-      );
-    }
-
-    function updateVariant() {
-      const variant = findVariant();
-      if (!variant) return;
-
-      if (priceEl) {
-        priceEl.textContent = "$" + (variant.price / 100).toFixed(2);
-      }
-
-      document.body.dataset.variantId = variant.id;
-      document.body.dataset.productPrice = variant.price / 100;
-    }
 
     // 🔥 IMAGES (SAFE)
     const mainImage = document.getElementById("mainProductImage");
@@ -669,28 +659,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 const sizeContainer = document.getElementById("sizeOptions");
 
     // COLORS
-    if (colorContainer && colors.length > 1 && colors[0] !== "Default") {
-      colorContainer.innerHTML = colors.map(color => `
-        <button class="product-chip ${color === selectedColor ? 'active' : ''}" data-color="${color}">
-          ${color}
-        </button>
-      `).join("");
+    if (colorContainer && colors.length > 0) {
+  colorGroup.style.display = "flex";
 
-     colorContainer.querySelectorAll("button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedColor = btn.dataset.color;
+  colorContainer.innerHTML = colors.map(color => `
+    <button class="product-chip ${color === selectedColor ? 'active' : ''}" data-color="${color}">
+      ${color}
+    </button>
+  `).join("");
 
-    colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+  colorContainer.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedColor = btn.dataset.color;
 
-    renderSizes();
-    updateVariant();
-    
+      colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      renderSizes();
+      updateVariant();
+    });
   });
-});
-    } else if (colorGroup) {
-      colorGroup.style.display = "none";
-    }
+
+} else if (colorGroup) {
+  colorGroup.style.display = "none"; // 🔥 hides label + options
+}
 
     // SIZES
     function getAvailableSizes(color) {
@@ -714,7 +706,7 @@ function renderSizes() {
     return;
   }
 
-  sizeGroup.style.display = "flex";
+sizeGroup.style.display = availableSizes.length ? "flex" : "none";
 
   // 🔥 Sort sizes
   const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
