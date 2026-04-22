@@ -459,20 +459,18 @@
 ****        </div>
 
         <div class="product-meta-row">
-          <div class="product-option-group">
-            <div class="product-option-label">Color</div>
-            <div class="product-option-values" id="colorOptions"></div>
-              
-            
-            </div>
-          </div>
-          <div class="product-option-group">
-            <div class="product-option-label">Size</div>
-            <div class="product-option-values" id="sizeOptions"></div>
-             
-            </div>
-          </div>
-        </div>
+
+  <div class="product-option-group" id="colorGroup">
+    <div class="product-option-label">Color</div>
+    <div class="product-option-values" id="colorOptions"></div>
+  </div>
+
+  <div class="product-option-group" id="sizeGroup">
+    <div class="product-option-label">Size</div>
+    <div class="product-option-values" id="sizeOptions"></div>
+  </div>
+
+</div>
 
         <div class="product-qty-row">
           <div class="product-option-label">Qty</div>
@@ -596,13 +594,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   .filter(v => v.is_enabled) // ONLY enabled variants
   .filter(v => v.title !== "Default")
   .map(v => {
-    const parts = v.title.split(" / ");
+    const parsed = product.variants
+  .filter(v => v.is_enabled)
+  .filter(v => v.title !== "Default")
+  .map(v => {
+    const parts = v.title.split(" / ").map(p => p.trim());
+
+    let color = null;
+    let size = null;
+
+    parts.forEach(part => {
+      if (["XS","S","M","L","XL","2XL","3XL","4XL","5XL"].includes(part)) {
+        size = part;
+      } else {
+        color = part;
+      }
+    });
+
     return {
       id: v.id,
       price: v.price,
-      color: parts[0] || null,
-      size: parts[1] || null
+      color,
+      size
     };
+  });
   });
 
     const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
@@ -655,42 +670,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // 🔥 OPTIONS (SAFE TARGETING)
-    const optionGroups = document.querySelectorAll(".product-option-group");
-
-    const colorGroup = [...optionGroups].find(g =>
-      g.textContent.toLowerCase().includes("color")
-    );
-
-    const sizeGroup = [...optionGroups].find(g =>
-      g.textContent.toLowerCase().includes("size")
-    );
+   const colorGroup = document.getElementById("colorGroup");
+const sizeGroup = document.getElementById("sizeGroup");
 
     const colorContainer = document.getElementById("colorOptions");
 const sizeContainer = document.getElementById("sizeOptions");
 
     // COLORS
-    if (colorContainer && colors.length > 1 && colors[0] !== "Default") {
-      colorContainer.innerHTML = colors.map(color => `
-        <button class="product-chip ${color === selectedColor ? 'active' : ''}" data-color="${color}">
-          ${color}
-        </button>
-      `).join("");
+if (colorContainer && colors.length) {
+  colorGroup.style.display = "flex";
 
-     colorContainer.querySelectorAll("button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedColor = btn.dataset.color;
+  colorContainer.innerHTML = colors.map(color => `
+    <button class="product-chip ${color === selectedColor ? 'active' : ''}" data-color="${color}">
+      ${color}
+    </button>
+  `).join("");
 
-    colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+  colorContainer.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedColor = btn.dataset.color;
 
-    renderSizes();
-    updateVariant();
-    
+      colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      renderSizes();
+      updateVariant();
+    });
   });
-});
     } else if (colorGroup) {
-      colorGroup.style.display = "none";
-    }
+  colorGroup.style.display = "none";
+}
 
     // SIZES
     function getAvailableSizes(color) {
