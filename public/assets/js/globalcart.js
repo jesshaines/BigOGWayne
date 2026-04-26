@@ -25,6 +25,7 @@ function openLootBag() {
   const drawer = document.getElementById('lootbagDrawer');
   if (!drawer) return;
   drawer.classList.add('open');
+  drawer.setAttribute("aria-hidden", "false");
   renderLootBag();
 }
 
@@ -32,6 +33,8 @@ function closeLootBag() {
   const drawer = document.getElementById('lootbagDrawer');
   if (!drawer) return;
   drawer.classList.remove('open');
+  drawer.setAttribute("aria-hidden", "true");
+document.activeElement.blur(); // 🔥 removes focus
 }
 
 function renderLootBag() {
