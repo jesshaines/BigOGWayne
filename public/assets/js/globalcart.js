@@ -126,55 +126,34 @@ function attachCartEvents() {
 
 /* 🔥 THIS is what your product page will call */
 window.addToCartFromProductPage = function () {
-  const body = document.body;
+  const productId = document.body.dataset.productId;
+  const variantId = document.body.dataset.variantId;
+  const name = document.body.dataset.productName;
+  const price = parseFloat(document.body.dataset.productPrice);
+  const quantity = parseInt(document.getElementById("qtyValue")?.textContent || "1");
 
-  const productId = body.dataset.productId;
-  const name = body.dataset.productName;
-  const price = Number(body.dataset.productPrice || 0);
+  console.log("ADDING TO CART:", { productId, variantId, name, price, quantity });
 
-  const image =
-    document.getElementById('mainProductImage')?.src ||
-    body.dataset.productImage ||
-    '';
-
-  const url = body.dataset.productUrl || '';
-  const collection = body.dataset.productCollection || '';
-
-  const color =
-  document.querySelector('.product-option-group:nth-of-type(1) .product-chip.active')?.textContent || '';
-
-const size =
-  document.querySelector('.product-option-group:nth-of-type(2) .product-chip.active')?.textContent || '';
-
-const quantity =
-  parseInt(document.getElementById('qtyValue')?.textContent || '1', 10);
-
-  const key = `${productId}__${color || 'none'}__${size || 'none'}`;
-
-  const cart = getLootBag();
-  const existing = cart.find(item => item.key === key);
-
-  if (existing) {
-    existing.quantity += quantity;
-  } else {
-    cart.push({
-      key,
-      productId,
-      name,
-      price,
-      image,
-      url,
-      collection,
-      color,
-      size,
-      quantity
-    });
+  if (!variantId) {
+    alert("Please select a variant first");
+    return;
   }
 
- saveLootBag(cart);
-setTimeout(() => {
-  openLootBag();
-}, 0);
+  const item = {
+    productId,
+    variantId,
+    name,
+    price,
+    quantity
+  };
+
+  let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+  cart.push(item);
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  console.log("UPDATED CART:", cart);
 };
 
 document.addEventListener("DOMContentLoaded", () => {
