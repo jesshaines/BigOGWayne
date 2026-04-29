@@ -163,8 +163,8 @@ window.addToCartFromProductPage = function () {
 renderLootBag();
 updateCartCount();
 openLootBag(); // optional but nice UX
-
-  console.log("UPDATED CART:", cart);
+const cart = getLootBag();
+console.log(cart);
 ;
 
 document.addEventListener("DOMContentLoaded", () => {
