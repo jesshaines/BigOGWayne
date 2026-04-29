@@ -132,8 +132,6 @@ window.addToCartFromProductPage = function () {
   const price = parseFloat(document.body.dataset.productPrice);
   const quantity = parseInt(document.getElementById("qtyValue")?.textContent || "1");
 
-  console.log("ADDING TO CART:", { productId, variantId, name, price, quantity });
-
   if (!variantId) {
     alert("Please select a variant first");
     return;
@@ -144,17 +142,30 @@ window.addToCartFromProductPage = function () {
     variantId,
     name,
     price,
-    quantity
+    quantity,
+    image: document.getElementById("mainProductImage")?.src || ""
   };
 
-  let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  let cart = getLootBag();
 
   cart.push(item);
 
-  localStorage.setItem("cart", JSON.stringify(cart));
+  saveLootBag(cart);
+
+  renderLootBag();     // 🔥 updates drawer
+  updateCartCount();   // 🔥 updates icon
+  openLootBag();       // 🔥 opens cart (optional)
+
+  console.log("UPDATED LOOTBAG:", cart);
+};
+
+// 🔥 update UI immediately
+renderLootBag();
+updateCartCount();
+openLootBag(); // optional but nice UX
 
   console.log("UPDATED CART:", cart);
-};
+;
 
 document.addEventListener("DOMContentLoaded", () => {
   updateCartCount();
