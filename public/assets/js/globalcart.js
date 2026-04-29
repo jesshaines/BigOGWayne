@@ -170,20 +170,30 @@ openLootBag(); // optional but nice UX
 document.addEventListener("DOMContentLoaded", () => {
   updateCartCount();
 
+  // 🛒 Open drawer
   document.querySelectorAll('.cart-btn').forEach(btn => {
     btn.addEventListener('click', openLootBag);
   });
 
+  // ❌ Close drawer (X + backdrop)
   document.getElementById('lootbagClose')?.addEventListener('click', closeLootBag);
   document.getElementById('lootbagBackdrop')?.addEventListener('click', closeLootBag);
-});
-document.getElementById('lootbagCheckoutBtn')?.addEventListener('click', () => {
-  window.location.href = "/checkout.html";
-});
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll('.checkout-trigger').forEach(btn => {
-    btn.addEventListener('click', () => {
+
+  // 🚀 Checkout
+  const checkoutBtn = document.getElementById('lootbagCheckoutBtn');
+
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+      const cart = getLootBag();
+
+      console.log("CHECKOUT CLICKED. CART:", cart); // 👈 debug
+
+      if (!cart.length) {
+        alert("Your loot bag is empty");
+        return;
+      }
+
       window.location.href = "/checkout.html";
     });
-  });
+  }
 });
