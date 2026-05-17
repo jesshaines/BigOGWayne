@@ -441,11 +441,18 @@
 
     <div class="product-layout">
       <div class="product-gallery">
-        <div class="product-thumbs">
-          <button class="product-thumb active" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie front"></button>
-          <button class="product-thumb" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie back"></button>
-          <button class="product-thumb" type="button"><img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie detail"></button>
-        </div>
+       <div class="product-thumbs"></div>
+
+<div class="product-main-image">
+  <div class="product-badge">Featured</div>
+
+  <img
+    id="mainProductImage"
+    src=""
+    alt=""
+    style="opacity:0;"
+  >
+</div>
 
         <div class="product-main-image">
           <div class="product-badge">Featured</div>
@@ -455,7 +462,7 @@
 
       <div class="product-info-panel">
         <div id="loadingState">Loading product...</div>
-        <div class="product-collection">Stinky Pinky</div>
+        <div class="product-collection" id="productCollection"></div>
         <h1 class="product-title"></h1>
         
         <div class="product-description">
@@ -643,6 +650,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.body.dataset.productPrice = variant.price / 100;
     }
 
+    const collectionLabel = document.getElementById("productCollection");
+
+      if (collectionLabel) {
+      collectionLabel.textContent = formattedCollection;
+    }
+
     // 🔥 IMAGES (SAFE)
  const mainImage = document.getElementById("mainProductImage");
 const thumbContainer = document.querySelector(".product-thumbs");
@@ -675,6 +688,7 @@ function renderImages() {
 
 const first = images[0].src;
 mainImage.src = first;
+mainImage.style.opacity = "1";
 
 const isSizeChart = first.includes("size-chart");
 
