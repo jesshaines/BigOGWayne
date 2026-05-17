@@ -981,5 +981,21 @@ updateCartCount();
   </div>
 </aside>
 
+<script>
+const qtyValue = document.getElementById('qtyValue');
+
+document.getElementById('qtyMinus')?.addEventListener('click', () => {
+  qtyValue.textContent = Math.max(
+    1,
+    parseInt(qtyValue.textContent, 10) - 1
+  );
+});
+
+document.getElementById('qtyPlus')?.addEventListener('click', () => {
+  qtyValue.textContent =
+    parseInt(qtyValue.textContent, 10) + 1;
+});
+</script>
+
 </body>
 </html>
