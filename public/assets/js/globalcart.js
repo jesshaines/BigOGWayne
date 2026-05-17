@@ -1,5 +1,9 @@
 const LOOTBAG_KEY = 'bigogwayne_lootbag_v1';
 
+/* =========================================================
+   STORAGE
+========================================================= */
+
 function getLootBag() {
   try {
     return JSON.parse(localStorage.getItem(LOOTBAG_KEY)) || [];
@@ -12,188 +16,328 @@ function saveLootBag(cart) {
   localStorage.setItem(LOOTBAG_KEY, JSON.stringify(cart));
 }
 
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function formatMoney(value) {
+  return `$${Number(value).toFixed(2)}`;
+}
+
 function updateCartCount() {
   const cart = getLootBag();
-  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const count = cart.reduce((sum, item) => {
+    return sum + item.quantity;
+  }, 0);
 
   document.querySelectorAll('.cart-dot').forEach(el => {
     el.textContent = count;
   });
 }
 
+function getSelectedOptionText(groupLabel) {
+  const groups = Array.from(
+    document.querySelectorAll('.product-option-group')
+  );
+
+  const group = groups.find(g => {
+    const label = g.querySelector('.product-option-label');
+
+    return (
+      label &&
+      label.textContent.trim().toLowerCase() ===
+        groupLabel.toLowerCase()
+    );
+  });
+
+  if (!group) return '';
+
+  const active = group.querySelector('.product-chip.active');
+
+  return active ? active.textContent.trim() : '';
+}
+
+function getQtyValue() {
+  const qtyEl = document.getElementById('qtyValue');
+
+  return qtyEl
+    ? Number(qtyEl.textContent.trim()) || 1
+    : 1;
+}
+
+/* =========================================================
+   DRAWER
+========================================================= */
+
 function openLootBag() {
   const drawer = document.getElementById('lootbagDrawer');
+
   if (!drawer) return;
+
   drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden', 'false');
+
   renderLootBag();
 }
 
 function closeLootBag() {
   const drawer = document.getElementById('lootbagDrawer');
+
   if (!drawer) return;
+
   drawer.classList.remove('open');
+  drawer.setAttribute('aria-hidden', 'true');
 }
+
+/* =========================================================
+   CART ACTIONS
+========================================================= */
+
+function addCurrentProductToLootBag() {
+  const body = document.body;
+
+  const productId = body.dataset.productId;
+  const variantId = body.dataset.variantId;
+  const name = body.dataset.productName;
+
+  const price = Number(body.dataset.productPrice || 0);
+
+  const image =
+    document.getElementById('mainProductImage')?.src || '';
+
+  const collection =
+    body.dataset.productCollection || '';
+
+  const color = getSelectedOptionText('Color');
+  const size = getSelectedOptionText('Size');
+
+  const quantity = getQtyValue();
+
+  if (!productId || !variantId || !name || !price) {
+    console.error('Missing product data');
+    return;
+  }
+
+  const key = `${variantId}`;
+
+  const cart = getLootBag();
+
+  const existing = cart.find(item => item.key === key);
+
+  if (existing) {
+    existing.quantity += quantity;
+  } else {
+    cart.push({
+      key,
+      productId,
+      variantId,
+      name,
+      price,
+      image,
+      collection,
+      color,
+      size,
+      quantity
+    });
+  }
+
+  saveLootBag(cart);
+
+  renderLootBag();
+  updateCartCount();
+  openLootBag();
+
+  console.log('UPDATED CART:', cart);
+}
+
+function changeLootBagQty(key, delta) {
+  const cart = getLootBag();
+
+  const item = cart.find(i => i.key === key);
+
+  if (!item) return;
+
+  item.quantity += delta;
+
+  const updated = cart.filter(i => i.quantity > 0);
+
+  saveLootBag(updated);
+
+  renderLootBag();
+}
+
+function removeFromLootBag(key) {
+  const updated = getLootBag().filter(
+    item => item.key !== key
+  );
+
+  saveLootBag(updated);
+
+  renderLootBag();
+}
+
+/* =========================================================
+   RENDER CART
+========================================================= */
 
 function renderLootBag() {
   const cart = getLootBag();
-  const container = document.getElementById('lootbagItems');
+
+  const itemsEl = document.getElementById('lootbagItems');
   const subtotalEl = document.getElementById('lootbagSubtotal');
 
-  if (!container) return;
+  if (!itemsEl || !subtotalEl) return;
 
   if (!cart.length) {
-    container.innerHTML = "<p>Your bag is empty</p>";
-    if (subtotalEl) subtotalEl.textContent = "$0.00";
+    itemsEl.innerHTML = `
+      <div class="lootbag-empty">
+        Your loot bag is empty.
+      </div>
+    `;
+
+    subtotalEl.textContent = '$0.00';
+
     updateCartCount();
+
     return;
   }
 
   let subtotal = 0;
 
-  container.innerHTML = cart.map((item, index) => {
+  itemsEl.innerHTML = cart.map(item => {
+
     subtotal += item.price * item.quantity;
 
     return `
       <div class="lootbag-item">
-        <img src="${item.image}" />
 
-        <div class="lootbag-info">
-          <div class="lootbag-name">${item.name}</div>
-          <div class="lootbag-meta">
+        <div class="lootbag-item-media">
+          <img src="${item.image}" alt="${item.name}">
+        </div>
+
+        <div class="lootbag-item-info">
+
+          <div class="lootbag-item-name">
+            ${item.name}
+          </div>
+
+          <div class="lootbag-item-meta">
+            ${item.collection ? `${item.collection}<br>` : ''}
             ${item.color ? `Color: ${item.color}<br>` : ''}
             ${item.size ? `Size: ${item.size}` : ''}
           </div>
 
-          <div class="lootbag-controls">
-            <button class="qty-minus" data-index="${index}">-</button>
-            <span>${item.quantity}</span>
-            <button class="qty-plus" data-index="${index}">+</button>
+          <div class="lootbag-item-price">
+            ${formatMoney(item.price)}
+          </div>
+
+          <div class="lootbag-item-actions">
+
+            <div class="lootbag-qty">
+              <button
+                type="button"
+                onclick="changeLootBagQty('${item.key}', -1)">
+                −
+              </button>
+
+              <span>${item.quantity}</span>
+
+              <button
+                type="button"
+                onclick="changeLootBagQty('${item.key}', 1)">
+                +
+              </button>
+            </div>
+
+            <button
+              class="lootbag-remove"
+              type="button"
+              onclick="removeFromLootBag('${item.key}')">
+              Remove
+            </button>
+
           </div>
         </div>
-
-        <div class="lootbag-price">$${item.price}</div>
-
-        <button class="lootbag-remove" data-index="${index}">✕</button>
       </div>
     `;
-  }).join("");
+  }).join('');
 
-  if (subtotalEl) {
-    subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-  }
+  subtotalEl.textContent = formatMoney(subtotal);
 
-  attachCartEvents();
   updateCartCount();
 }
-function attachCartEvents() {
+
+/* =========================================================
+   CHECKOUT
+========================================================= */
+
+async function goToCheckout() {
   const cart = getLootBag();
 
-  // ➕ Increase qty
-  document.querySelectorAll('.qty-plus').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const i = btn.dataset.index;
-      cart[i].quantity += 1;
-      saveLootBag(cart);
-      renderLootBag();
-    });
-  });
-
-  // ➖ Decrease qty
-  document.querySelectorAll('.qty-minus').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const i = btn.dataset.index;
-      cart[i].quantity -= 1;
-
-      if (cart[i].quantity <= 0) {
-        cart.splice(i, 1);
-      }
-
-      saveLootBag(cart);
-      renderLootBag();
-    });
-  });
-
-  // 🗑 Remove item
-  document.querySelectorAll('.lootbag-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const i = btn.dataset.index;
-      cart.splice(i, 1);
-      saveLootBag(cart);
-      renderLootBag();
-    });
-  });
-}
-
-/* 🔥 THIS is what your product page will call */
-window.addToCartFromProductPage = function () {
-  const productId = document.body.dataset.productId;
-  const variantId = document.body.dataset.variantId;
-  const name = document.body.dataset.productName;
-  const price = parseFloat(document.body.dataset.productPrice);
-  const quantity = parseInt(document.getElementById("qtyValue")?.textContent || "1");
-
-  if (!variantId) {
-    alert("Please select a variant first");
+  if (!cart.length) {
+    alert('Your loot bag is empty.');
     return;
   }
 
-  const item = {
-    productId,
-    variantId,
-    name,
-    price,
-    quantity,
-    image: document.getElementById("mainProductImage")?.src || ""
-  };
+  try {
+    const res = await fetch('/create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ cart })
+    });
 
-  let cart = getLootBag();
+    const data = await res.json();
 
-  cart.push(item);
+    console.log('CHECKOUT RESPONSE:', data);
 
-  saveLootBag(cart);
+    if (!data.url) {
+      alert('Checkout failed.');
+      return;
+    }
 
-  renderLootBag();     // 🔥 updates drawer
-  updateCartCount();   // 🔥 updates icon
-  openLootBag();       // 🔥 opens cart (optional)
+    window.location.href = data.url;
 
-  console.log("UPDATED LOOTBAG:", cart);
-};
+  } catch (err) {
+    console.error(err);
+    alert('Checkout error.');
+  }
+}
 
-// 🔥 update UI immediately
-renderLootBag();
-updateCartCount();
-openLootBag(); // optional but nice UX
-const cart = getLootBag();
-console.log(cart);
-;
+/* =========================================================
+   INIT
+========================================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
+
   updateCartCount();
 
-  // 🛒 Open drawer
+  renderLootBag();
+
+  /* Open cart */
   document.querySelectorAll('.cart-btn').forEach(btn => {
     btn.addEventListener('click', openLootBag);
   });
 
-  // ❌ Close drawer (X + backdrop)
-  document.getElementById('lootbagClose')?.addEventListener('click', closeLootBag);
-  document.getElementById('lootbagBackdrop')?.addEventListener('click', closeLootBag);
+  /* Close cart */
+  document
+    .getElementById('lootbagClose')
+    ?.addEventListener('click', closeLootBag);
 
-  // 🚀 Checkout
-  const checkoutBtn = document.getElementById('lootbagCheckoutBtn');
+  document
+    .getElementById('lootbagBackdrop')
+    ?.addEventListener('click', closeLootBag);
 
-  if (checkoutBtn) {
-    checkoutBtn.addEventListener('click', () => {
-      const cart = getLootBag();
+  /* Add to cart */
+  document
+    .getElementById('addToLootBagBtn')
+    ?.addEventListener('click', addCurrentProductToLootBag);
 
-      console.log("CHECKOUT CLICKED. CART:", cart); // 👈 debug
+  /* Checkout */
+  document
+    .getElementById('lootbagCheckoutBtn')
+    ?.addEventListener('click', goToCheckout);
 
-      if (!cart.length) {
-        alert("Your loot bag is empty");
-        return;
-      }
-
-      window.location.href = "/checkout.html";
-    });
-  }
 });
