@@ -447,16 +447,15 @@
   <div class="product-badge">Featured</div>
 
   <img
-    id="mainProductImage"
-    src=""
-    alt=""
-    style="opacity:0;"
-  >
+  id="mainProductImage"
+  src=""
+  alt=""
+  style="display:none;"
+>
 </div>
 
         <div class="product-main-image">
           <div class="product-badge">Featured</div>
-          <img id="mainProductImage" src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png" alt="Stinky Pinky Hoodie">
         </div>
       </div>
 
@@ -687,8 +686,16 @@ function renderImages() {
   if (!images.length) return;
 
 const first = images[0].src;
-mainImage.src = first;
-mainImage.style.opacity = "1";
+mainImage.style.display = "none";
+
+const preload = new Image();
+
+preload.onload = () => {
+  mainImage.src = first;
+  mainImage.style.display = "block";
+};
+
+preload.src = first;
 
 const isSizeChart = first.includes("size-chart");
 
