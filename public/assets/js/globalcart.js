@@ -218,9 +218,7 @@ function renderLootBag() {
 
         <div class="lootbag-item-info">
 
-          <div class="lootbag-item-name">
-            ${item.name}
-          </div>
+         <div class="lootbag-item-name">${item.name}</div>
 
           <div class="lootbag-item-meta">
             ${item.collection ? `${item.collection}<br>` : ''}
@@ -228,34 +226,22 @@ function renderLootBag() {
             ${item.size ? `Size: ${item.size}` : ''}
           </div>
 
-          <div class="lootbag-item-price">
-            ${formatMoney(item.price)}
-          </div>
+          <div class="lootbag-item-price">${formatMoney(item.price)}</div>
 
           <div class="lootbag-item-actions">
+  <div class="lootbag-qty">
+    <button type="button" onclick="changeLootBagQty('${item.key}', -1)">−</button>
+    <span>${item.quantity}</span>
+    <button type="button" onclick="changeLootBagQty('${item.key}', 1)">+</button>
+  </div>
 
-            <div class="lootbag-qty">
-              <button
-                type="button"
-                onclick="changeLootBagQty('${item.key}', -1)">
-                −
-              </button>
-
-              <span>${item.quantity}</span>
-
-              <button
-                type="button"
-                onclick="changeLootBagQty('${item.key}', 1)">
-                +
-              </button>
-            </div>
-
-            <button
-              class="lootbag-remove"
-              type="button"
-              onclick="removeFromLootBag('${item.key}')">
-              Remove
-            </button>
+  <button
+    class="lootbag-remove"
+    type="button"
+    onclick="removeFromLootBag('${item.key}')">
+    Remove
+  </button>
+</div>
 
           </div>
         </div>
