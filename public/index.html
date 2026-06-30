@@ -1074,298 +1074,6 @@ button{font-family:inherit;cursor:pointer;border:none;}
 }
 
 /* ============================================================
-   SHOP GRID
-   ============================================================ */
-.shop-section{
-  background:var(--obsidian);
-  padding:clamp(3.5rem, 7vw, 6rem) 0;
-  position:relative;
-}
-
-.shop-inner{
-  max-width:1320px;
-  margin:0 auto;
-  padding:0 clamp(1rem,4vw,2rem);
-}
-
-.shop-header{
-  display:flex;
-  align-items:end;
-  justify-content:space-between;
-  gap:1rem;
-  flex-wrap:wrap;
-  margin-bottom:2rem;
-}
-
-.shop-label{
-  display:flex;
-  align-items:center;
-  gap:0.7rem;
-  font-size:0.68rem;
-  font-weight:600;
-  letter-spacing:0.2em;
-  text-transform:uppercase;
-  color:var(--red);
-  margin-bottom:0.8rem;
-}
-
-.shop-label::before{
-  content:'';
-  width:22px;
-  height:2px;
-  background:var(--red);
-  display:block;
-}
-
-.shop-title{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:clamp(1.6rem,3vw,2.6rem);
-  letter-spacing:-0.03em;
-  text-transform:uppercase;
-  color:var(--white);
-  line-height:1;
-}
-
-.shop-sub{
-  margin-top:0.75rem;
-  max-width:650px;
-  font-size:0.95rem;
-  line-height:1.65;
-  color:var(--mist);
-}
-
-.shop-controls{
-  display:flex;
-  flex-wrap:wrap;
-  gap:0.65rem;
-  margin-bottom:2rem;
-}
-
-.shop-filter{
-  appearance:none;
-  border:1px solid var(--steel);
-  background:transparent;
-  color:var(--chrome);
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.68rem;
-  letter-spacing:0.16em;
-  text-transform:uppercase;
-  padding:0.8rem 1rem;
-  cursor:pointer;
-  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;
-}
-
-.shop-filter:hover{
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.shop-filter.active{
-  background:var(--red);
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.shop-grid{
-  display:grid;
-  grid-template-columns:repeat(4, minmax(0,1fr));
-  gap:1px;
-  background:var(--iron);
-  border:1px solid var(--iron);
-}
-
-.shop-card{
-  background:var(--carbon);
-  display:flex;
-  flex-direction:column;
-  position:relative;
-  overflow:hidden;
-  transition:transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
-}
-
-.shop-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 0 0 1px var(--red), 0 10px 28px rgba(0,0,0,0.45);
-  z-index:2;
-}
-
-.shop-card[hidden]{
-  display:none !important;
-}
-
-.shop-card-media{
-  position:relative;
-  aspect-ratio:4/5;
-  overflow:hidden;
-  background:var(--graphite);
-}
-
-.shop-card-media img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  transition:transform 0.45s var(--ease);
-}
-
-.shop-card:hover .shop-card-media img{
-  transform:scale(1.04);
-}
-
-.shop-card-placeholder{
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:2.8rem;
-  letter-spacing:-0.04em;
-  color:rgba(255,255,255,0.08);
-  text-transform:uppercase;
-}
-
-.shop-card-badge{
-  position:absolute;
-  top:0.8rem;
-  left:0.8rem;
-  z-index:2;
-  background:var(--red);
-  color:var(--white);
-  font-size:0.6rem;
-  font-weight:700;
-  letter-spacing:0.1em;
-  text-transform:uppercase;
-  padding:0.35rem 0.55rem;
-}
-
-.shop-card-info{
-  padding:1.1rem 1.15rem 1.2rem;
-  border-top:1px solid var(--iron);
-}
-
-.shop-card-collection{
-  font-size:0.58rem;
-  font-weight:700;
-  letter-spacing:0.14em;
-  text-transform:uppercase;
-  color:var(--red);
-  margin-bottom:0.55rem;
-}
-
-.shop-card-name{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.9rem;
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-  color:var(--white);
-  line-height:1.25;
-  margin-bottom:0.5rem;
-}
-
-.shop-card-meta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:0.75rem;
-  margin-bottom:0.75rem;
-}
-
-.shop-card-price{
-  font-size:1rem;
-  font-weight:600;
-  color:var(--white);
-}
-
-.shop-card-tag{
-  font-size:0.58rem;
-  font-weight:600;
-  letter-spacing:0.12em;
-  text-transform:uppercase;
-  color:var(--mist);
-}
-
-.shop-card-desc{
-  font-size:0.82rem;
-  line-height:1.55;
-  color:var(--mist);
-  margin-bottom:0.95rem;
-}
-
-.shop-card-actions{
-  display:flex;
-  gap:0.55rem;
-  flex-wrap:wrap;
-}
-
-.shop-card-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.64rem;
-  letter-spacing:0.14em;
-  text-transform:uppercase;
-  padding:0.72rem 0.9rem;
-  border:1px solid var(--steel);
-  color:var(--chrome);
-  background:transparent;
-  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;
-}
-
-.shop-card-btn:hover{
-  border-color:var(--red);
-  color:var(--white);
-  background:rgba(204,0,0,0.12);
-}
-
-.shop-card-btn.primary{
-  background:var(--red);
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.shop-card-btn.primary:hover{
-  background:var(--ember);
-  border-color:var(--ember);
-}
-
-@media (max-width: 1100px){
-  .shop-grid{
-    grid-template-columns:repeat(3, minmax(0,1fr));
-  }
-}
-
-@media (max-width: 768px){
-  .shop-grid{
-    grid-template-columns:repeat(2, minmax(0,1fr));
-  }
-
-  .shop-sub{
-    font-size:0.88rem;
-  }
-}
-
-@media (max-width: 540px){
-  .shop-grid{
-    grid-template-columns:1fr;
-  }
-
-  .shop-controls{
-    gap:0.5rem;
-  }
-
-  .shop-filter{
-    font-size:0.62rem;
-    padding:0.72rem 0.85rem;
-  }
-}
-
-/* ============================================================
    COLLECTIONS
    ============================================================ */
 .collections-section{background:var(--obsidian);}
@@ -1640,257 +1348,6 @@ button{font-family:inherit;cursor:pointer;border:none;}
     justify-self:center;
     font-size:0.64rem;
     padding:0.72rem 1rem;
-  }
-}
-
-/* ============================================================
-   FEATURED DROP
-   ============================================================ */
-
-.featured-drop-section{
-  background:var(--carbon);
-  padding:clamp(3.5rem, 7vw, 6rem) 0;
-  position:relative;
-}
-
-.featured-drop-inner{
-  max-width:1320px;
-  margin:0 auto;
-  padding:0 clamp(1rem,4vw,2rem);
-}
-
-.featured-drop-header{
-  display:flex;
-  align-items:end;
-  justify-content:space-between;
-  gap:1rem;
-  flex-wrap:wrap;
-  margin-bottom:2.25rem;
-}
-
-.featured-drop-label{
-  display:flex;
-  align-items:center;
-  gap:0.7rem;
-  font-size:0.68rem;
-  font-weight:600;
-  letter-spacing:0.2em;
-  text-transform:uppercase;
-  color:var(--red);
-  margin-bottom:0.8rem;
-}
-
-.featured-drop-label::before{
-  content:'';
-  width:22px;
-  height:2px;
-  background:var(--red);
-  display:block;
-}
-
-.featured-drop-title{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:clamp(1.6rem,3vw,2.6rem);
-  letter-spacing:-0.03em;
-  text-transform:uppercase;
-  color:var(--white);
-  line-height:1;
-}
-
-.featured-drop-sub{
-  margin-top:0.75rem;
-  max-width:620px;
-  font-size:0.95rem;
-  line-height:1.65;
-  color:var(--mist);
-}
-
-.featured-drop-cta{
-  display:inline-flex;
-  align-items:center;
-  gap:0.5rem;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.72rem;
-  letter-spacing:0.16em;
-  text-transform:uppercase;
-  color:var(--chrome);
-  border:1px solid var(--steel);
-  padding:0.85rem 1.1rem;
-  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;
-}
-
-.featured-drop-cta:hover{
-  border-color:var(--red);
-  color:var(--white);
-  background:rgba(204,0,0,0.12);
-}
-
-.featured-drop-grid{
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0,1fr));
-  gap:1px;
-  background:var(--iron);
-  border:1px solid var(--iron);
-}
-
-.featured-card{
-  background:var(--carbon);
-  display:flex;
-  flex-direction:column;
-  position:relative;
-  overflow:hidden;
-  transition:transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
-}
-
-.featured-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 0 0 1px var(--red), 0 10px 28px rgba(0,0,0,0.45);
-  z-index:2;
-}
-
-.featured-card-media{
-  position:relative;
-  aspect-ratio:4/5;
-  overflow:hidden;
-  background:var(--graphite);
-}
-
-.featured-card-media img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  transition:transform 0.45s var(--ease);
-}
-
-.featured-card:hover .featured-card-media img{
-  transform:scale(1.04);
-}
-
-.featured-card-placeholder{
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:3rem;
-  letter-spacing:-0.04em;
-  color:rgba(255,255,255,0.08);
-  text-transform:uppercase;
-}
-
-.featured-card-badge{
-  position:absolute;
-  top:0.85rem;
-  left:0.85rem;
-  z-index:2;
-  background:var(--red);
-  color:var(--white);
-  font-size:0.62rem;
-  font-weight:700;
-  letter-spacing:0.1em;
-  text-transform:uppercase;
-  padding:0.35rem 0.55rem;
-}
-
-.featured-card-info{
-  padding:1.15rem 1.2rem 1.25rem;
-  border-top:1px solid var(--iron);
-}
-
-.featured-card-name{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.92rem;
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-  color:var(--white);
-  line-height:1.25;
-  margin-bottom:0.45rem;
-}
-
-.featured-card-meta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:0.75rem;
-  margin-bottom:0.65rem;
-}
-
-.featured-card-price{
-  font-size:1rem;
-  font-weight:600;
-  color:var(--white);
-}
-
-.featured-card-tag{
-  font-size:0.6rem;
-  font-weight:600;
-  letter-spacing:0.12em;
-  text-transform:uppercase;
-  color:var(--red);
-}
-
-.featured-card-desc{
-  font-size:0.82rem;
-  line-height:1.55;
-  color:var(--mist);
-  margin-bottom:0.95rem;
-}
-
-.featured-card-actions{
-  display:flex;
-  gap:0.6rem;
-  flex-wrap:wrap;
-}
-
-.featured-card-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.66rem;
-  letter-spacing:0.14em;
-  text-transform:uppercase;
-  padding:0.72rem 0.9rem;
-  border:1px solid var(--steel);
-  color:var(--chrome);
-  background:transparent;
-  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;
-}
-
-.featured-card-btn:hover{
-  border-color:var(--red);
-  color:var(--white);
-  background:rgba(204,0,0,0.12);
-}
-
-.featured-card-btn.primary{
-  background:var(--red);
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.featured-card-btn.primary:hover{
-  background:var(--ember);
-  border-color:var(--ember);
-}
-
-@media (max-width: 900px){
-  .featured-drop-grid{
-    grid-template-columns:1fr;
-  }
-
-  .featured-drop-header{
-    margin-bottom:1.75rem;
-  }
-
-  .featured-drop-sub{
-    font-size:0.88rem;
   }
 }
 
@@ -2360,7 +1817,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
     <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
       <img
         src="/assets/images/logo/bow_logo.png"
-        alt="Big OG Wayne — Lilliwaups Finest"
+        alt="Big OG Wayne"
         width="928"
         height="928"
       />
@@ -2428,7 +1885,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
         <!-- Live location indicator -->
         <div class="hero-location">
           <div class="hero-location-dot"></div>
-          <span class="hero-location-text">Lilliwaup, WA</span>
+          <span class="hero-location-text">Official Artist Site</span>
         </div>
       </div>
 
@@ -2472,7 +1929,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
     <div class="hero-copy">
       <div class="hero-eyebrow anim-1">
         <div class="hero-eyebrow-line"></div>
-        <span class="hero-eyebrow-text">Official Merch · Lilliwaup's Finest</span>
+        <span class="hero-eyebrow-text">Official Merch &amp; Music</span>
       </div>
 
       <h1 class="hero-headline anim-2">
@@ -2482,8 +1939,8 @@ button{font-family:inherit;cursor:pointer;border:none;}
       </h1>
 
       <p class="hero-subline anim-3">
-        Straight from <strong>Lilliwaup, WA</strong>.<br/>
-        Real music. Real culture. Wear the proof.
+        Real music. Real culture.<br/>
+        Wear the proof.
       </p>
 
       <div class="hero-ctas anim-4">
@@ -2503,8 +1960,8 @@ button{font-family:inherit;cursor:pointer;border:none;}
           <div class="hero-stat-label">Real</div>
         </div>
         <div class="hero-stat">
-          <div class="hero-stat-num">Lilliwaup</div>
-          <div class="hero-stat-label">Origin</div>
+          <div class="hero-stat-num">Music</div>
+          <div class="hero-stat-label">First</div>
         </div>
         <div class="hero-stat">
           <div class="hero-stat-num">OG</div>
@@ -2535,279 +1992,6 @@ button{font-family:inherit;cursor:pointer;border:none;}
 </section>
 
 
-<!-- ============================================================
-     FEATURED DROP
-     ============================================================ -->
-<section class="featured-drop-section">
-  <div class="featured-drop-inner">
-
-    <div class="featured-drop-header">
-      <div>
-        <div class="featured-drop-label">Featured Collection</div>
-        <h2 class="featured-drop-title">Stinky Pinky</h2>
-        <p class="featured-drop-sub">
-          Loud, funny, and built to stand out. The Stinky Pinky drop brings the energy of the track into wearable pieces made for fans who already know what it is.
-        </p>
-      </div>
-
-      <a href="/collections/stinky-pinky" class="featured-drop-cta">
-        View Collection →
-      </a>
-    </div>
-
-    <div class="featured-drop-grid">
-
-      <article class="featured-card">
-        <div class="featured-card-media">
-  <div class="featured-card-badge">New</div>
-  <img src="/assets/images/products/collections/stinkypinky/whitehoodie.png" alt="Stinky Pinky Hoodie">
-</div>
-        <div class="featured-card-info">
-          <div class="featured-card-name">Stinky Pinky Hoodie</div>
-          <div class="featured-card-meta">
-            <div class="featured-card-price">$85.00</div>
-            <div class="featured-card-tag">Apparel</div>
-          </div>
-          <div class="featured-card-desc">
-            Heavyweight comfort with a loud graphic identity. Built for the fans repping the collection hardest.
- 
-          </div>
-          <div class="featured-card-actions">
-            <a href="/products/emboideredKeyChain" class="featured-card-btn primary">View Product</a>
-            <a href="/collections/stinky-pinky" class="featured-card-btn">More Like This</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="featured-card">
-        <div class="featured-card-media">
-  <div class="featured-card-badge">New</div>
-  <img src="/assets/images/products/collections/stinkypinky/blackcapshock.png" alt="Stinky Pinky Snapback">
-</div>
-        <div class="featured-card-info">
-          <div class="featured-card-name">Stinky Pinky Snapback</div>
-          <div class="featured-card-meta">
-            <div class="featured-card-price">$45.00</div>
-            <div class="featured-card-tag">Hat</div>
-          </div>
-          <div class="featured-card-desc">
-            Clean fit, bold logo, instant attitude. A standout piece from the latest drop.
-          </div>
-          <div class="featured-card-actions">
-            <a href="/products/stinky-pinky-hoodie" class="featured-card-btn primary">View Product</a>
-            <a href="/collections/stinky-pinky" class="featured-card-btn">More Like This</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="featured-card">
-       <div class="featured-card-media">
-  <div class="featured-card-badge">Selling Fast</div>
-  <img src="/assets/images/products/collections/stinkypinky/mensboxerbriefs.png" alt="Men's Stinky Pinky 'Shock & Aww' Boxer Briefs ">
-</div>
-        <div class="featured-card-info">
-          <div class="featured-card-name">Men's Boxer Briefs</div>
-          <div class="featured-card-meta">
-            <div class="featured-card-price">$35.00</div>
-            <div class="featured-card-tag">Apparel</div>
-          </div>
-          <div class="featured-card-desc">
-            Get the message across without saying a thing. You already know who you are. Find out who she is. 
-          </div>
-          <div class="featured-card-actions">
-            <a href="/products/mensBoxerBriefs" class="featured-card-btn primary">View Product</a>
-            <a href="/collections/stinky-pinky" class="featured-card-btn">More Like This</a>
-          </div>
-        </div>
-      </article>
-
-    </div>
-  </div>
-</section>
-<!-- ============================================================
-     SHOP GRID
-     ============================================================ -->
-<section class="shop-section">
-  <div class="shop-inner">
-
-    <div class="shop-header">
-      <div>
-        <div class="shop-label">Shop All</div>
-        <h2 class="shop-title">Browse the Loot</h2>
-        <p class="shop-sub">
-          Shop the full lineup and find the pieces that match your lane.
-        </p>
-      </div>
-    </div>
-
-    <div class="shop-controls" aria-label="Shop filters">
-      <button class="shop-filter active" data-filter="all">All</button>
-      <button class="shop-filter" data-filter="stinky-pinky">Stinky Pinky</button>
-      <button class="shop-filter" data-filter="no-bluff">No Bluff</button>
-      <button class="shop-filter" data-filter="lilliwaup-twang">Lilliwaup Twang</button>
-    </div>
-
-    <div class="shop-grid" id="shopGrid">
-
-      <article class="shop-card" data-collection="stinky-pinky">
-        <div class="shop-card-media">
-          <div class="shop-card-badge">New</div>
-          <img src="/assets/images/products/collections/stinkypinky/stinkypinky-pinksnapback.png">SP</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Stinky Pinky</div>
-          <div class="shop-card-name">Stinky Pinky Snapback</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$40.00</div>
-            <div class="shop-card-tag">Hat</div>
-          </div>
-          <div class="shop-card-desc">
-            Clean fit, loud identity, easy statement piece.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/stinky-pinky-snapback" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="stinky-pinky">
-        <div class="shop-card-media">
-          <div class="shop-card-badge">Featured</div>
-          <img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png">SP</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Stinky Pinky</div>
-          <div class="shop-card-name">Stinky Pinky Hoodie</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$85.00</div>
-            <div class="shop-card-tag">Hoodie</div>
-          </div>
-          <div class="shop-card-desc">
-            Heavyweight comfort with track-inspired energy.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/stinky-pinky-hoodie" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="stinky-pinky">
-        <div class="shop-card-media">
-          <div class="shop-card-badge">Limited</div>
-          <img src="/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png">SP</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Stinky Pinky</div>
-          <div class="shop-card-name">Stinky Pinky Tee</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$35.00</div>
-            <div class="shop-card-tag">Tee</div>
-          </div>
-          <div class="shop-card-desc">
-            Everyday wear with drop-specific attitude.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/stinky-pinky-tee" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="no-bluff">
-        <div class="shop-card-media">
-          <img src="/assets/images/products/collections/nobluff/nobluff-hoodie.jpeg">NB</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">No Bluff</div>
-          <div class="shop-card-name">No Bluff Hoodie</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$80.00</div>
-            <div class="shop-card-tag">Hoodie</div>
-          </div>
-          <div class="shop-card-desc">
-            Low-key look, same hard edge.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/coll" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="no-bluff">
-        <div class="shop-card-media">
-        <img src="/assets/images/products/collections/nobluff/nobluff-boxerbriefs.png">">NB</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">No Bluff</div>
-          <div class="shop-card-name">No Bluff Boxer Briefs</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$28.00</div>
-            <div class="shop-card-tag">Boxers</div>
-          </div>
-          <div class="shop-card-desc">
-            Bold branding with everyday wearability.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/no-bluff-boxers" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="lilliwaup-twang">
-        <div class="shop-card-media">
-        <img src="/assets/images/products/collections/lilliwauptwang/lilliwauptwang-floormats.png">LT</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Lilliwaup Twang</div>
-          <div class="shop-card-name">Lilliwaup Twang Floor Mats</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$95.00</div>
-            <div class="shop-card-tag">Auto</div>
-          </div>
-          <div class="shop-card-desc">
-            A wild statement piece built for the ride.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/lilliwaup-twang-floor-mats" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="lilliwaup-twang">
-        <div class="shop-card-media">
-          <div class="shop-card-badge">Hot</div>
-        <img src="/assets/images/products/collections/lilliwauptwang/lilliwauptwang-poster.png">LT</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Lilliwaup Twang</div>
-          <div class="shop-card-name">Lilliwaup Twang Poster</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$24.00</div>
-            <div class="shop-card-tag">Poster</div>
-          </div>
-          <div class="shop-card-desc">
-            Wall-ready drop art for fans who want the look.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/lilliwaup-twang-poster" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="lilliwaup-twang">
-        <div class="shop-card-media">
-        <img src="/assets/images/products/stickers.png">LT</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Lilliwaup Twang</div>
-          <div class="shop-card-name">Lilliwaup Twang Stickers</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$5.00</div>
-            <div class="shop-card-tag">Sticker</div>
-          </div>
-          <div class="shop-card-desc">
-            Fast, cheap, and easy to rep anywhere.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/lilliwaup-twang-stickers" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-    </div>
-  </div>
-</section>
 <!-- ============================================================
      FEATURED PRODUCTS
      ============================================================ 
@@ -2910,8 +2094,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   <div class="section-inner">
     <div class="section-header">
       <div>
-        <div class="section-label">Browse</div>
-        <h2 class="section-title">Collections</h2>
+        <h2 class="section-title">REP BIG OG WAYNE</h2>
       </div>
       <a href="/collections" class="section-cta">
         All Collections <span class="section-cta-arrow">→</span>
@@ -2920,13 +2103,29 @@ button{font-family:inherit;cursor:pointer;border:none;}
     <div class="section-divider" style="margin-bottom:2rem;"></div>
 
     <div class="collections-grid">
+      <!-- Streetwise -->
+      <a href="/collections/streetwise" class="collection-card">
+        <div class="collection-bg col-3">
+        <img src="/assets/images/logo/bow_logo.png" alt="Streetwise">SW</div>
+        <div class="collection-gradient"></div>
+        <div class="collection-content">
+          <div class="collection-tag">FEATURED RELEASE</div>
+          <div class="collection-name">Street<br/>wise</div>
+          <div class="collection-desc">Built from real stories, sharp instincts, and the current era.</div>
+          <div class="collection-arrow">
+            Shop Now
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </div>
+        </div>
+      </a>
+
       <!-- Stinky Pinky -->
       <a href="/collections/stinky-pinky" class="collection-card">
         <div class="collection-bg col-1">
         <img src="/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
         <div class="collection-gradient"></div>
         <div class="collection-content">
-          <div class="collection-tag">Collection 01</div>
+          <div class="collection-tag">FAN FAVORITE</div>
           <div class="collection-name">Stinky<br/>Pinky</div>
           <div class="collection-desc">Bold signature pieces. The ones that start conversations.</div>
           <div class="collection-arrow">
@@ -2942,7 +2141,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
         <img src="/assets/images/logo/NoBluff_Logo_BlackBkg.png">NB</div>
         <div class="collection-gradient"></div>
         <div class="collection-content">
-          <div class="collection-tag">Collection 02</div>
+          <div class="collection-tag">SIGNATURE SERIES</div>
           <div class="collection-name">No<br/>Bluff</div>
           <div class="collection-desc">No games. No filler. Just the real ones.</div>
           <div class="collection-arrow">
@@ -2952,21 +2151,6 @@ button{font-family:inherit;cursor:pointer;border:none;}
         </div>
       </a>
 
-      <!-- Lilliwaup Twang -->
-      <a href="/collections/lilliwaup-twang" class="collection-card">
-        <div class="collection-bg col-3">
-        <img src="/assets/images/logo/LilliwaupTwang_Logo_BlackBkg.png">LT</div>
-        <div class="collection-gradient"></div>
-        <div class="collection-content">
-          <div class="collection-tag">Collection 03</div>
-          <div class="collection-name">Lilliwaup<br/>Twang</div>
-          <div class="collection-desc">Where you're from never leaves you. Rep the roots.</div>
-          <div class="collection-arrow">
-            Shop Now
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </div>
-        </div>
-      </a>
     </div>
   </div>
 </section>
@@ -2978,8 +2162,8 @@ button{font-family:inherit;cursor:pointer;border:none;}
   <div class="section-inner">
     <div class="section-header">
       <div>
-        <div class="section-label">Follow Along</div>
-        <h2 class="section-title">Stay Connected</h2>
+        <div class="section-label">MORE THAN MERCH</div>
+        <h2 class="section-title">Follow the Movement</h2>
       </div>
     </div>
     <div class="section-divider" style="margin-bottom:2rem;"></div>
@@ -3032,7 +2216,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
     <div class="footer-brand">
       <img class="footer-logo" src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne Logo">
     </img>
-    <p class="footer-tagline">The culture is the brand. Wear what you rep. Straight out of Lilliwaup, WA.</p>
+    <p class="footer-tagline">The culture is the brand. Wear what you rep.</p>
       <div class="footer-social">
         <a href="https://www.tiktok.com/@wayneherr1" target="_blank" class="footer-social-btn" aria-label="TikTok">TT</a>
         <a href="https://www.youtube.com/@Big-OG-Wayne" target="_blank" class="footer-social-btn" aria-label="YouTube">YT</a>
@@ -3044,9 +2228,9 @@ button{font-family:inherit;cursor:pointer;border:none;}
         <p class="footer-group-heading">Shop</p>
         <ul class="footer-group-list">
           <li><a href="/shop" class="footer-link">All Products</a></li>
-          <li><a href="/collections/stinky-pinky" class="footer-link">Stinky Pinky</a></li>
+          <li><a href="/collections/streetwise" class="footer-link">Streetwise</a></li>
           <li><a href="/collections/no-bluff" class="footer-link">No Bluff</a></li>
-          <li><a href="/collections/lilliwaup-twang" class="footer-link">Lilliwaup Twang</a></li>
+          <li><a href="/collections/stinky-pinky" class="footer-link">Stinky Pinky</a></li>
         </ul>
       </div>
       <div class="footer-group">
@@ -3061,7 +2245,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
     </div>
   </div>
   <div class="footer-bottom">
-    <p class="footer-copy">© 2025 <strong>Big OG Wayne</strong>. All rights reserved. Lilliwaup's Finest.</p>
+    <p class="footer-copy">© 2025 <strong>Big OG Wayne</strong>. All rights reserved.</p>
     <div class="footer-legal">
       <a href="/policies">Privacy</a>
       <a href="/policies">Terms</a>
@@ -3141,29 +2325,6 @@ mobileNavDrawer.querySelectorAll('.mobile-nav-link, .btn-secondary')
     mobileNavDrawer.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   }));
-</script>
-<script>
-  const filterButtons = document.querySelectorAll('.shop-filter');
-  const shopCards = document.querySelectorAll('.shop-card');
-
-  filterButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const filter = button.dataset.filter;
-
-      filterButtons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-
-      shopCards.forEach(card => {
-        const collection = card.dataset.collection;
-
-        if (filter === 'all' || collection === filter) {
-          card.hidden = false;
-        } else {
-          card.hidden = true;
-        }
-      });
-    });
-  });
 </script>
 <div id="products"></div>
 

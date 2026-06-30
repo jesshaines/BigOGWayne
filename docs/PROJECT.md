@@ -79,6 +79,17 @@ The store should feel like a natural extension of the music—not the primary fo
 
 ---
 
+## Homepage Success Metrics
+
+A successful homepage should encourage visitors to:
+
+1. Watch the featured release.
+2. Listen on their preferred music platform.
+3. Follow Big OG Wayne on social media.
+4. Explore the featured collection.
+5. Purchase merchandise.
+---
+
 # Featured Release
 
 Current Release:
@@ -182,3 +193,19 @@ Commit fourth.
 Deploy last.
 
 Never skip testing.
+
+## Documentation
+
+Project documentation lives in the `/docs` folder.
+
+PROJECT.md
+Project vision and roadmap
+
+CODING_STANDARDS.md
+Development standards
+
+TASKS.md
+Current work items and backlog
+
+DECISIONS.md
+Major product and technical decisions

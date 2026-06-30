@@ -78,6 +78,8 @@ Document complex logic.
 
 Favor reusable helper functions.
 
+User-facing content (headlines, stories, badges, featured releases, social links, and collection metadata) should live in configuration objects whenever practical instead of being hardcoded into templates.
+
 ---
 
 # Components
