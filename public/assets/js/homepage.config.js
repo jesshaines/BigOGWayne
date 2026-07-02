@@ -48,6 +48,20 @@ export const homepageConfig = {
       isFeatured: true
     },
     {
+      id: "hoodrat-mama",
+      name: "Hoodrat Mama",
+      displayName: "Hoodrat<br/>Mama",
+      badge: "NEW RELEASE",
+      story: "Here we go again. Money for the kids but it vanishes once again.",
+      url: "/collections",
+      artwork: {
+        src: "/assets/images/products/collections/hoodrat/hoodrat_transparent_full.png",
+        alt: "Hoodrat Mama"
+      },
+      artFallback: "HM",
+      colorClass: "col-4"
+    },
+    {
       id: "no-bluff",
       name: "No Bluff",
       displayName: "No<br/>Bluff",
