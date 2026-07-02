@@ -118,6 +118,16 @@ Each collection should have:
 - Music connection
 
 ---
+## Development Workflow
+
+1. Create or select a feature branch.
+2. Start the local server with `npm start`.
+3. Review changes on `http://localhost:3000`.
+4. Commit and push the feature branch.
+5. Verify changes on the Render preview environment.
+6. After approval, merge into `main`.
+7. Production deploys automatically via Render.
+---
 
 # Follow the Movement
 
