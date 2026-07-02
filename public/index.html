@@ -420,17 +420,28 @@ button{font-family:inherit;cursor:pointer;border:none;}
   color:var(--mist);
 }
 
-/* SoundCloud area */
+/* Hero music player */
 .hero-player{
-  background:var(--graphite);
-  border-top:1px solid var(--iron);
-  padding:1rem 2rem;
+  width:100vw;
+  margin-left:50%;
+  transform:translateX(-50%);
+  background:
+    linear-gradient(90deg, rgba(184,154,94,0.1), rgba(0,0,0,0) 24%, rgba(204,0,0,0.1) 50%, rgba(0,0,0,0) 76%, rgba(184,154,94,0.1)),
+    #000;
+  border-top:1px solid rgba(216,197,154,0.18);
+  border-bottom:1px solid rgba(184,154,94,0.16);
+  padding:0.85rem max(1.25rem, calc((100vw - 1320px) / 2 + 2rem));
   display:flex;
   align-items:center;
-  gap:1rem;
+  gap:1.15rem;
   flex-shrink:0;
-  grid-column:1;
+  grid-column:1 / -1;
   grid-row:2;
+  box-shadow:0 -10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(216,197,154,0.08);
+}
+.player-meta{
+  min-width:0;
+  flex:0 1 260px;
 }
 .player-art{
   width:44px;height:44px;
@@ -456,33 +467,34 @@ button{font-family:inherit;cursor:pointer;border:none;}
   margin-top:2px;
 }
 .player-controls{
-  display:flex;align-items:center;gap:0.75rem;flex-shrink:0;
+  display:flex;align-items:center;gap:0.9rem;flex:1 1 auto;min-width:160px;
 }
 .play-btn{
   width:36px;height:36px;
-  background:var(--red);
+  background:linear-gradient(135deg, var(--red), var(--blood));
   display:flex;align-items:center;justify-content:center;
   transition:background 0.15s,box-shadow 0.2s;
   flex-shrink:0;
+  box-shadow:0 0 0 1px rgba(216,197,154,0.18);
 }
-.play-btn:hover{background:var(--ember);box-shadow:0 0 16px var(--red-glow);}
+.play-btn:hover{background:var(--ember);box-shadow:0 0 16px var(--red-glow), 0 0 0 1px rgba(216,197,154,0.34);}
 .play-btn svg{margin-left:2px;}
 .player-waveform{
   display:flex;align-items:center;gap:2px;
   height:28px;
   flex:1;
-  max-width:120px;
+  max-width:520px;
 }
 .waveform-bar{
   flex:1;
-  background:var(--steel);
+  background:rgba(216,197,154,0.22);
   border-radius:1px;
   transition:background 0.1s;
 }
-.waveform-bar.active{background:var(--red);}
-.soundcloud-link{
+.waveform-bar.active{background:linear-gradient(180deg, #d8c59a, var(--red));}
+.spotify-link{
   font-size:0.6875rem;
-  color:var(--mist);
+  color:#d8c59a;
   letter-spacing:0.08em;
   text-transform:uppercase;
   font-weight:500;
@@ -490,7 +502,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   transition:color 0.15s;
   flex-shrink:0;
 }
-.soundcloud-link:hover{color:var(--silver);}
+.spotify-link:hover{color:var(--white);}
 
 /* ── RIGHT: COPY SIDE ── */
 .hero-copy{
@@ -756,11 +768,14 @@ button{font-family:inherit;cursor:pointer;border:none;}
     position: absolute;
     left: 0;
     right: 0;
+    width: auto;
+    margin-left: 0;
+    transform: none;
     bottom: 0;
     z-index: 7;
     padding: 0.8rem 1rem;
     gap: 0.75rem;
-    background: rgba(26,26,26,0.92);
+    background: rgba(0,0,0,0.92);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
@@ -774,7 +789,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   }
 
   .player-artist,
-  .soundcloud-link {
+  .spotify-link {
     font-size: 0.62rem;
   }
 }
@@ -912,6 +927,295 @@ button{font-family:inherit;cursor:pointer;border:none;}
   height:1px;
   background:linear-gradient(90deg, var(--red) 0%, var(--iron) 40%, transparent 100%);
   margin-bottom:0;
+}
+
+/* ============================================================
+   FEATURED RELEASE
+   ============================================================ */
+.featured-release-section{
+  background:
+    radial-gradient(circle at 50% 34%, rgba(218,187,119,0.18), transparent 34%),
+    radial-gradient(circle at 50% 58%, rgba(204,0,0,0.08), transparent 38%),
+    linear-gradient(180deg, #000 0%, #050505 52%, #000 100%);
+  border-top:1px solid rgba(218,187,119,0.14);
+  border-bottom:1px solid rgba(218,187,119,0.1);
+  text-align:center;
+  overflow:hidden;
+}
+
+.featured-release-panel{
+  max-width:980px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:clamp(1.1rem, 2.6vw, 1.8rem);
+  position:relative;
+}
+
+.featured-release-panel::before{
+  content:'';
+  position:absolute;
+  top:clamp(7rem, 13vw, 10rem);
+  left:50%;
+  width:min(78vw, 680px);
+  aspect-ratio:1;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(218,187,119,0.18), rgba(218,187,119,0.06) 44%, transparent 68%);
+  filter:blur(4px);
+  pointer-events:none;
+}
+
+.featured-release-art{
+  position:relative;
+  width:min(78vw, 620px);
+  min-height:0;
+  overflow:visible;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  order:2;
+  z-index:1;
+}
+
+.featured-release-art::before{
+  content:'';
+  position:absolute;
+  inset:18% 8% 10%;
+  border-radius:50%;
+  border:1px solid rgba(218,187,119,0.16);
+  box-shadow:0 0 60px rgba(218,187,119,0.16), inset 0 0 45px rgba(204,0,0,0.08);
+  pointer-events:none;
+  z-index:0;
+}
+
+.featured-release-art img{
+  position:relative;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 28px 54px rgba(0,0,0,0.86)) drop-shadow(0 0 34px rgba(218,187,119,0.18));
+  z-index:2;
+}
+
+.featured-release-art-label{
+  display:none;
+}
+
+.featured-release-heading{
+  order:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0.75rem;
+  position:relative;
+  z-index:2;
+}
+
+.featured-release-eyebrow{
+  font-family:var(--font-display);
+  font-size:0.68rem;
+  font-weight:900;
+  letter-spacing:0.24em;
+  text-transform:uppercase;
+  color:#dabb77;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0.75rem;
+}
+
+.featured-release-eyebrow::before,
+.featured-release-eyebrow::after{
+  content:'';
+  width:34px;
+  height:1px;
+  background:linear-gradient(90deg, transparent, #dabb77);
+}
+
+.featured-release-eyebrow::after{
+  background:linear-gradient(90deg, #dabb77, transparent);
+}
+
+.featured-release-kicker{
+  font-family:var(--font-display);
+  font-size:clamp(2.6rem, 9vw, 7rem);
+  font-weight:900;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  color:var(--white);
+  line-height:0.86;
+  text-shadow:0 0 32px rgba(218,187,119,0.16);
+}
+
+.featured-release-content{
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  order:3;
+  position:relative;
+  z-index:2;
+}
+
+.featured-release-platform{
+  display:none;
+}
+
+.featured-release-title{
+  font-family:var(--font-display);
+  font-size:clamp(1.25rem, 3vw, 2rem);
+  font-weight:900;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:#dabb77;
+  line-height:1;
+  margin-bottom:0.95rem;
+}
+
+.featured-release-story{
+  max-width:620px;
+  font-size:clamp(0.98rem, 1.5vw, 1.1rem);
+  line-height:1.75;
+  color:var(--chrome);
+  margin:0 auto 1.5rem;
+}
+
+.featured-release-platforms{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:0.75rem;
+  margin-bottom:1rem;
+}
+
+.featured-release-platform-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  min-width:104px;
+  padding:0.65rem 0.95rem;
+  border:1px solid rgba(218,187,119,0.34);
+  color:#ead9ac;
+  font-family:var(--font-display);
+  font-size:0.64rem;
+  font-weight:900;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  background:rgba(255,255,255,0.025);
+  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease,transform 0.15s ease;
+}
+
+.featured-release-platform-link:hover{
+  border-color:#dabb77;
+  color:var(--white);
+  background:rgba(218,187,119,0.1);
+  transform:translateY(-1px);
+}
+
+.featured-release-availability{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0.9rem;
+  width:min(100%, 460px);
+  max-width:100%;
+  margin:0 auto 1.45rem;
+  color:#ead9ac;
+  font-family:var(--font-display);
+  font-size:0.64rem;
+  font-weight:900;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  padding:0.55rem 0;
+  border-top:1px solid rgba(218,187,119,0.24);
+  border-bottom:1px solid rgba(218,187,119,0.24);
+  background:linear-gradient(90deg, transparent, rgba(218,187,119,0.08), transparent);
+}
+
+.featured-release-availability::before{
+  content:'';
+  width:28px;
+  height:1px;
+  background:#dabb77;
+  flex-shrink:0;
+}
+
+.featured-release-availability::after{
+  content:'';
+  width:28px;
+  height:1px;
+  background:#dabb77;
+  flex-shrink:0;
+}
+
+.featured-release-actions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:0.85rem;
+}
+
+.featured-release-actions .btn-primary{
+  min-height:48px;
+  background:linear-gradient(135deg, var(--red), var(--blood));
+  box-shadow:0 0 0 1px rgba(218,187,119,0.28), 0 18px 36px rgba(0,0,0,0.42);
+}
+
+@media(max-width:900px){
+  .featured-release-panel{
+    max-width:760px;
+  }
+
+  .featured-release-art{
+    width:min(86vw, 540px);
+  }
+}
+
+@media(max-width:540px){
+  .section-title{
+    font-size:clamp(1.35rem, 9vw, 2rem);
+    line-height:1.05;
+  }
+
+  .featured-release-content{
+    padding:0;
+  }
+
+  .featured-release-art{
+    width:min(96vw, 420px);
+  }
+
+  .featured-release-platforms{
+    gap:0.55rem;
+  }
+
+  .featured-release-platform-link{
+    min-width:0;
+    flex:1 1 30%;
+    font-size:0.58rem;
+    padding:0.62rem 0.65rem;
+  }
+
+  .featured-release-story{
+    font-size:0.95rem;
+    line-height:1.65;
+  }
+
+  .featured-release-actions .btn-primary{
+    width:100%;
+  }
+
+  .featured-release-availability{
+    width:100%;
+    justify-content:center;
+    font-size:0.58rem;
+    letter-spacing:0.14em;
+  }
 }
 
 /* ============================================================
@@ -1076,41 +1380,82 @@ button{font-family:inherit;cursor:pointer;border:none;}
 /* ============================================================
    COLLECTIONS
    ============================================================ */
-.collections-section{background:var(--obsidian);}
-.collections-section .section-divider{margin-bottom:3rem;}
+.collections-section{
+  background:
+    radial-gradient(circle at 50% 12%, rgba(184,154,94,0.12), transparent 32%),
+    #000;
+}
+.collections-section .section-header{
+  align-items:flex-end;
+}
+.collections-section .section-title{
+  text-shadow:0 0 28px rgba(184,154,94,0.18);
+}
+.collections-section .section-cta{
+  color:#d8c59a;
+}
+.collections-section .section-cta:hover{
+  color:var(--white);
+}
+.collections-section .section-divider{
+  margin-bottom:3rem;
+  background:linear-gradient(90deg, #b89a5e 0%, var(--red) 32%, rgba(216,197,154,0.22) 62%, transparent 100%);
+  box-shadow:0 0 18px rgba(184,154,94,0.18);
+}
 
 .collections-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:1px;
-  background:var(--iron);
-  border:1px solid var(--iron);
-}
-@media(max-width:768px){
-  .collections-grid{grid-template-columns:1fr;}
+  background:#000;
+  border:1px solid rgba(184,154,94,0.22);
+  box-shadow:0 24px 60px rgba(0,0,0,0.38), 0 0 0 1px rgba(216,197,154,0.04);
 }
 
 .collection-card{
-  background:var(--carbon);
+  background:#000;
   aspect-ratio:4/5;
   position:relative;
   overflow:hidden;
   cursor:pointer;
   display:flex;align-items:flex-end;
+  border:1px solid rgba(255,255,255,0.04);
+  min-height:420px;
+}
+.collection-card.featured{
+  box-shadow:inset 0 0 0 1px rgba(184,154,94,0.46), 0 0 34px rgba(184,154,94,0.12);
+  z-index:1;
+}
+.collection-card.featured .collection-tag{
+  color:#d8c59a;
 }
 .collection-bg{
   position:absolute;inset:0;
   transition:transform 0.6s var(--ease);
   display:flex;align-items:center;justify-content:center;
+  background:#000;
+  padding:clamp(1.5rem, 3vw, 2.4rem);
 }
 .collection-card:hover .collection-bg{transform:scale(1.06);}
+.collection-bg img,
 .collection-bg-fill{
-  width:100%;height:100%;
-  object-fit:cover;
+  width:100%;
+  height:100%;
+  max-width:82%;
+  max-height:58%;
+  object-fit:contain;
+  object-position:center;
+  filter:drop-shadow(0 20px 34px rgba(0,0,0,0.68));
+}
+.collection-card.featured .collection-bg img{
+  filter:drop-shadow(0 20px 34px rgba(0,0,0,0.72)) drop-shadow(0 0 18px rgba(184,154,94,0.22));
+}
+.collection-fallback{
+  display:none;
 }
 .collection-gradient{
   position:absolute;inset:0;
-  background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.15) 100%);
+  background:linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.62) 42%, rgba(0,0,0,0.12) 100%);
   transition:opacity 0.3s;
 }
 .collection-card:hover .collection-gradient{opacity:0.85;}
@@ -1121,6 +1466,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   width:100%;
   transform:translateY(8px);
   transition:transform 0.3s var(--ease);
+  border-top:1px solid rgba(216,197,154,0.08);
 }
 .collection-card:hover .collection-content{transform:translateY(0);}
 .collection-tag{
@@ -1128,7 +1474,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   font-weight:600;
   letter-spacing:0.18em;
   text-transform:uppercase;
-  color:var(--red);
+  color:#b89a5e;
   display:flex;align-items:center;gap:0.5rem;
   margin-bottom:0.5rem;
 }
@@ -1136,7 +1482,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   content:'';
   display:block;
   width:16px;height:1px;
-  background:var(--red);
+  background:linear-gradient(90deg, #b89a5e, var(--red));
 }
 .collection-name{
   font-family:var(--font-display);
@@ -1179,10 +1525,50 @@ button{font-family:inherit;cursor:pointer;border:none;}
   transform:translateX(0);
 }
 
+@media(max-width:768px){
+  .collections-grid{grid-template-columns:1fr;}
+
+  .collection-card{
+    aspect-ratio:16/11;
+    min-height:250px;
+  }
+
+  .collection-name{
+    font-size:clamp(1.25rem, 8vw, 1.75rem);
+    letter-spacing:0;
+  }
+
+  .collection-bg{
+    padding:1.25rem;
+  }
+
+  .collection-bg img,
+  .collection-bg-fill{
+    max-width:74%;
+    max-height:50%;
+  }
+
+  .collection-tag{
+    font-size:0.58rem;
+    letter-spacing:0.14em;
+  }
+
+  .collection-desc{
+    max-height:80px;
+    opacity:1;
+    font-size:0.8rem;
+  }
+
+  .collection-arrow{
+    opacity:1;
+    transform:none;
+  }
+}
+
 /* Collection color fills */
-.col-1{ background:linear-gradient(135deg,#0d0d0d,#1a0505);}
-.col-2{ background:linear-gradient(135deg,#0a0a0a,#0d0d18);}
-.col-3{ background:linear-gradient(135deg,#0d0a00,#0d0d0d);}
+.col-1,
+.col-2,
+.col-3{ background:#000;}
 
 /* Collection placeholder art */
 .col-art{
@@ -1213,7 +1599,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
 }
 
 .drop-band::before{
-  content:'STINKY PINKY • LATEST DROP • BIG OG WAYNE • LIMITED RUN • STINKY PINKY • ';
+  content:'STREETWISE • CURRENT RELEASE • BIG OG WAYNE • LIMITED RUN • STREETWISE • ';
   position:absolute;
   top:50%;
   left:0;
@@ -1448,13 +1834,14 @@ button{font-family:inherit;cursor:pointer;border:none;}
    ============================================================ */
 .footer{
   background:var(--void);
-  border-top:1px solid var(--iron);
+  border-top:1px solid rgba(184,154,94,0.24);
+  box-shadow:inset 0 1px 0 rgba(216,197,154,0.06);
 }
 .footer::before{
   content:'';
   display:block;
   height:2px;
-  background:linear-gradient(90deg, var(--red) 0%, var(--blood) 40%, transparent 100%);
+  background:linear-gradient(90deg, #b89a5e 0%, var(--red) 38%, rgba(216,197,154,0.18) 68%, transparent 100%);
 }
 .footer-main{
   max-width:1320px;
@@ -1469,19 +1856,25 @@ button{font-family:inherit;cursor:pointer;border:none;}
   .footer-main{grid-template-columns:1fr;gap:2.5rem;}
 }
 .footer-brand{display:flex;flex-direction:column;gap:1rem;max-width:280px;}
-.footer-logo{height:20%;}
+.footer-logo{
+  height:20%;
+  filter:drop-shadow(0 0 16px rgba(184,154,94,0.2));
+}
 .footer-tagline{
   font-size:0.875rem;
-  color:var(--fog);
+  color:#d8c59a;
   line-height:1.65;
   font-style:italic;
+}
+.footer-tagline span{
+  display:block;
 }
 .footer-social{display:flex;gap:0.625rem;margin-top:0.5rem;}
 .footer-social-btn{
   display:flex;align-items:center;justify-content:center;
   width:34px;height:34px;
-  background:var(--graphite);
-  border:1px solid var(--iron);
+  background:#000;
+  border:1px solid rgba(184,154,94,0.24);
   color:var(--mist);
   font-family:var(--font-display);
   font-weight:900;
@@ -1491,9 +1884,9 @@ button{font-family:inherit;cursor:pointer;border:none;}
   transition:border-color 0.15s,color 0.15s,box-shadow 0.2s;
 }
 .footer-social-btn:hover{
-  border-color:var(--red);
+  border-color:#b89a5e;
   color:var(--white);
-  box-shadow:0 0 10px var(--red-glow);
+  box-shadow:0 0 14px rgba(184,154,94,0.24), 0 0 10px rgba(204,0,0,0.16);
 }
 .footer-links{display:flex;gap:3rem;flex-wrap:wrap;}
 .footer-group{display:flex;flex-direction:column;gap:1rem;min-width:120px;}
@@ -1503,16 +1896,16 @@ button{font-family:inherit;cursor:pointer;border:none;}
   font-size:0.6875rem;
   letter-spacing:0.18em;
   text-transform:uppercase;
-  color:var(--white);
+  color:#d8c59a;
   padding-bottom:0.75rem;
-  border-bottom:1px solid var(--iron);
+  border-bottom:1px solid rgba(184,154,94,0.18);
   position:relative;
 }
 .footer-group-heading::after{
   content:'';
   position:absolute;bottom:-1px;left:0;
   width:20px;height:1px;
-  background:var(--red);
+  background:linear-gradient(90deg, #b89a5e, var(--red));
 }
 .footer-group-list{display:flex;flex-direction:column;gap:0.625rem;}
 .footer-link{
@@ -1521,9 +1914,9 @@ button{font-family:inherit;cursor:pointer;border:none;}
   color:var(--fog);
   transition:color 0.15s;
 }
-.footer-link:hover{color:var(--silver);}
+.footer-link:hover{color:#d8c59a;}
 .footer-bottom{
-  border-top:1px solid var(--iron);
+  border-top:1px solid rgba(184,154,94,0.16);
   padding:1.125rem clamp(1rem,4vw,2rem);
   max-width:1320px;
   margin:0 auto;
@@ -1537,10 +1930,10 @@ button{font-family:inherit;cursor:pointer;border:none;}
   font-size:0.75rem;
   color:var(--fog);
 }
-.footer-copy strong{color:var(--mist);}
+.footer-copy strong{color:#d8c59a;}
 .footer-legal{display:flex;gap:1.5rem;}
 .footer-legal a{font-size:0.75rem;color:var(--fog);transition:color 0.15s;}
-.footer-legal a:hover{color:var(--mist);}
+.footer-legal a:hover{color:#d8c59a;}
 
 
 /* ============================================================
@@ -1894,11 +2287,11 @@ button{font-family:inherit;cursor:pointer;border:none;}
       <!-- Player bar -->
       <div class="hero-player">
   <div class="player-meta">
-    <div class="player-title">LATEST DROP</div>
-    <div class="player-artist">Big OG Wayne · SoundCloud</div>
+    <div class="player-title">Streetwise</div>
+    <div class="player-artist">Big OG Wayne · Spotify</div>
   </div>
         <div class="player-controls">
-          <button class="play-btn" id="playBtn" aria-label="Play">
+          <button class="play-btn" id="playBtn" aria-label="Open Streetwise on Spotify" data-spotify-url="https://open.spotify.com/track/3HAGDuUYAyEMGiXGpdrgUx?si=fef72fee85344164">
             <svg id="playIcon" width="14" height="14" viewBox="0 0 24 24" fill="white">
               <polygon points="5,3 19,12 5,21"/>
             </svg>
@@ -1918,9 +2311,9 @@ button{font-family:inherit;cursor:pointer;border:none;}
             <div class="waveform-bar" style="height:85%"></div>
           </div>
         </div>
-        <a href="https://soundcloud.com" target="_blank" rel="noopener" class="soundcloud-link">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.56 8.87V17h8.76c.82-.01 1.68-.68 1.68-1.69 0-.91-.62-1.66-1.46-1.68-.07 0-.13 0-.2.01a2.3 2.3 0 0 0 .02-.31c0-1.37-1.07-2.48-2.39-2.48-.29 0-.56.05-.81.15A3.38 3.38 0 0 0 13.9 9.2a3.33 3.33 0 0 0-2.34-.33zm-1.27 8.13H2.05C.92 17 0 16.08 0 14.95c0-.86.53-1.6 1.29-1.91a4.4 4.4 0 0 1-.05-.67A4.43 4.43 0 0 1 5.67 7.9a4.4 4.4 0 0 1 2.23.6 4.08 4.08 0 0 1 2.73-1.47v9.97z"/></svg>
-          SoundCloud
+        <a href="https://open.spotify.com/track/3HAGDuUYAyEMGiXGpdrgUx?si=fef72fee85344164" target="_blank" rel="noopener" class="spotify-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.5 17.31c-.2.32-.62.41-.94.22-2.57-1.57-5.8-1.92-9.6-1.05-.37.08-.73-.15-.82-.52-.08-.37.15-.73.52-.82 4.16-.95 7.73-.54 10.62 1.23.32.2.42.62.22.94zm1.33-2.95c-.25.39-.77.51-1.16.26-2.94-1.8-7.43-2.32-10.91-1.27-.44.13-.91-.12-1.04-.56-.13-.44.12-.91.56-1.04 3.97-1.2 8.91-.62 12.29 1.45.39.24.51.76.26 1.16zm.12-3.08C15.42 9.18 9.61 8.98 6.23 10c-.53.16-1.09-.14-1.25-.67-.16-.53.14-1.09.67-1.25 3.88-1.18 10.28-.94 14.32 1.46.48.28.63.9.35 1.37-.29.48-.9.63-1.37.37z"/></svg>
+          Spotify
         </a>
       </div>
 
@@ -1974,20 +2367,29 @@ button{font-family:inherit;cursor:pointer;border:none;}
 </section>
 
 <!-- ============================================================
+     FEATURED
+     ============================================================ -->
+<section class="section featured-release-section" id="featured">
+  <div class="section-inner">
+    <div class="featured-release-panel" data-featured-release></div>
+  </div>
+</section>
+
+<!-- ============================================================
      IDENTITY BAND
      ============================================================ -->
 <section class="drop-band">
   <div class="drop-band-inner">
-    <div class="drop-band-label">Latest Drop</div>
+    <div class="drop-band-label">Current Release</div>
 
     <div class="drop-band-copy">
-      <div class="drop-band-title">Stinky Pinky</div>
+      <div class="drop-band-title">Streetwise</div>
       <div class="drop-band-sub">
         Big OG Wayne’s newest collection. Limited-run energy. Wear what you rep.
       </div>
     </div>
 
-    <a href="/collections/stinky-pinky" class="drop-band-cta">Shop Stinky Pinky</a>
+    <a href="/collections/streetwise" class="drop-band-cta">Shop Streetwise</a>
   </div>
 </section>
 
@@ -2097,61 +2499,12 @@ button{font-family:inherit;cursor:pointer;border:none;}
         <h2 class="section-title">REP BIG OG WAYNE</h2>
       </div>
       <a href="/collections" class="section-cta">
-        All Collections <span class="section-cta-arrow">→</span>
+        REP THE MUSIC <span class="section-cta-arrow">→</span>
       </a>
     </div>
     <div class="section-divider" style="margin-bottom:2rem;"></div>
 
-    <div class="collections-grid">
-      <!-- Streetwise -->
-      <a href="/collections/streetwise" class="collection-card">
-        <div class="collection-bg col-3">
-        <img src="/assets/images/logo/bow_logo.png" alt="Streetwise">SW</div>
-        <div class="collection-gradient"></div>
-        <div class="collection-content">
-          <div class="collection-tag">FEATURED RELEASE</div>
-          <div class="collection-name">Street<br/>wise</div>
-          <div class="collection-desc">Built from real stories, sharp instincts, and the current era.</div>
-          <div class="collection-arrow">
-            Shop Now
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </div>
-        </div>
-      </a>
-
-      <!-- Stinky Pinky -->
-      <a href="/collections/stinky-pinky" class="collection-card">
-        <div class="collection-bg col-1">
-        <img src="/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
-        <div class="collection-gradient"></div>
-        <div class="collection-content">
-          <div class="collection-tag">FAN FAVORITE</div>
-          <div class="collection-name">Stinky<br/>Pinky</div>
-          <div class="collection-desc">Bold signature pieces. The ones that start conversations.</div>
-          <div class="collection-arrow">
-            Shop Now
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </div>
-        </div>
-      </a>
-
-      <!-- No Bluff -->
-      <a href="/collections/no-bluff" class="collection-card">
-        <div class="collection-bg col-2">
-        <img src="/assets/images/logo/NoBluff_Logo_BlackBkg.png">NB</div>
-        <div class="collection-gradient"></div>
-        <div class="collection-content">
-          <div class="collection-tag">SIGNATURE SERIES</div>
-          <div class="collection-name">No<br/>Bluff</div>
-          <div class="collection-desc">No games. No filler. Just the real ones.</div>
-          <div class="collection-arrow">
-            Shop Now
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </div>
-        </div>
-      </a>
-
-    </div>
+    <div class="collections-grid" data-homepage-collections></div>
   </div>
 </section>
 
@@ -2216,7 +2569,11 @@ button{font-family:inherit;cursor:pointer;border:none;}
     <div class="footer-brand">
       <img class="footer-logo" src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne Logo">
     </img>
-    <p class="footer-tagline">The culture is the brand. Wear what you rep.</p>
+    <p class="footer-tagline">
+      <span>More than merch.</span>
+      <span>Rep the music.</span>
+      <span>Follow the movement.</span>
+    </p>
       <div class="footer-social">
         <a href="https://www.tiktok.com/@wayneherr1" target="_blank" class="footer-social-btn" aria-label="TikTok">TT</a>
         <a href="https://www.youtube.com/@Big-OG-Wayne" target="_blank" class="footer-social-btn" aria-label="YouTube">YT</a>
@@ -2253,6 +2610,98 @@ button{font-family:inherit;cursor:pointer;border:none;}
   </div>
 </footer>
 
+<script type="module">
+import { homepageConfig } from "/assets/js/homepage.config.js";
+
+const arrowIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function safeDisplayName(value = "") {
+  return escapeHtml(value).replace(/&lt;br\/&gt;/g, "<br/>");
+}
+
+function linkTarget(url = "") {
+  return url.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
+}
+
+function renderFeaturedRelease(config) {
+  const target = document.querySelector("[data-featured-release]");
+  if (!target || !config) return;
+
+  const platformLinks = config.platforms.map(platform => `
+    <a
+      href="${escapeHtml(platform.url)}"
+      class="featured-release-platform-link"
+      ${linkTarget(platform.url)}
+    >
+      ${escapeHtml(platform.label)}
+    </a>
+  `).join("");
+
+  target.innerHTML = `
+    <div class="featured-release-heading">
+      <div class="featured-release-eyebrow">${escapeHtml(config.eyebrow)}</div>
+      <h2 class="featured-release-kicker">Featured</h2>
+    </div>
+    <div class="featured-release-art">
+      <img src="${escapeHtml(config.artwork.src)}" alt="${escapeHtml(config.artwork.alt)}" loading="lazy">
+      <div class="featured-release-art-label">${escapeHtml(config.releaseTitle)}</div>
+    </div>
+    <div class="featured-release-content">
+      <div class="featured-release-platform">${escapeHtml(config.platformLabel)}</div>
+      <h3 class="featured-release-title">${escapeHtml(config.releaseTitle)}</h3>
+      <p class="featured-release-story">${escapeHtml(config.story)}</p>
+      <div class="featured-release-platforms" aria-label="Featured release platforms">
+        ${platformLinks}
+      </div>
+      <div class="featured-release-availability" aria-label="Availability">
+        AVAILABLE EVERYWHERE
+      </div>
+      <div class="featured-release-actions">
+        <a href="${escapeHtml(config.merchCta.url)}" class="btn-primary">
+          ${escapeHtml(config.merchCta.label)}
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+function renderCollections(collections) {
+  const target = document.querySelector("[data-homepage-collections]");
+  if (!target || !collections?.length) return;
+
+  target.innerHTML = collections.map(collection => `
+    <a href="${escapeHtml(collection.url)}" class="collection-card${collection.isFeatured ? " featured" : ""}">
+      <div class="collection-bg ${escapeHtml(collection.colorClass)}">
+        <img src="${escapeHtml(collection.artwork.src)}" alt="${escapeHtml(collection.artwork.alt)}" loading="lazy">
+        <span class="collection-fallback" aria-hidden="true">${escapeHtml(collection.artFallback)}</span>
+      </div>
+      <div class="collection-gradient"></div>
+      <div class="collection-content">
+        <div class="collection-tag">${escapeHtml(collection.badge)}</div>
+        <div class="collection-name">${safeDisplayName(collection.displayName)}</div>
+        <div class="collection-desc">${escapeHtml(collection.story)}</div>
+        <div class="collection-arrow">
+          Shop Now
+          ${arrowIcon}
+        </div>
+      </div>
+    </a>
+  `).join("");
+}
+
+renderFeaturedRelease(homepageConfig.featuredRelease);
+renderCollections(homepageConfig.collections);
+</script>
+
 <script>
 // ── Waveform play toggle ──
 let playing = false;
@@ -2266,6 +2715,7 @@ playBtn.addEventListener('click', () => {
   playIcon.innerHTML = playing
     ? '<rect x="6" y="4" width="4" height="16" fill="white"/><rect x="14" y="4" width="4" height="16" fill="white"/>'
     : '<polygon points="5,3 19,12 5,21" fill="white"/>';
+  window.open(playBtn.dataset.spotifyUrl, '_blank', 'noopener');
 });
 
 // ── Scroll reveal for sections ──
