@@ -123,3 +123,34 @@ Acceptance Criteria
 - Remove homepage-only JS.
 - No console errors.
 - Responsive.
+
+---
+
+## Shop/Product Cleanup
+
+### 📋 Backlog
+
+#### SHOP-001 Shop and product stabilization
+
+Status: Planned
+
+#### SHOP-001F Printify product performance
+
+Status: Planned
+
+Scope
+
+- Add a backend endpoint for fetching a single Printify product by id.
+- Example route:
+  `/products/:id`
+- Update `product.html` so individual product pages can fetch one product directly instead of fetching the full product list.
+- Add lightweight server-side caching for Printify product responses.
+- Cache should reduce repeated Printify API calls during normal browsing.
+- Cache duration should be short enough to avoid stale product/pricing data, such as 5-15 minutes.
+- Preserve Printify as the source of truth for live products, pricing, variants, and availability.
+- Do not break existing `/products` behavior used by the shop page.
+- Do not change checkout behavior in this ticket.
+
+Reason
+
+Product pages currently fetch all Printify products and then search by id, which can feel slow. A single-product endpoint plus short-lived caching should make product pages feel faster and reduce unnecessary Printify API calls.

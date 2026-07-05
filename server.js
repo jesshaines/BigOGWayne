@@ -79,21 +79,58 @@ app.listen(PORT, () => {
 import axios from "axios";
 
 const PRINTIFY_API = "https://api.printify.com/v1";
+const PRINTIFY_API_TOKEN = process.env.PRINTIFY_API_TOKEN;
+const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID;
+const PRINTIFY_PRODUCTS_ENDPOINT = `/shops/${PRINTIFY_SHOP_ID}/products.json`;
+const PRINTIFY_PRODUCTS_ENDPOINT_LABEL = "/shops/[PRINTIFY_SHOP_ID]/products.json";
 
 const printify = axios.create({
   baseURL: PRINTIFY_API,
   headers: {
-    Authorization: `Bearer ${process.env.PRINTIFY_API_KEY}`,
+    Authorization: `Bearer ${PRINTIFY_API_TOKEN}`,
     "Content-Type": "application/json"
   }
 });
 
+function sanitizeLogBody(value) {
+  if (Array.isArray(value)) {
+    return value.map(item => sanitizeLogBody(item));
+  }
+
+  if (!value || typeof value !== "object") return value;
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => {
+      const shouldRedact = /token|secret|password|authorization|api[_-]?key/i.test(key);
+      return [key, shouldRedact ? "[REDACTED]" : sanitizeLogBody(entry)];
+    })
+  );
+}
+
 app.get("/products", async (req, res) => {
+  console.log("/products requested", {
+    printifyApiTokenPresent: Boolean(process.env.PRINTIFY_API_TOKEN),
+    printifyShopIdPresent: Boolean(process.env.PRINTIFY_SHOP_ID)
+  });
+
   try {
-    const response = await printify.get(`/shops/27239381/products.json`);
+    const response = await printify.get(PRINTIFY_PRODUCTS_ENDPOINT);
     res.json(response.data);
   } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch products" });
+    const status = error.response?.status || 500;
+
+    console.error("PRINTIFY PRODUCTS ERROR", {
+      endpoint: PRINTIFY_PRODUCTS_ENDPOINT_LABEL,
+      message: error.message,
+      status: error.response?.status || null,
+      response: error.response?.data ? sanitizeLogBody(error.response.data) : null,
+      noResponseReceived: !error.response
+    });
+
+    res.status(status).json({
+      error: "Failed to fetch products",
+      status,
+      details: "Printify request failed. Check server logs."
+    });
   }
 });

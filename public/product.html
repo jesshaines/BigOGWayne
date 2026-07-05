@@ -92,11 +92,31 @@
   object-fit: contain; 
 }
 
-/* .product-main-image img{
+.product-main-image img{
   width:100%;
   height:100%;
   object-fit:cover;
-} */
+}
+
+.product-image-placeholder{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:1.25rem;
+  text-align:center;
+  color:var(--mist);
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.14em;
+  line-height:1.5;
+  text-transform:uppercase;
+}
+
+.product-image-placeholder[hidden]{
+  display:none;
+}
 
 .product-badge{
   position:absolute;
@@ -256,6 +276,11 @@
   letter-spacing:.16em;
 }
 
+.product-buy-btn:disabled{
+  cursor:not-allowed;
+  opacity:.55;
+}
+
 .product-secondary-btn{
   width:100%;
   padding:.9rem 1rem;
@@ -399,16 +424,12 @@
 }
 </style>
 </head>
-<body
-  data-product-id="REAL_PRINTIFY_PRODUCT_ID"
-  data-variant-id="REAL_PRINTIFY_VARIANT_ID"
-  data-product-url="/product.html?id=${product.id}"
-  data-product-collection="stinky-pinky">
+<body>
   
 <header class="header">
   <div class="header-inner">
     <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
-      <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne — Lilliwaup's Finest">
+      <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne logo">
     </a>
     <nav class="nav" aria-label="Main navigation">
       <a href="/shop" class="nav-link">Shop</a>
@@ -452,20 +473,17 @@
   alt=""
   style="display:none;"
 >
+<div class="product-image-placeholder" id="productImagePlaceholder" hidden>No product image available</div>
 </div>
-
-        <div class="product-main-image">
-          <div class="product-badge">Featured</div>
-        </div>
       </div>
 
       <div class="product-info-panel">
         <div id="loadingState">Loading product...</div>
         <div class="product-collection" id="productCollection"></div>
         <h1 class="product-title"></h1>
+        <div class="product-price"></div>
         
-        <div class="product-description">
-****        </div>
+        <div class="product-description" id="productDescription"></div>
 
         <div class="product-meta-row">
 
@@ -522,7 +540,7 @@
       <div class="product-panel">
         <div class="product-panel-title">Drop Details</div>
         <div class="product-panel-text">
-          Part of the Stinky Pinky collection. This piece is designed to carry the humor, attitude, and standout visual identity of the track into something wearable. Keep this panel for collection-specific notes, material details, or vendor sizing notes.
+          Official Big OG Wayne merch. Product details and sizing may vary by item.
         </div>
       </div>
     </div>
@@ -572,38 +590,147 @@
 </section>
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
+  const loadingState = document.getElementById("loadingState");
+
+  function showStatus(message) {
+    if (loadingState) {
+      loadingState.textContent = message;
+      loadingState.style.display = "block";
+    }
+  }
+
+  function clearStatus() {
+    if (loadingState) {
+      loadingState.style.display = "none";
+    }
+  }
+
+  function formatCollection(value = "Collection") {
+    return String(value || "Collection")
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  function plainTextFromHtml(value = "") {
+    const div = document.createElement("div");
+    div.innerHTML = String(value);
+    return div.textContent.trim();
+  }
+
+  async function readProductsResponse(response) {
+    const text = await response.text();
+
+    if (!text) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      console.error("Invalid /products JSON response:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: text
+      });
+      return null;
+    }
+  }
+
+  function normalizeProductsResponse(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.products)) return payload.products;
+    return null;
+  }
+
+  function setAddToBagEnabled(isEnabled, label = "Add to Loot Bag") {
+    const addToLootBagBtn = document.getElementById("addToLootBagBtn");
+
+    if (!addToLootBagBtn) return;
+
+    addToLootBagBtn.disabled = !isEnabled;
+    addToLootBagBtn.textContent = label;
+  }
+
   try {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
 
     if (!id) {
       console.error("No product ID");
+      showStatus("No product selected.");
       return;
     }
 
-    const res = await fetch("/products");
-    const json = await res.json();
-    const products = json.data || json;
+    let res;
+
+    try {
+      res = await fetch("/products");
+    } catch (fetchErr) {
+      console.error("Failed to fetch /products:", fetchErr);
+      showStatus("Failed to load products.");
+      return;
+    }
+
+    const json = await readProductsResponse(res);
+
+    if (!res.ok) {
+      console.error("Failed to load /products:", {
+        status: res.status,
+        statusText: res.statusText,
+        response: json
+      });
+      showStatus("Failed to load products.");
+      return;
+    }
+
+    const products = normalizeProductsResponse(json);
+
+    if (!Array.isArray(products)) {
+      console.error("Unexpected /products response shape:", json);
+      showStatus("Failed to load products.");
+      return;
+    }
 
     const product = products.find(p => String(p.id) === String(id));
 
     if (!product) {
-      console.error("Product not found");
+      console.error("Product not found:", {
+        requestedProductId: id,
+        availableProductIds: products.map(p => String(p?.id || "")).filter(Boolean)
+      });
+      showStatus("Product not found.");
       return;
     }
 
-    // 🔥 BASIC INFO
     const titleEl = document.querySelector(".product-title");
     const priceEl = document.querySelector(".product-price");
+    const descriptionEl = document.getElementById("productDescription");
+    const collectionLabel = document.getElementById("productCollection");
+    const collection = Array.isArray(product.tags) && product.tags.length
+      ? product.tags[0]
+      : "";
+    const formattedCollection = formatCollection(collection);
 
     if (titleEl) titleEl.textContent = product.title;
+    if (descriptionEl) {
+      descriptionEl.textContent =
+        plainTextFromHtml(product.description || product.description_html) ||
+        "Official Big OG Wayne merch.";
+    }
+    if (collectionLabel) {
+      collectionLabel.textContent = formattedCollection;
+    }
 
-    // 🔥 VARIANTS
-  const parsed = product.variants
-  .filter(v => v.is_enabled)
-  .filter(v => v.title !== "Default")
-  .map(v => {
-    const parts = v.title.split(" / ").map(p => p.trim());
+    const rawVariants = Array.isArray(product.variants)
+      ? product.variants
+      : [];
+    const enabledVariants = rawVariants.filter(v => v && v.is_enabled !== false);
+    const optionVariants = enabledVariants.filter(v => v.title && v.title !== "Default");
+    const variantsToUse = optionVariants.length ? optionVariants : enabledVariants;
+
+    const parsed = variantsToUse.map(v => {
+      const parts = v.title && v.title !== "Default"
+        ? v.title.split(" / ").map(p => p.trim())
+        : [];
 
     let color = null;
     let size = null;
@@ -618,11 +745,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     return {
       id: v.id,
-      price: v.price,
+      price: Number(v.price),
       color,
       size
     };
-  });
+  }).filter(v => v.id && Number.isFinite(v.price));
+
+    const hasAvailableVariants = parsed.length > 0;
+
+    if (!hasAvailableVariants) {
+      if (priceEl) priceEl.textContent = "Price unavailable";
+      setAddToBagEnabled(false, "Unavailable");
+      showStatus("Product options are unavailable.");
+    }
 
     const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
     const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
@@ -639,27 +774,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function updateVariant() {
       const variant = findVariant();
-      if (!variant) return;
+      if (!variant) {
+        setAddToBagEnabled(false, "Unavailable");
+        showStatus("Selected variant is unavailable.");
+        return null;
+      }
 
       if (priceEl) {
         priceEl.textContent = "$" + (variant.price / 100).toFixed(2);
       }
 
+      setAddToBagEnabled(true);
+
       document.body.dataset.variantId = variant.id;
       document.body.dataset.productPrice = variant.price / 100;
+      document.body.dataset.productId = product.id;
+      document.body.dataset.productName = product.title;
+      document.body.dataset.productCollection = collection;
+      document.body.dataset.productUrl = `/product.html?id=${product.id}`;
+
+      return variant;
     }
 
-    const collectionLabel = document.getElementById("productCollection");
-
-      if (collectionLabel) {
-      collectionLabel.textContent = formattedCollection;
-    }
-
-    // 🔥 IMAGES (SAFE)
  const mainImage = document.getElementById("mainProductImage");
 const thumbContainer = document.querySelector(".product-thumbs");
+const imagePlaceholder = document.getElementById("productImagePlaceholder");
 
-// 🔥 Get images tied to selected variant
 function getImagesForSelection() {
   if (!product.images?.length) return [];
 
@@ -668,25 +808,38 @@ function getImagesForSelection() {
     (selectedSize ? v.size === selectedSize : true)
   );
 
-  const variantIds = matchingVariants.map(v => v.id);
+  const variantIds = matchingVariants.map(v => String(v.id));
 
-  // 🔥 match images that belong to those variants
   const filtered = product.images.filter(img =>
-    img.variant_ids?.some(id => variantIds.includes(id))
+    Array.isArray(img.variant_ids) &&
+    img.variant_ids.some(id => variantIds.includes(String(id)))
   );
 
   return filtered.length ? filtered : product.images;
 }
 
-// 🔥 render images
+function setImagePlaceholder(isVisible) {
+  if (!imagePlaceholder) return;
+  imagePlaceholder.hidden = !isVisible;
+}
+
 function renderImages() {
   if (!mainImage || !thumbContainer) return;
 
-  const images = getImagesForSelection();
-  if (!images.length) return;
+  const images = getImagesForSelection().filter(img => img?.src);
+  if (!images.length) {
+    mainImage.removeAttribute("src");
+    mainImage.alt = product.title || "Product image";
+    mainImage.style.display = "none";
+    thumbContainer.innerHTML = "";
+    setImagePlaceholder(true);
+    return;
+  }
 
 const first = images[0].src;
 mainImage.style.display = "none";
+mainImage.alt = product.title || "Product image";
+setImagePlaceholder(false);
 
 const preload = new Image();
 
@@ -715,6 +868,7 @@ mainImage.style.background = isSizeChart ? "#111" : "transparent";
       const img = btn.querySelector("img");
 if (img) {
   mainImage.src = img.src;
+  mainImage.alt = img.alt || product.title || "Product image";
 
   const isSizeChart = img.src.includes("size-chart");
 
@@ -729,7 +883,6 @@ if (img) {
   });
 }
 
-    // 🔥 OPTIONS (SAFE TARGETING)
    const colorGroup = document.getElementById("colorGroup");
 const sizeGroup = document.getElementById("sizeGroup");
 
@@ -752,9 +905,9 @@ if (colorContainer && colors.length) {
 
       colorContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      renderImages(); 
       renderSizes();
       updateVariant();
+      renderImages();
     });
   });
     } else if (colorGroup) {
@@ -785,7 +938,6 @@ function renderSizes() {
 
   sizeGroup.style.display = "flex";
 
-  // 🔥 Sort sizes
   const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
   availableSizes = availableSizes.sort((a, b) => {
@@ -794,12 +946,10 @@ function renderSizes() {
     return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
   });
 
-  // 🔥 Ensure selectedSize is valid
   if (!availableSizes.includes(selectedSize)) {
     selectedSize = availableSizes[0];
   }
 
-  // 🔥 Build buttons
   sizeContainer.innerHTML = availableSizes.map(size => `
     <button 
       type="button"
@@ -809,25 +959,18 @@ function renderSizes() {
     </button>
   `).join("");
 
-  // 🔥 Attach listeners AFTER render
   sizeContainer.querySelectorAll("button").forEach(btn => {
     btn.addEventListener("click", () => {
       selectedSize = btn.dataset.size;
 
-      // update UI
        sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
 
       updateVariant();
+      renderImages();
     });
   });
 }
-    const collection = product.tags?.[0] || "Collection";
-
-// Format collection nicely
-const formattedCollection = collection
-  .replace(/-/g, " ")
-  .replace(/\b\w/g, l => l.toUpperCase());
 
 // Update breadcrumb text
 const collectionEl = document.getElementById("breadcrumbCollection");
@@ -843,18 +986,19 @@ if (productEl) {
   productEl.textContent = product.title;
 }
 
-    // 🔥 DATASET (CRITICAL FOR CART)
-    const firstVariant = findVariant();
-    document.body.dataset.productId = product.id;
-    document.body.dataset.variantId = firstVariant.id;
-    document.body.dataset.productName = product.title;
-    document.body.dataset.productPrice = firstVariant.price / 100;
-    renderImages();
     renderSizes();
-    updateVariant();
+    renderImages();
+
+    if (hasAvailableVariants) {
+      updateVariant();
+      clearStatus();
+    }
 
   } catch (err) {
     console.error("PRODUCT LOAD ERROR:", err);
+    showStatus(err.message === "Failed to load products."
+      ? "Failed to load products."
+      : err.message || "Unable to load product.");
   }
 });
 </script>
@@ -966,11 +1110,7 @@ loadRelatedProducts();
 
 <!-- BUTTON HOOK -->
 <script>
-document.getElementById('addToLootBagBtn')?.addEventListener('click', () => {
-  window.addToCartFromProductPage();
-});
 document.querySelector(".product-page")?.classList.add("loaded");
-document.getElementById("loadingState").style.display = "none";
 renderLootBag();
 updateCartCount();
 </script>
