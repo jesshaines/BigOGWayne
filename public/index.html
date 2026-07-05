@@ -40,7 +40,11 @@
    RESET
    ============================================================ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{font-size:16px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth;}
+html{font-size:16px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth;overflow-x:hidden;}
+html,
+body{
+  max-width:100%;
+}
 body{
   font-family:var(--font-body);
   background:var(--obsidian);
@@ -420,17 +424,28 @@ button{font-family:inherit;cursor:pointer;border:none;}
   color:var(--mist);
 }
 
-/* SoundCloud area */
+/* Hero music player */
 .hero-player{
-  background:var(--graphite);
-  border-top:1px solid var(--iron);
-  padding:1rem 2rem;
+  width:100%;
+  margin-left:0;
+  transform:none;
+  background:
+    linear-gradient(90deg, rgba(184,154,94,0.1), rgba(0,0,0,0) 24%, rgba(204,0,0,0.1) 50%, rgba(0,0,0,0) 76%, rgba(184,154,94,0.1)),
+    #000;
+  border-top:1px solid rgba(216,197,154,0.18);
+  border-bottom:1px solid rgba(184,154,94,0.16);
+  padding:0.85rem 2rem;
   display:flex;
   align-items:center;
-  gap:1rem;
+  gap:1.15rem;
   flex-shrink:0;
-  grid-column:1;
+  grid-column:1 / -1;
   grid-row:2;
+  box-shadow:0 -10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(216,197,154,0.08);
+}
+.player-meta{
+  min-width:0;
+  flex:0 1 260px;
 }
 .player-art{
   width:44px;height:44px;
@@ -456,41 +471,43 @@ button{font-family:inherit;cursor:pointer;border:none;}
   margin-top:2px;
 }
 .player-controls{
-  display:flex;align-items:center;gap:0.75rem;flex-shrink:0;
+  display:flex;align-items:center;gap:0.9rem;flex:1 1 auto;min-width:0;
 }
 .play-btn{
   width:36px;height:36px;
-  background:var(--red);
+  background:linear-gradient(135deg, var(--red), var(--blood));
   display:flex;align-items:center;justify-content:center;
   transition:background 0.15s,box-shadow 0.2s;
   flex-shrink:0;
+  box-shadow:0 0 0 1px rgba(216,197,154,0.18);
 }
-.play-btn:hover{background:var(--ember);box-shadow:0 0 16px var(--red-glow);}
+.play-btn:hover{background:var(--ember);box-shadow:0 0 16px var(--red-glow), 0 0 0 1px rgba(216,197,154,0.34);}
 .play-btn svg{margin-left:2px;}
 .player-waveform{
   display:flex;align-items:center;gap:2px;
   height:28px;
   flex:1;
-  max-width:120px;
+  max-width:520px;
 }
 .waveform-bar{
   flex:1;
-  background:var(--steel);
+  background:rgba(216,197,154,0.22);
   border-radius:1px;
   transition:background 0.1s;
 }
-.waveform-bar.active{background:var(--red);}
-.soundcloud-link{
+.waveform-bar.active{background:linear-gradient(180deg, #d8c59a, var(--red));}
+.spotify-link{
   font-size:0.6875rem;
-  color:var(--mist);
+  color:#d8c59a;
   letter-spacing:0.08em;
   text-transform:uppercase;
   font-weight:500;
   display:flex;align-items:center;gap:4px;
   transition:color 0.15s;
   flex-shrink:0;
+  min-width:0;
 }
-.soundcloud-link:hover{color:var(--silver);}
+.spotify-link:hover{color:var(--white);}
 
 /* ── RIGHT: COPY SIDE ── */
 .hero-copy{
@@ -756,11 +773,14 @@ button{font-family:inherit;cursor:pointer;border:none;}
     position: absolute;
     left: 0;
     right: 0;
+    width: auto;
+    margin-left: 0;
+    transform: none;
     bottom: 0;
     z-index: 7;
     padding: 0.8rem 1rem;
     gap: 0.75rem;
-    background: rgba(26,26,26,0.92);
+    background: rgba(0,0,0,0.92);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
@@ -774,7 +794,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   }
 
   .player-artist,
-  .soundcloud-link {
+  .spotify-link {
     font-size: 0.62rem;
   }
 }
@@ -851,6 +871,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   max-width:1320px;
   margin:0 auto;
   padding:0 clamp(1rem,4vw,2rem);
+  min-width:0;
 }
 .section-header{
   margin-bottom:3rem;
@@ -859,6 +880,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   justify-content:space-between;
   gap:1rem;
   flex-wrap:wrap;
+  min-width:0;
 }
 .section-label{
   display:flex;align-items:center;gap:0.75rem;
@@ -912,6 +934,306 @@ button{font-family:inherit;cursor:pointer;border:none;}
   height:1px;
   background:linear-gradient(90deg, var(--red) 0%, var(--iron) 40%, transparent 100%);
   margin-bottom:0;
+}
+
+/* ============================================================
+   FEATURED RELEASE
+   ============================================================ */
+.featured-release-section{
+  background:
+    radial-gradient(circle at 50% 34%, rgba(218,187,119,0.18), transparent 34%),
+    radial-gradient(circle at 50% 58%, rgba(204,0,0,0.08), transparent 38%),
+    linear-gradient(180deg, #000 0%, #050505 52%, #000 100%);
+  border-top:1px solid rgba(218,187,119,0.14);
+  border-bottom:1px solid rgba(218,187,119,0.1);
+  text-align:center;
+  overflow:hidden;
+}
+
+.featured-release-panel{
+  max-width:980px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:clamp(1.1rem, 2.6vw, 1.8rem);
+  position:relative;
+  min-width:0;
+}
+
+.featured-release-panel::before{
+  content:'';
+  position:absolute;
+  top:clamp(7rem, 13vw, 10rem);
+  left:50%;
+  width:min(78vw, 680px);
+  aspect-ratio:1;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(218,187,119,0.18), rgba(218,187,119,0.06) 44%, transparent 68%);
+  filter:blur(4px);
+  pointer-events:none;
+}
+
+.featured-release-art{
+  position:relative;
+  width:min(78vw, 620px);
+  min-height:0;
+  overflow:visible;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  order:2;
+  z-index:1;
+}
+
+.featured-release-art::before{
+  content:'';
+  position:absolute;
+  inset:18% 8% 10%;
+  border-radius:50%;
+  border:1px solid rgba(218,187,119,0.16);
+  box-shadow:0 0 60px rgba(218,187,119,0.16), inset 0 0 45px rgba(204,0,0,0.08);
+  pointer-events:none;
+  z-index:0;
+}
+
+.featured-release-art img{
+  position:relative;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 28px 54px rgba(0,0,0,0.86)) drop-shadow(0 0 34px rgba(218,187,119,0.18));
+  z-index:2;
+}
+
+.featured-release-art-label{
+  display:none;
+}
+
+.featured-release-heading{
+  order:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0.75rem;
+  position:relative;
+  z-index:2;
+}
+
+.featured-release-eyebrow{
+  font-family:var(--font-display);
+  font-size:0.68rem;
+  font-weight:900;
+  letter-spacing:0.24em;
+  text-transform:uppercase;
+  color:#dabb77;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0.75rem;
+}
+
+.featured-release-eyebrow::before,
+.featured-release-eyebrow::after{
+  content:'';
+  width:34px;
+  height:1px;
+  background:linear-gradient(90deg, transparent, #dabb77);
+}
+
+.featured-release-eyebrow::after{
+  background:linear-gradient(90deg, #dabb77, transparent);
+}
+
+.featured-release-kicker{
+  font-family:var(--font-display);
+  font-size:clamp(2.6rem, 9vw, 7rem);
+  font-weight:900;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  color:var(--white);
+  line-height:0.86;
+  text-shadow:0 0 32px rgba(218,187,119,0.16);
+}
+
+.featured-release-content{
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  order:3;
+  position:relative;
+  z-index:2;
+  max-width:100%;
+  min-width:0;
+}
+
+.featured-release-platform{
+  display:none;
+}
+
+.featured-release-title{
+  font-family:var(--font-display);
+  font-size:clamp(1.25rem, 3vw, 2rem);
+  font-weight:900;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:#dabb77;
+  line-height:1;
+  margin-bottom:0.95rem;
+}
+
+.featured-release-story{
+  max-width:620px;
+  font-size:clamp(0.98rem, 1.5vw, 1.1rem);
+  line-height:1.75;
+  color:var(--chrome);
+  margin:0 auto 1.5rem;
+}
+
+.featured-release-platforms{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:0.75rem;
+  margin-bottom:1rem;
+  max-width:100%;
+}
+
+.featured-release-platform-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  min-width:104px;
+  padding:0.65rem 0.95rem;
+  border:1px solid rgba(218,187,119,0.34);
+  color:#ead9ac;
+  font-family:var(--font-display);
+  font-size:0.64rem;
+  font-weight:900;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  background:rgba(255,255,255,0.025);
+  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease,transform 0.15s ease;
+}
+
+.featured-release-platform-link:hover{
+  border-color:#dabb77;
+  color:var(--white);
+  background:rgba(218,187,119,0.1);
+  transform:translateY(-1px);
+}
+
+.featured-release-availability{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0.9rem;
+  width:min(100%, 460px);
+  max-width:100%;
+  margin:0 auto 1.45rem;
+  color:#ead9ac;
+  font-family:var(--font-display);
+  font-size:0.64rem;
+  font-weight:900;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  padding:0.55rem 0;
+  border-top:1px solid rgba(218,187,119,0.24);
+  border-bottom:1px solid rgba(218,187,119,0.24);
+  background:linear-gradient(90deg, transparent, rgba(218,187,119,0.08), transparent);
+  min-width:0;
+}
+
+.featured-release-availability::before{
+  content:'';
+  width:28px;
+  height:1px;
+  background:#dabb77;
+  flex-shrink:0;
+}
+
+.featured-release-availability::after{
+  content:'';
+  width:28px;
+  height:1px;
+  background:#dabb77;
+  flex-shrink:0;
+}
+
+.featured-release-actions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:0.85rem;
+}
+
+.featured-release-actions .btn-primary{
+  min-height:48px;
+  background:linear-gradient(135deg, var(--red), var(--blood));
+  box-shadow:0 0 0 1px rgba(218,187,119,0.28), 0 18px 36px rgba(0,0,0,0.42);
+}
+
+@media(max-width:900px){
+  .featured-release-panel{
+    max-width:760px;
+  }
+
+  .featured-release-art{
+    width:min(86vw, 540px);
+  }
+}
+
+@media(max-width:540px){
+  .section-title{
+    font-size:clamp(1.35rem, 9vw, 2rem);
+    line-height:1.05;
+  }
+
+  .featured-release-content{
+    padding:0;
+  }
+
+  .featured-release-art{
+    width:min(96vw, 420px);
+  }
+
+  .featured-release-platforms{
+    gap:0.55rem;
+  }
+
+  .featured-release-platform-link{
+    min-width:0;
+    flex:1 1 30%;
+    font-size:0.58rem;
+    padding:0.62rem 0.65rem;
+  }
+
+  .featured-release-story{
+    font-size:0.95rem;
+    line-height:1.65;
+  }
+
+  .featured-release-actions .btn-primary{
+    width:100%;
+  }
+
+  .featured-release-availability{
+    width:100%;
+    justify-content:center;
+    font-size:0.58rem;
+    letter-spacing:0.14em;
+    gap:0.55rem;
+  }
+
+  .featured-release-availability::before,
+  .featured-release-availability::after{
+    width:18px;
+  }
 }
 
 /* ============================================================
@@ -1074,335 +1396,86 @@ button{font-family:inherit;cursor:pointer;border:none;}
 }
 
 /* ============================================================
-   SHOP GRID
-   ============================================================ */
-.shop-section{
-  background:var(--obsidian);
-  padding:clamp(3.5rem, 7vw, 6rem) 0;
-  position:relative;
-}
-
-.shop-inner{
-  max-width:1320px;
-  margin:0 auto;
-  padding:0 clamp(1rem,4vw,2rem);
-}
-
-.shop-header{
-  display:flex;
-  align-items:end;
-  justify-content:space-between;
-  gap:1rem;
-  flex-wrap:wrap;
-  margin-bottom:2rem;
-}
-
-.shop-label{
-  display:flex;
-  align-items:center;
-  gap:0.7rem;
-  font-size:0.68rem;
-  font-weight:600;
-  letter-spacing:0.2em;
-  text-transform:uppercase;
-  color:var(--red);
-  margin-bottom:0.8rem;
-}
-
-.shop-label::before{
-  content:'';
-  width:22px;
-  height:2px;
-  background:var(--red);
-  display:block;
-}
-
-.shop-title{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:clamp(1.6rem,3vw,2.6rem);
-  letter-spacing:-0.03em;
-  text-transform:uppercase;
-  color:var(--white);
-  line-height:1;
-}
-
-.shop-sub{
-  margin-top:0.75rem;
-  max-width:650px;
-  font-size:0.95rem;
-  line-height:1.65;
-  color:var(--mist);
-}
-
-.shop-controls{
-  display:flex;
-  flex-wrap:wrap;
-  gap:0.65rem;
-  margin-bottom:2rem;
-}
-
-.shop-filter{
-  appearance:none;
-  border:1px solid var(--steel);
-  background:transparent;
-  color:var(--chrome);
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.68rem;
-  letter-spacing:0.16em;
-  text-transform:uppercase;
-  padding:0.8rem 1rem;
-  cursor:pointer;
-  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;
-}
-
-.shop-filter:hover{
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.shop-filter.active{
-  background:var(--red);
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.shop-grid{
-  display:grid;
-  grid-template-columns:repeat(4, minmax(0,1fr));
-  gap:1px;
-  background:var(--iron);
-  border:1px solid var(--iron);
-}
-
-.shop-card{
-  background:var(--carbon);
-  display:flex;
-  flex-direction:column;
-  position:relative;
-  overflow:hidden;
-  transition:transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
-}
-
-.shop-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 0 0 1px var(--red), 0 10px 28px rgba(0,0,0,0.45);
-  z-index:2;
-}
-
-.shop-card[hidden]{
-  display:none !important;
-}
-
-.shop-card-media{
-  position:relative;
-  aspect-ratio:4/5;
-  overflow:hidden;
-  background:var(--graphite);
-}
-
-.shop-card-media img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  transition:transform 0.45s var(--ease);
-}
-
-.shop-card:hover .shop-card-media img{
-  transform:scale(1.04);
-}
-
-.shop-card-placeholder{
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:2.8rem;
-  letter-spacing:-0.04em;
-  color:rgba(255,255,255,0.08);
-  text-transform:uppercase;
-}
-
-.shop-card-badge{
-  position:absolute;
-  top:0.8rem;
-  left:0.8rem;
-  z-index:2;
-  background:var(--red);
-  color:var(--white);
-  font-size:0.6rem;
-  font-weight:700;
-  letter-spacing:0.1em;
-  text-transform:uppercase;
-  padding:0.35rem 0.55rem;
-}
-
-.shop-card-info{
-  padding:1.1rem 1.15rem 1.2rem;
-  border-top:1px solid var(--iron);
-}
-
-.shop-card-collection{
-  font-size:0.58rem;
-  font-weight:700;
-  letter-spacing:0.14em;
-  text-transform:uppercase;
-  color:var(--red);
-  margin-bottom:0.55rem;
-}
-
-.shop-card-name{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.9rem;
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-  color:var(--white);
-  line-height:1.25;
-  margin-bottom:0.5rem;
-}
-
-.shop-card-meta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:0.75rem;
-  margin-bottom:0.75rem;
-}
-
-.shop-card-price{
-  font-size:1rem;
-  font-weight:600;
-  color:var(--white);
-}
-
-.shop-card-tag{
-  font-size:0.58rem;
-  font-weight:600;
-  letter-spacing:0.12em;
-  text-transform:uppercase;
-  color:var(--mist);
-}
-
-.shop-card-desc{
-  font-size:0.82rem;
-  line-height:1.55;
-  color:var(--mist);
-  margin-bottom:0.95rem;
-}
-
-.shop-card-actions{
-  display:flex;
-  gap:0.55rem;
-  flex-wrap:wrap;
-}
-
-.shop-card-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.64rem;
-  letter-spacing:0.14em;
-  text-transform:uppercase;
-  padding:0.72rem 0.9rem;
-  border:1px solid var(--steel);
-  color:var(--chrome);
-  background:transparent;
-  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;
-}
-
-.shop-card-btn:hover{
-  border-color:var(--red);
-  color:var(--white);
-  background:rgba(204,0,0,0.12);
-}
-
-.shop-card-btn.primary{
-  background:var(--red);
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.shop-card-btn.primary:hover{
-  background:var(--ember);
-  border-color:var(--ember);
-}
-
-@media (max-width: 1100px){
-  .shop-grid{
-    grid-template-columns:repeat(3, minmax(0,1fr));
-  }
-}
-
-@media (max-width: 768px){
-  .shop-grid{
-    grid-template-columns:repeat(2, minmax(0,1fr));
-  }
-
-  .shop-sub{
-    font-size:0.88rem;
-  }
-}
-
-@media (max-width: 540px){
-  .shop-grid{
-    grid-template-columns:1fr;
-  }
-
-  .shop-controls{
-    gap:0.5rem;
-  }
-
-  .shop-filter{
-    font-size:0.62rem;
-    padding:0.72rem 0.85rem;
-  }
-}
-
-/* ============================================================
    COLLECTIONS
    ============================================================ */
-.collections-section{background:var(--obsidian);}
-.collections-section .section-divider{margin-bottom:3rem;}
+.collections-section{
+  background:
+    radial-gradient(circle at 50% 12%, rgba(184,154,94,0.12), transparent 32%),
+    #000;
+}
+.collections-section .section-header{
+  align-items:flex-end;
+}
+.collections-section .section-title{
+  text-shadow:0 0 28px rgba(184,154,94,0.18);
+}
+.collections-section .section-cta{
+  color:#d8c59a;
+}
+.collections-section .section-cta:hover{
+  color:var(--white);
+}
+.collections-section .section-divider{
+  margin-bottom:3rem;
+  background:linear-gradient(90deg, #b89a5e 0%, var(--red) 32%, rgba(216,197,154,0.22) 62%, transparent 100%);
+  box-shadow:0 0 18px rgba(184,154,94,0.18);
+}
 
 .collections-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:1px;
-  background:var(--iron);
-  border:1px solid var(--iron);
-}
-@media(max-width:768px){
-  .collections-grid{grid-template-columns:1fr;}
+  background:#000;
+  border:1px solid rgba(184,154,94,0.22);
+  box-shadow:0 24px 60px rgba(0,0,0,0.38), 0 0 0 1px rgba(216,197,154,0.04);
+  max-width:100%;
+  min-width:0;
 }
 
 .collection-card{
-  background:var(--carbon);
+  background:#000;
   aspect-ratio:4/5;
   position:relative;
   overflow:hidden;
   cursor:pointer;
   display:flex;align-items:flex-end;
+  border:1px solid rgba(255,255,255,0.04);
+  min-height:360px;
+}
+.collection-card.featured{
+  box-shadow:inset 0 0 0 1px rgba(184,154,94,0.46), 0 0 34px rgba(184,154,94,0.12);
+  z-index:1;
+}
+.collection-card.featured .collection-tag{
+  color:#d8c59a;
 }
 .collection-bg{
   position:absolute;inset:0;
   transition:transform 0.6s var(--ease);
   display:flex;align-items:center;justify-content:center;
+  background:#000;
+  padding:clamp(0.9rem, 1.8vw, 1.5rem);
 }
 .collection-card:hover .collection-bg{transform:scale(1.06);}
+.collection-bg img,
 .collection-bg-fill{
-  width:100%;height:100%;
-  object-fit:cover;
+  width:100%;
+  height:100%;
+  max-width:92%;
+  max-height:68%;
+  object-fit:contain;
+  object-position:center;
+  filter:drop-shadow(0 20px 34px rgba(0,0,0,0.68));
+}
+.collection-card.featured .collection-bg img{
+  filter:drop-shadow(0 20px 34px rgba(0,0,0,0.72)) drop-shadow(0 0 18px rgba(184,154,94,0.22));
+}
+.collection-fallback{
+  display:none;
 }
 .collection-gradient{
   position:absolute;inset:0;
-  background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.15) 100%);
+  background:linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.62) 42%, rgba(0,0,0,0.12) 100%);
   transition:opacity 0.3s;
 }
 .collection-card:hover .collection-gradient{opacity:0.85;}
@@ -1413,6 +1486,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   width:100%;
   transform:translateY(8px);
   transition:transform 0.3s var(--ease);
+  border-top:1px solid rgba(216,197,154,0.08);
 }
 .collection-card:hover .collection-content{transform:translateY(0);}
 .collection-tag{
@@ -1420,7 +1494,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   font-weight:600;
   letter-spacing:0.18em;
   text-transform:uppercase;
-  color:var(--red);
+  color:#b89a5e;
   display:flex;align-items:center;gap:0.5rem;
   margin-bottom:0.5rem;
 }
@@ -1428,7 +1502,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   content:'';
   display:block;
   width:16px;height:1px;
-  background:var(--red);
+  background:linear-gradient(90deg, #b89a5e, var(--red));
 }
 .collection-name{
   font-family:var(--font-display);
@@ -1453,28 +1527,50 @@ button{font-family:inherit;cursor:pointer;border:none;}
   max-height:60px;
   opacity:1;
 }
-.collection-arrow{
-  display:flex;align-items:center;gap:0.375rem;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.6875rem;
-  letter-spacing:0.14em;
-  text-transform:uppercase;
-  color:var(--white);
-  margin-top:0.875rem;
-  opacity:0;
-  transform:translateX(-8px);
-  transition:opacity 0.25s 0.05s, transform 0.25s 0.05s;
+@media(max-width:1100px){
+  .collections-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
-.collection-card:hover .collection-arrow{
-  opacity:1;
-  transform:translateX(0);
+
+@media(max-width:768px){
+  .collections-grid{grid-template-columns:1fr;}
+
+  .collection-card{
+    aspect-ratio:16/11;
+    min-height:250px;
+  }
+
+  .collection-name{
+    font-size:clamp(1.25rem, 8vw, 1.75rem);
+    letter-spacing:0;
+  }
+
+  .collection-bg{
+    padding:0.85rem;
+  }
+
+  .collection-bg img,
+  .collection-bg-fill{
+    max-width:84%;
+    max-height:62%;
+  }
+
+  .collection-tag{
+    font-size:0.58rem;
+    letter-spacing:0.14em;
+  }
+
+  .collection-desc{
+    max-height:0;
+    opacity:0;
+    font-size:0.8rem;
+  }
 }
 
 /* Collection color fills */
-.col-1{ background:linear-gradient(135deg,#0d0d0d,#1a0505);}
-.col-2{ background:linear-gradient(135deg,#0a0a0a,#0d0d18);}
-.col-3{ background:linear-gradient(135deg,#0d0a00,#0d0d0d);}
+.col-1,
+.col-2,
+.col-3,
+.col-4{ background:#000;}
 
 /* Collection placeholder art */
 .col-art{
@@ -1505,7 +1601,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
 }
 
 .drop-band::before{
-  content:'STINKY PINKY • LATEST DROP • BIG OG WAYNE • LIMITED RUN • STINKY PINKY • ';
+  content:'STREETWISE • CURRENT RELEASE • BIG OG WAYNE • LIMITED RUN • STREETWISE • ';
   position:absolute;
   top:50%;
   left:0;
@@ -1531,6 +1627,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
   grid-template-columns:auto 1fr auto;
   align-items:center;
   gap:1.25rem;
+  min-width:0;
 }
 
 .drop-band-label{
@@ -1644,257 +1741,6 @@ button{font-family:inherit;cursor:pointer;border:none;}
 }
 
 /* ============================================================
-   FEATURED DROP
-   ============================================================ */
-
-.featured-drop-section{
-  background:var(--carbon);
-  padding:clamp(3.5rem, 7vw, 6rem) 0;
-  position:relative;
-}
-
-.featured-drop-inner{
-  max-width:1320px;
-  margin:0 auto;
-  padding:0 clamp(1rem,4vw,2rem);
-}
-
-.featured-drop-header{
-  display:flex;
-  align-items:end;
-  justify-content:space-between;
-  gap:1rem;
-  flex-wrap:wrap;
-  margin-bottom:2.25rem;
-}
-
-.featured-drop-label{
-  display:flex;
-  align-items:center;
-  gap:0.7rem;
-  font-size:0.68rem;
-  font-weight:600;
-  letter-spacing:0.2em;
-  text-transform:uppercase;
-  color:var(--red);
-  margin-bottom:0.8rem;
-}
-
-.featured-drop-label::before{
-  content:'';
-  width:22px;
-  height:2px;
-  background:var(--red);
-  display:block;
-}
-
-.featured-drop-title{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:clamp(1.6rem,3vw,2.6rem);
-  letter-spacing:-0.03em;
-  text-transform:uppercase;
-  color:var(--white);
-  line-height:1;
-}
-
-.featured-drop-sub{
-  margin-top:0.75rem;
-  max-width:620px;
-  font-size:0.95rem;
-  line-height:1.65;
-  color:var(--mist);
-}
-
-.featured-drop-cta{
-  display:inline-flex;
-  align-items:center;
-  gap:0.5rem;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.72rem;
-  letter-spacing:0.16em;
-  text-transform:uppercase;
-  color:var(--chrome);
-  border:1px solid var(--steel);
-  padding:0.85rem 1.1rem;
-  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;
-}
-
-.featured-drop-cta:hover{
-  border-color:var(--red);
-  color:var(--white);
-  background:rgba(204,0,0,0.12);
-}
-
-.featured-drop-grid{
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0,1fr));
-  gap:1px;
-  background:var(--iron);
-  border:1px solid var(--iron);
-}
-
-.featured-card{
-  background:var(--carbon);
-  display:flex;
-  flex-direction:column;
-  position:relative;
-  overflow:hidden;
-  transition:transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
-}
-
-.featured-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 0 0 1px var(--red), 0 10px 28px rgba(0,0,0,0.45);
-  z-index:2;
-}
-
-.featured-card-media{
-  position:relative;
-  aspect-ratio:4/5;
-  overflow:hidden;
-  background:var(--graphite);
-}
-
-.featured-card-media img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  transition:transform 0.45s var(--ease);
-}
-
-.featured-card:hover .featured-card-media img{
-  transform:scale(1.04);
-}
-
-.featured-card-placeholder{
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:3rem;
-  letter-spacing:-0.04em;
-  color:rgba(255,255,255,0.08);
-  text-transform:uppercase;
-}
-
-.featured-card-badge{
-  position:absolute;
-  top:0.85rem;
-  left:0.85rem;
-  z-index:2;
-  background:var(--red);
-  color:var(--white);
-  font-size:0.62rem;
-  font-weight:700;
-  letter-spacing:0.1em;
-  text-transform:uppercase;
-  padding:0.35rem 0.55rem;
-}
-
-.featured-card-info{
-  padding:1.15rem 1.2rem 1.25rem;
-  border-top:1px solid var(--iron);
-}
-
-.featured-card-name{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.92rem;
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-  color:var(--white);
-  line-height:1.25;
-  margin-bottom:0.45rem;
-}
-
-.featured-card-meta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:0.75rem;
-  margin-bottom:0.65rem;
-}
-
-.featured-card-price{
-  font-size:1rem;
-  font-weight:600;
-  color:var(--white);
-}
-
-.featured-card-tag{
-  font-size:0.6rem;
-  font-weight:600;
-  letter-spacing:0.12em;
-  text-transform:uppercase;
-  color:var(--red);
-}
-
-.featured-card-desc{
-  font-size:0.82rem;
-  line-height:1.55;
-  color:var(--mist);
-  margin-bottom:0.95rem;
-}
-
-.featured-card-actions{
-  display:flex;
-  gap:0.6rem;
-  flex-wrap:wrap;
-}
-
-.featured-card-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.66rem;
-  letter-spacing:0.14em;
-  text-transform:uppercase;
-  padding:0.72rem 0.9rem;
-  border:1px solid var(--steel);
-  color:var(--chrome);
-  background:transparent;
-  transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;
-}
-
-.featured-card-btn:hover{
-  border-color:var(--red);
-  color:var(--white);
-  background:rgba(204,0,0,0.12);
-}
-
-.featured-card-btn.primary{
-  background:var(--red);
-  border-color:var(--red);
-  color:var(--white);
-}
-
-.featured-card-btn.primary:hover{
-  background:var(--ember);
-  border-color:var(--ember);
-}
-
-@media (max-width: 900px){
-  .featured-drop-grid{
-    grid-template-columns:1fr;
-  }
-
-  .featured-drop-header{
-    margin-bottom:1.75rem;
-  }
-
-  .featured-drop-sub{
-    font-size:0.88rem;
-  }
-}
-
-/* ============================================================
    SOCIAL SECTION
    ============================================================ */
 .social-section{background:var(--carbon);}
@@ -1991,40 +1837,48 @@ button{font-family:inherit;cursor:pointer;border:none;}
    ============================================================ */
 .footer{
   background:var(--void);
-  border-top:1px solid var(--iron);
+  border-top:1px solid rgba(184,154,94,0.24);
+  box-shadow:inset 0 1px 0 rgba(216,197,154,0.06);
 }
 .footer::before{
   content:'';
   display:block;
   height:2px;
-  background:linear-gradient(90deg, var(--red) 0%, var(--blood) 40%, transparent 100%);
+  background:linear-gradient(90deg, #b89a5e 0%, var(--red) 38%, rgba(216,197,154,0.18) 68%, transparent 100%);
 }
 .footer-main{
   max-width:1320px;
   margin:0 auto;
   padding:clamp(2.5rem,5vw,4rem) clamp(1rem,4vw,2rem);
   display:grid;
-  grid-template-columns:1fr auto;
+  grid-template-columns:minmax(0,1fr) auto;
   gap:4rem;
   align-items:start;
+  min-width:0;
 }
 @media(max-width:768px){
   .footer-main{grid-template-columns:1fr;gap:2.5rem;}
 }
 .footer-brand{display:flex;flex-direction:column;gap:1rem;max-width:280px;}
-.footer-logo{height:20%;}
+.footer-logo{
+  height:20%;
+  filter:drop-shadow(0 0 16px rgba(184,154,94,0.2));
+}
 .footer-tagline{
   font-size:0.875rem;
-  color:var(--fog);
+  color:#d8c59a;
   line-height:1.65;
   font-style:italic;
+}
+.footer-tagline span{
+  display:block;
 }
 .footer-social{display:flex;gap:0.625rem;margin-top:0.5rem;}
 .footer-social-btn{
   display:flex;align-items:center;justify-content:center;
   width:34px;height:34px;
-  background:var(--graphite);
-  border:1px solid var(--iron);
+  background:#000;
+  border:1px solid rgba(184,154,94,0.24);
   color:var(--mist);
   font-family:var(--font-display);
   font-weight:900;
@@ -2034,11 +1888,11 @@ button{font-family:inherit;cursor:pointer;border:none;}
   transition:border-color 0.15s,color 0.15s,box-shadow 0.2s;
 }
 .footer-social-btn:hover{
-  border-color:var(--red);
+  border-color:#b89a5e;
   color:var(--white);
-  box-shadow:0 0 10px var(--red-glow);
+  box-shadow:0 0 14px rgba(184,154,94,0.24), 0 0 10px rgba(204,0,0,0.16);
 }
-.footer-links{display:flex;gap:3rem;flex-wrap:wrap;}
+.footer-links{display:flex;gap:3rem;flex-wrap:wrap;min-width:0;}
 .footer-group{display:flex;flex-direction:column;gap:1rem;min-width:120px;}
 .footer-group-heading{
   font-family:var(--font-display);
@@ -2046,27 +1900,28 @@ button{font-family:inherit;cursor:pointer;border:none;}
   font-size:0.6875rem;
   letter-spacing:0.18em;
   text-transform:uppercase;
-  color:var(--white);
+  color:#d8c59a;
   padding-bottom:0.75rem;
-  border-bottom:1px solid var(--iron);
+  border-bottom:1px solid rgba(184,154,94,0.18);
   position:relative;
 }
 .footer-group-heading::after{
   content:'';
   position:absolute;bottom:-1px;left:0;
   width:20px;height:1px;
-  background:var(--red);
+  background:linear-gradient(90deg, #b89a5e, var(--red));
 }
-.footer-group-list{display:flex;flex-direction:column;gap:0.625rem;}
+.footer-group-list{display:flex;flex-direction:column;gap:0.625rem;padding-left:0.75rem}
 .footer-link{
   font-size:0.875rem;
   font-weight:400;
   color:var(--fog);
+  line-height:1.45;
   transition:color 0.15s;
 }
-.footer-link:hover{color:var(--silver);}
+.footer-link:hover{color:#d8c59a;}
 .footer-bottom{
-  border-top:1px solid var(--iron);
+  border-top:1px solid rgba(184,154,94,0.16);
   padding:1.125rem clamp(1rem,4vw,2rem);
   max-width:1320px;
   margin:0 auto;
@@ -2080,10 +1935,10 @@ button{font-family:inherit;cursor:pointer;border:none;}
   font-size:0.75rem;
   color:var(--fog);
 }
-.footer-copy strong{color:var(--mist);}
-.footer-legal{display:flex;gap:1.5rem;}
+.footer-copy strong{color:#d8c59a;}
+.footer-legal{display:flex;gap:1.5rem;flex-wrap:wrap;}
 .footer-legal a{font-size:0.75rem;color:var(--fog);transition:color 0.15s;}
-.footer-legal a:hover{color:var(--mist);}
+.footer-legal a:hover{color:#d8c59a;}
 
 
 /* ============================================================
@@ -2360,7 +2215,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
     <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
       <img
         src="/assets/images/logo/bow_logo.png"
-        alt="Big OG Wayne — Lilliwaups Finest"
+        alt="Big OG Wayne"
         width="928"
         height="928"
       />
@@ -2428,7 +2283,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
         <!-- Live location indicator -->
         <div class="hero-location">
           <div class="hero-location-dot"></div>
-          <span class="hero-location-text">Lilliwaup, WA</span>
+          <span class="hero-location-text">Official Artist Site</span>
         </div>
       </div>
 
@@ -2437,11 +2292,11 @@ button{font-family:inherit;cursor:pointer;border:none;}
       <!-- Player bar -->
       <div class="hero-player">
   <div class="player-meta">
-    <div class="player-title">LATEST DROP</div>
-    <div class="player-artist">Big OG Wayne · SoundCloud</div>
+    <div class="player-title">Streetwise</div>
+    <div class="player-artist">Big OG Wayne · Spotify</div>
   </div>
         <div class="player-controls">
-          <button class="play-btn" id="playBtn" aria-label="Play">
+          <button class="play-btn" id="playBtn" aria-label="Open Streetwise on Spotify" data-spotify-url="https://open.spotify.com/track/3HAGDuUYAyEMGiXGpdrgUx?si=fef72fee85344164">
             <svg id="playIcon" width="14" height="14" viewBox="0 0 24 24" fill="white">
               <polygon points="5,3 19,12 5,21"/>
             </svg>
@@ -2461,9 +2316,9 @@ button{font-family:inherit;cursor:pointer;border:none;}
             <div class="waveform-bar" style="height:85%"></div>
           </div>
         </div>
-        <a href="https://soundcloud.com" target="_blank" rel="noopener" class="soundcloud-link">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.56 8.87V17h8.76c.82-.01 1.68-.68 1.68-1.69 0-.91-.62-1.66-1.46-1.68-.07 0-.13 0-.2.01a2.3 2.3 0 0 0 .02-.31c0-1.37-1.07-2.48-2.39-2.48-.29 0-.56.05-.81.15A3.38 3.38 0 0 0 13.9 9.2a3.33 3.33 0 0 0-2.34-.33zm-1.27 8.13H2.05C.92 17 0 16.08 0 14.95c0-.86.53-1.6 1.29-1.91a4.4 4.4 0 0 1-.05-.67A4.43 4.43 0 0 1 5.67 7.9a4.4 4.4 0 0 1 2.23.6 4.08 4.08 0 0 1 2.73-1.47v9.97z"/></svg>
-          SoundCloud
+        <a href="https://open.spotify.com/track/3HAGDuUYAyEMGiXGpdrgUx?si=fef72fee85344164" target="_blank" rel="noopener" class="spotify-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.5 17.31c-.2.32-.62.41-.94.22-2.57-1.57-5.8-1.92-9.6-1.05-.37.08-.73-.15-.82-.52-.08-.37.15-.73.52-.82 4.16-.95 7.73-.54 10.62 1.23.32.2.42.62.22.94zm1.33-2.95c-.25.39-.77.51-1.16.26-2.94-1.8-7.43-2.32-10.91-1.27-.44.13-.91-.12-1.04-.56-.13-.44.12-.91.56-1.04 3.97-1.2 8.91-.62 12.29 1.45.39.24.51.76.26 1.16zm.12-3.08C15.42 9.18 9.61 8.98 6.23 10c-.53.16-1.09-.14-1.25-.67-.16-.53.14-1.09.67-1.25 3.88-1.18 10.28-.94 14.32 1.46.48.28.63.9.35 1.37-.29.48-.9.63-1.37.37z"/></svg>
+          Spotify
         </a>
       </div>
 
@@ -2472,7 +2327,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
     <div class="hero-copy">
       <div class="hero-eyebrow anim-1">
         <div class="hero-eyebrow-line"></div>
-        <span class="hero-eyebrow-text">Official Merch · Lilliwaup's Finest</span>
+        <span class="hero-eyebrow-text">Official Merch &amp; Music</span>
       </div>
 
       <h1 class="hero-headline anim-2">
@@ -2482,8 +2337,8 @@ button{font-family:inherit;cursor:pointer;border:none;}
       </h1>
 
       <p class="hero-subline anim-3">
-        Straight from <strong>Lilliwaup, WA</strong>.<br/>
-        Real music. Real culture. Wear the proof.
+        Real music. Real culture.<br/>
+        Wear the proof.
       </p>
 
       <div class="hero-ctas anim-4">
@@ -2503,8 +2358,8 @@ button{font-family:inherit;cursor:pointer;border:none;}
           <div class="hero-stat-label">Real</div>
         </div>
         <div class="hero-stat">
-          <div class="hero-stat-num">Lilliwaup</div>
-          <div class="hero-stat-label">Origin</div>
+          <div class="hero-stat-num">Music</div>
+          <div class="hero-stat-label">First</div>
         </div>
         <div class="hero-stat">
           <div class="hero-stat-num">OG</div>
@@ -2517,297 +2372,33 @@ button{font-family:inherit;cursor:pointer;border:none;}
 </section>
 
 <!-- ============================================================
+     FEATURED
+     ============================================================ -->
+<section class="section featured-release-section" id="featured">
+  <div class="section-inner">
+    <div class="featured-release-panel" data-featured-release></div>
+  </div>
+</section>
+
+<!-- ============================================================
      IDENTITY BAND
      ============================================================ -->
 <section class="drop-band">
   <div class="drop-band-inner">
-    <div class="drop-band-label">Latest Drop</div>
+    <div class="drop-band-label">Current Release</div>
 
     <div class="drop-band-copy">
-      <div class="drop-band-title">Stinky Pinky</div>
+      <div class="drop-band-title">Streetwise</div>
       <div class="drop-band-sub">
         Big OG Wayne’s newest collection. Limited-run energy. Wear what you rep.
       </div>
     </div>
 
-    <a href="/collections/stinky-pinky" class="drop-band-cta">Shop Stinky Pinky</a>
+    <a href="/collections/streetwise" class="drop-band-cta">Shop Streetwise</a>
   </div>
 </section>
 
 
-<!-- ============================================================
-     FEATURED DROP
-     ============================================================ -->
-<section class="featured-drop-section">
-  <div class="featured-drop-inner">
-
-    <div class="featured-drop-header">
-      <div>
-        <div class="featured-drop-label">Featured Collection</div>
-        <h2 class="featured-drop-title">Stinky Pinky</h2>
-        <p class="featured-drop-sub">
-          Loud, funny, and built to stand out. The Stinky Pinky drop brings the energy of the track into wearable pieces made for fans who already know what it is.
-        </p>
-      </div>
-
-      <a href="/collections/stinky-pinky" class="featured-drop-cta">
-        View Collection →
-      </a>
-    </div>
-
-    <div class="featured-drop-grid">
-
-      <article class="featured-card">
-        <div class="featured-card-media">
-  <div class="featured-card-badge">New</div>
-  <img src="/assets/images/products/collections/stinkypinky/whitehoodie.png" alt="Stinky Pinky Hoodie">
-</div>
-        <div class="featured-card-info">
-          <div class="featured-card-name">Stinky Pinky Hoodie</div>
-          <div class="featured-card-meta">
-            <div class="featured-card-price">$85.00</div>
-            <div class="featured-card-tag">Apparel</div>
-          </div>
-          <div class="featured-card-desc">
-            Heavyweight comfort with a loud graphic identity. Built for the fans repping the collection hardest.
- 
-          </div>
-          <div class="featured-card-actions">
-            <a href="/products/emboideredKeyChain" class="featured-card-btn primary">View Product</a>
-            <a href="/collections/stinky-pinky" class="featured-card-btn">More Like This</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="featured-card">
-        <div class="featured-card-media">
-  <div class="featured-card-badge">New</div>
-  <img src="/assets/images/products/collections/stinkypinky/blackcapshock.png" alt="Stinky Pinky Snapback">
-</div>
-        <div class="featured-card-info">
-          <div class="featured-card-name">Stinky Pinky Snapback</div>
-          <div class="featured-card-meta">
-            <div class="featured-card-price">$45.00</div>
-            <div class="featured-card-tag">Hat</div>
-          </div>
-          <div class="featured-card-desc">
-            Clean fit, bold logo, instant attitude. A standout piece from the latest drop.
-          </div>
-          <div class="featured-card-actions">
-            <a href="/products/stinky-pinky-hoodie" class="featured-card-btn primary">View Product</a>
-            <a href="/collections/stinky-pinky" class="featured-card-btn">More Like This</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="featured-card">
-       <div class="featured-card-media">
-  <div class="featured-card-badge">Selling Fast</div>
-  <img src="/assets/images/products/collections/stinkypinky/mensboxerbriefs.png" alt="Men's Stinky Pinky 'Shock & Aww' Boxer Briefs ">
-</div>
-        <div class="featured-card-info">
-          <div class="featured-card-name">Men's Boxer Briefs</div>
-          <div class="featured-card-meta">
-            <div class="featured-card-price">$35.00</div>
-            <div class="featured-card-tag">Apparel</div>
-          </div>
-          <div class="featured-card-desc">
-            Get the message across without saying a thing. You already know who you are. Find out who she is. 
-          </div>
-          <div class="featured-card-actions">
-            <a href="/products/mensBoxerBriefs" class="featured-card-btn primary">View Product</a>
-            <a href="/collections/stinky-pinky" class="featured-card-btn">More Like This</a>
-          </div>
-        </div>
-      </article>
-
-    </div>
-  </div>
-</section>
-<!-- ============================================================
-     SHOP GRID
-     ============================================================ -->
-<section class="shop-section">
-  <div class="shop-inner">
-
-    <div class="shop-header">
-      <div>
-        <div class="shop-label">Shop All</div>
-        <h2 class="shop-title">Browse the Loot</h2>
-        <p class="shop-sub">
-          Shop the full lineup and find the pieces that match your lane.
-        </p>
-      </div>
-    </div>
-
-    <div class="shop-controls" aria-label="Shop filters">
-      <button class="shop-filter active" data-filter="all">All</button>
-      <button class="shop-filter" data-filter="stinky-pinky">Stinky Pinky</button>
-      <button class="shop-filter" data-filter="no-bluff">No Bluff</button>
-      <button class="shop-filter" data-filter="lilliwaup-twang">Lilliwaup Twang</button>
-    </div>
-
-    <div class="shop-grid" id="shopGrid">
-
-      <article class="shop-card" data-collection="stinky-pinky">
-        <div class="shop-card-media">
-          <div class="shop-card-badge">New</div>
-          <img src="/assets/images/products/collections/stinkypinky/stinkypinky-pinksnapback.png">SP</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Stinky Pinky</div>
-          <div class="shop-card-name">Stinky Pinky Snapback</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$40.00</div>
-            <div class="shop-card-tag">Hat</div>
-          </div>
-          <div class="shop-card-desc">
-            Clean fit, loud identity, easy statement piece.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/stinky-pinky-snapback" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="stinky-pinky">
-        <div class="shop-card-media">
-          <div class="shop-card-badge">Featured</div>
-          <img src="/assets/images/products/collections/stinkypinky/stinkypinky-blackhoodie.png">SP</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Stinky Pinky</div>
-          <div class="shop-card-name">Stinky Pinky Hoodie</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$85.00</div>
-            <div class="shop-card-tag">Hoodie</div>
-          </div>
-          <div class="shop-card-desc">
-            Heavyweight comfort with track-inspired energy.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/stinky-pinky-hoodie" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="stinky-pinky">
-        <div class="shop-card-media">
-          <div class="shop-card-badge">Limited</div>
-          <img src="/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png">SP</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Stinky Pinky</div>
-          <div class="shop-card-name">Stinky Pinky Tee</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$35.00</div>
-            <div class="shop-card-tag">Tee</div>
-          </div>
-          <div class="shop-card-desc">
-            Everyday wear with drop-specific attitude.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/stinky-pinky-tee" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="no-bluff">
-        <div class="shop-card-media">
-          <img src="/assets/images/products/collections/nobluff/nobluff-hoodie.jpeg">NB</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">No Bluff</div>
-          <div class="shop-card-name">No Bluff Hoodie</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$80.00</div>
-            <div class="shop-card-tag">Hoodie</div>
-          </div>
-          <div class="shop-card-desc">
-            Low-key look, same hard edge.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/coll" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="no-bluff">
-        <div class="shop-card-media">
-        <img src="/assets/images/products/collections/nobluff/nobluff-boxerbriefs.png">">NB</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">No Bluff</div>
-          <div class="shop-card-name">No Bluff Boxer Briefs</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$28.00</div>
-            <div class="shop-card-tag">Boxers</div>
-          </div>
-          <div class="shop-card-desc">
-            Bold branding with everyday wearability.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/no-bluff-boxers" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="lilliwaup-twang">
-        <div class="shop-card-media">
-        <img src="/assets/images/products/collections/lilliwauptwang/lilliwauptwang-floormats.png">LT</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Lilliwaup Twang</div>
-          <div class="shop-card-name">Lilliwaup Twang Floor Mats</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$95.00</div>
-            <div class="shop-card-tag">Auto</div>
-          </div>
-          <div class="shop-card-desc">
-            A wild statement piece built for the ride.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/lilliwaup-twang-floor-mats" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="lilliwaup-twang">
-        <div class="shop-card-media">
-          <div class="shop-card-badge">Hot</div>
-        <img src="/assets/images/products/collections/lilliwauptwang/lilliwauptwang-poster.png">LT</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Lilliwaup Twang</div>
-          <div class="shop-card-name">Lilliwaup Twang Poster</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$24.00</div>
-            <div class="shop-card-tag">Poster</div>
-          </div>
-          <div class="shop-card-desc">
-            Wall-ready drop art for fans who want the look.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/lilliwaup-twang-poster" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="shop-card" data-collection="lilliwaup-twang">
-        <div class="shop-card-media">
-        <img src="/assets/images/products/stickers.png">LT</div>
-        <div class="shop-card-info">
-          <div class="shop-card-collection">Lilliwaup Twang</div>
-          <div class="shop-card-name">Lilliwaup Twang Stickers</div>
-          <div class="shop-card-meta">
-            <div class="shop-card-price">$5.00</div>
-            <div class="shop-card-tag">Sticker</div>
-          </div>
-          <div class="shop-card-desc">
-            Fast, cheap, and easy to rep anywhere.
-          </div>
-          <div class="shop-card-actions">
-            <a href="/products/lilliwaup-twang-stickers" class="shop-card-btn primary">View Product</a>
-          </div>
-        </div>
-      </article>
-
-    </div>
-  </div>
-</section>
 <!-- ============================================================
      FEATURED PRODUCTS
      ============================================================ 
@@ -2910,64 +2501,15 @@ button{font-family:inherit;cursor:pointer;border:none;}
   <div class="section-inner">
     <div class="section-header">
       <div>
-        <div class="section-label">Browse</div>
-        <h2 class="section-title">Collections</h2>
+        <h2 class="section-title">REP BIG OG WAYNE</h2>
       </div>
       <a href="/collections" class="section-cta">
-        All Collections <span class="section-cta-arrow">→</span>
+        REP THE MUSIC <span class="section-cta-arrow">→</span>
       </a>
     </div>
     <div class="section-divider" style="margin-bottom:2rem;"></div>
 
-    <div class="collections-grid">
-      <!-- Stinky Pinky -->
-      <a href="/collections/stinky-pinky" class="collection-card">
-        <div class="collection-bg col-1">
-        <img src="/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
-        <div class="collection-gradient"></div>
-        <div class="collection-content">
-          <div class="collection-tag">Collection 01</div>
-          <div class="collection-name">Stinky<br/>Pinky</div>
-          <div class="collection-desc">Bold signature pieces. The ones that start conversations.</div>
-          <div class="collection-arrow">
-            Shop Now
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </div>
-        </div>
-      </a>
-
-      <!-- No Bluff -->
-      <a href="/collections/no-bluff" class="collection-card">
-        <div class="collection-bg col-2">
-        <img src="/assets/images/logo/NoBluff_Logo_BlackBkg.png">NB</div>
-        <div class="collection-gradient"></div>
-        <div class="collection-content">
-          <div class="collection-tag">Collection 02</div>
-          <div class="collection-name">No<br/>Bluff</div>
-          <div class="collection-desc">No games. No filler. Just the real ones.</div>
-          <div class="collection-arrow">
-            Shop Now
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </div>
-        </div>
-      </a>
-
-      <!-- Lilliwaup Twang -->
-      <a href="/collections/lilliwaup-twang" class="collection-card">
-        <div class="collection-bg col-3">
-        <img src="/assets/images/logo/LilliwaupTwang_Logo_BlackBkg.png">LT</div>
-        <div class="collection-gradient"></div>
-        <div class="collection-content">
-          <div class="collection-tag">Collection 03</div>
-          <div class="collection-name">Lilliwaup<br/>Twang</div>
-          <div class="collection-desc">Where you're from never leaves you. Rep the roots.</div>
-          <div class="collection-arrow">
-            Shop Now
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </div>
-        </div>
-      </a>
-    </div>
+    <div class="collections-grid" data-homepage-collections></div>
   </div>
 </section>
 
@@ -2978,8 +2520,8 @@ button{font-family:inherit;cursor:pointer;border:none;}
   <div class="section-inner">
     <div class="section-header">
       <div>
-        <div class="section-label">Follow Along</div>
-        <h2 class="section-title">Stay Connected</h2>
+        <div class="section-label">MORE THAN MERCH</div>
+        <h2 class="section-title">Follow the Movement</h2>
       </div>
     </div>
     <div class="section-divider" style="margin-bottom:2rem;"></div>
@@ -3032,7 +2574,11 @@ button{font-family:inherit;cursor:pointer;border:none;}
     <div class="footer-brand">
       <img class="footer-logo" src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne Logo">
     </img>
-    <p class="footer-tagline">The culture is the brand. Wear what you rep. Straight out of Lilliwaup, WA.</p>
+    <p class="footer-tagline">
+      <span>More than merch.</span>
+      <span>Rep the music.</span>
+      <span>Follow the movement.</span>
+    </p>
       <div class="footer-social">
         <a href="https://www.tiktok.com/@wayneherr1" target="_blank" class="footer-social-btn" aria-label="TikTok">TT</a>
         <a href="https://www.youtube.com/@Big-OG-Wayne" target="_blank" class="footer-social-btn" aria-label="YouTube">YT</a>
@@ -3044,9 +2590,9 @@ button{font-family:inherit;cursor:pointer;border:none;}
         <p class="footer-group-heading">Shop</p>
         <ul class="footer-group-list">
           <li><a href="/shop" class="footer-link">All Products</a></li>
-          <li><a href="/collections/stinky-pinky" class="footer-link">Stinky Pinky</a></li>
+          <li><a href="/collections/streetwise" class="footer-link">Streetwise</a></li>
           <li><a href="/collections/no-bluff" class="footer-link">No Bluff</a></li>
-          <li><a href="/collections/lilliwaup-twang" class="footer-link">Lilliwaup Twang</a></li>
+          <li><a href="/collections/stinky-pinky" class="footer-link">Stinky Pinky</a></li>
         </ul>
       </div>
       <div class="footer-group">
@@ -3061,13 +2607,100 @@ button{font-family:inherit;cursor:pointer;border:none;}
     </div>
   </div>
   <div class="footer-bottom">
-    <p class="footer-copy">© 2025 <strong>Big OG Wayne</strong>. All rights reserved. Lilliwaup's Finest.</p>
+    <p class="footer-copy">© 2025 <strong>Big OG Wayne</strong>. All rights reserved.</p>
+    <p class="footer-copy">Designed and built by <strong><a href="https://www.olympicembers.com">Olympic Embers Media</strong></p>
     <div class="footer-legal">
       <a href="/policies">Privacy</a>
       <a href="/policies">Terms</a>
     </div>
   </div>
 </footer>
+
+<script type="module">
+import { homepageConfig } from "/assets/js/homepage.config.js";
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function safeDisplayName(value = "") {
+  return escapeHtml(value).replace(/&lt;br\/&gt;/g, "<br/>");
+}
+
+function linkTarget(url = "") {
+  return url.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
+}
+
+function renderFeaturedRelease(config) {
+  const target = document.querySelector("[data-featured-release]");
+  if (!target || !config) return;
+
+  const platformLinks = config.platforms.map(platform => `
+    <a
+      href="${escapeHtml(platform.url)}"
+      class="featured-release-platform-link"
+      ${linkTarget(platform.url)}
+    >
+      ${escapeHtml(platform.label)}
+    </a>
+  `).join("");
+
+  target.innerHTML = `
+    <div class="featured-release-heading">
+      <div class="featured-release-eyebrow">${escapeHtml(config.eyebrow)}</div>
+      <h2 class="featured-release-kicker">Featured</h2>
+    </div>
+    <div class="featured-release-art">
+      <img src="${escapeHtml(config.artwork.src)}" alt="${escapeHtml(config.artwork.alt)}" loading="lazy">
+      <div class="featured-release-art-label">${escapeHtml(config.releaseTitle)}</div>
+    </div>
+    <div class="featured-release-content">
+      <div class="featured-release-platform">${escapeHtml(config.platformLabel)}</div>
+      <h3 class="featured-release-title">${escapeHtml(config.releaseTitle)}</h3>
+      <p class="featured-release-story">${escapeHtml(config.story)}</p>
+      <div class="featured-release-platforms" aria-label="Featured release platforms">
+        ${platformLinks}
+      </div>
+      <div class="featured-release-availability" aria-label="Availability">
+        AVAILABLE EVERYWHERE
+      </div>
+      <div class="featured-release-actions">
+        <a href="${escapeHtml(config.merchCta.url)}" class="btn-primary">
+          ${escapeHtml(config.merchCta.label)}
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+function renderCollections(collections) {
+  const target = document.querySelector("[data-homepage-collections]");
+  if (!target || !collections?.length) return;
+
+  target.innerHTML = collections.map(collection => `
+    <a href="${escapeHtml(collection.url)}" class="collection-card${collection.isFeatured ? " featured" : ""}">
+      <div class="collection-bg ${escapeHtml(collection.colorClass)}">
+        <img src="${escapeHtml(collection.artwork.src)}" alt="${escapeHtml(collection.artwork.alt)}" loading="lazy">
+        <span class="collection-fallback" aria-hidden="true">${escapeHtml(collection.artFallback)}</span>
+      </div>
+      <div class="collection-gradient"></div>
+      <div class="collection-content">
+        <div class="collection-tag">${escapeHtml(collection.badge)}</div>
+        <div class="collection-name">${safeDisplayName(collection.displayName)}</div>
+        <div class="collection-desc">${escapeHtml(collection.story)}</div>
+      </div>
+    </a>
+  `).join("");
+}
+
+renderFeaturedRelease(homepageConfig.featuredRelease);
+renderCollections(homepageConfig.collections);
+</script>
 
 <script>
 // ── Waveform play toggle ──
@@ -3082,6 +2715,7 @@ playBtn.addEventListener('click', () => {
   playIcon.innerHTML = playing
     ? '<rect x="6" y="4" width="4" height="16" fill="white"/><rect x="14" y="4" width="4" height="16" fill="white"/>'
     : '<polygon points="5,3 19,12 5,21" fill="white"/>';
+  window.open(playBtn.dataset.spotifyUrl, '_blank', 'noopener');
 });
 
 // ── Scroll reveal for sections ──
@@ -3141,29 +2775,6 @@ mobileNavDrawer.querySelectorAll('.mobile-nav-link, .btn-secondary')
     mobileNavDrawer.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   }));
-</script>
-<script>
-  const filterButtons = document.querySelectorAll('.shop-filter');
-  const shopCards = document.querySelectorAll('.shop-card');
-
-  filterButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const filter = button.dataset.filter;
-
-      filterButtons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-
-      shopCards.forEach(card => {
-        const collection = card.dataset.collection;
-
-        if (filter === 'all' || collection === filter) {
-          card.hidden = false;
-        } else {
-          card.hidden = true;
-        }
-      });
-    });
-  });
 </script>
 <div id="products"></div>
 
