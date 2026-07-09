@@ -370,33 +370,28 @@
   color:var(--mist);
 }
 
-.size-chart-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:.78rem;
-  color:var(--chrome);
-}
-
-.size-chart-table th,
-.size-chart-table td{
-  border:1px solid var(--iron);
-  padding:.75rem;
-  text-align:left;
-}
-
-.size-chart-table th{
-  color:var(--white);
-  background:var(--graphite);
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  font-size:.68rem;
-}
-
 .size-chart-note{
   color:var(--mist);
   font-size:.78rem;
   line-height:1.55;
   margin-top:.85rem;
+}
+
+.size-chart-image-wrap{
+  background:#111;
+  border:1px solid var(--iron);
+}
+
+.size-chart-image-wrap[hidden]{
+  display:none;
+}
+
+.size-chart-image{
+  display:block;
+  width:100%;
+  max-width:100%;
+  height:auto;
+  object-fit:contain;
 }
 
 .related-products{
@@ -641,10 +636,9 @@
     <div class="product-extra single-panel">
       <div class="product-panel" id="size-chart" hidden>
         <div class="product-panel-title" id="sizeChartTitle">Sizing Chart</div>
-        <table class="size-chart-table">
-          <thead id="sizeChartHead"></thead>
-          <tbody id="sizeChartBody"></tbody>
-        </table>
+        <div class="size-chart-image-wrap" id="sizeChartImageWrap" hidden>
+          <img class="size-chart-image" id="sizeChartImage" src="" alt="">
+        </div>
         <p class="size-chart-note" id="sizeChartNote"></p>
       </div>
 
@@ -749,7 +743,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   function getProductImage(productData = {}) {
     if (!Array.isArray(productData.images)) return "";
 
-    return productData.images.find(image => image?.src)?.src || "";
+    const image = productData.images.find(item => !isPrintifySizeChartImage(item) && getImageSrc(item));
+    return getImageSrc(image);
   }
 
   function getProductPrice(productData = {}) {
@@ -771,52 +766,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       .toUpperCase() || "BOW";
   }
 
-  function getProductType(productData = {}) {
-    const tags = Array.isArray(productData.tags) ? productData.tags : [];
-    const searchable = [
-      productData.title,
-      productData.name,
-      productData.description,
-      productData.description_html,
-      ...tags
-    ].join(" ").toLowerCase();
-
-    if (/\b(boxer|boxers|brief|briefs|underwear)\b/.test(searchable)) return "underwear";
-    if (/\b(hoodie|sweatshirt|tee|t-shirt|shirt)\b/.test(searchable)) return "tops";
-    if (/\b(hat|cap|snapback|dad cap)\b/.test(searchable)) return "hat";
-    if (/\b(sticker|poster|mug|floor mat|floormat|keychain|household|accessory|accessories)\b/.test(searchable)) {
-      return "non-apparel";
-    }
-
-    return "unknown";
+  function getImageSrc(image = {}) {
+    return image?.src || image?.url || "";
   }
 
-  function getSizeChartConfig(productData = {}, sizes = []) {
-    const availableSizes = sizes.filter(size => APPAREL_SIZE_ORDER.includes(size));
+  function isPrintifySizeChartImage(image = {}) {
+    const src = getImageSrc(image).toLowerCase();
+    const mockupId = String(image?.mockup_id || "").toLowerCase();
 
-    if (!availableSizes.length) return null;
+    return src.includes("camera_label=size-chart") || mockupId.includes("size-chart");
+  }
 
-    const productType = getProductType(productData);
+  function getPrintifySizeChartImage(productData = {}) {
+    if (!Array.isArray(productData.images)) return null;
 
-    if (productType === "tops") {
-      return {
-        title: "Apparel Size Guide",
-        columns: ["Size", "Chest", "Length"],
-        rows: availableSizes.map(size => [size, "See vendor guide", "See vendor guide"]),
-        note: "Sizing may vary by product. Refer to the Printify/vendor size guide for exact measurements before ordering."
-      };
-    }
+    return productData.images.find(isPrintifySizeChartImage) || null;
+  }
 
-    if (productType === "underwear") {
-      return {
-        title: "Boxer Brief Size Guide",
-        columns: ["Size", "Waist", "Hips", "Inseam"],
-        rows: availableSizes.map(size => [size, "See vendor guide", "See vendor guide", "See vendor guide"]),
-        note: "Sizing may vary by product. Refer to the Printify/vendor size guide for exact underwear measurements before ordering."
-      };
-    }
+  function getSizeChartConfig(productData = {}) {
+    const sizeChartImage = getPrintifySizeChartImage(productData);
 
-    return null;
+    return sizeChartImage ? {
+      title: "Size Chart",
+      imageSrc: getImageSrc(sizeChartImage),
+      imageAlt: `${productData.title || productData.name || "Product"} size chart`,
+      note: "Sizing may vary by product. Check product details before ordering."
+    } : null;
   }
 
   function renderRelatedProducts(products = [], currentProduct = {}, currentCollection = null) {
@@ -913,8 +888,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const productExtra = document.querySelector(".product-extra");
     const sizeChartPanel = document.getElementById("size-chart");
     const sizeChartTitle = document.getElementById("sizeChartTitle");
-    const sizeChartHead = document.getElementById("sizeChartHead");
-    const sizeChartBody = document.getElementById("sizeChartBody");
+    const sizeChartImageWrap = document.getElementById("sizeChartImageWrap");
+    const sizeChartImage = document.getElementById("sizeChartImage");
     const sizeChartNote = document.getElementById("sizeChartNote");
     const dropDetailsPanel = document.getElementById("dropDetailsPanel");
     const sizeChartButton = document.getElementById("sizeChartButton");
@@ -922,25 +897,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (showSizeChart && sizeChartConfig) {
       if (sizeChartTitle) sizeChartTitle.textContent = sizeChartConfig.title;
-      if (sizeChartHead) {
-        sizeChartHead.innerHTML = `
-          <tr>
-            ${sizeChartConfig.columns.map(column => `<th>${escapeHtml(column)}</th>`).join("")}
-          </tr>
-        `;
+
+      if (sizeChartImage) {
+        sizeChartImage.src = sizeChartConfig.imageSrc;
+        sizeChartImage.alt = sizeChartConfig.imageAlt || "Product size chart";
       }
-      if (sizeChartBody) {
-        sizeChartBody.innerHTML = sizeChartConfig.rows.map(row => `
-          <tr>
-            ${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join("")}
-          </tr>
-        `).join("");
-      }
+      if (sizeChartImageWrap) sizeChartImageWrap.hidden = false;
       if (sizeChartNote) sizeChartNote.textContent = sizeChartConfig.note;
     } else {
       if (sizeChartTitle) sizeChartTitle.textContent = "Sizing Chart";
-      if (sizeChartHead) sizeChartHead.innerHTML = "";
-      if (sizeChartBody) sizeChartBody.innerHTML = "";
+      if (sizeChartImage) {
+        sizeChartImage.removeAttribute("src");
+        sizeChartImage.alt = "";
+      }
+      if (sizeChartImageWrap) sizeChartImageWrap.hidden = true;
       if (sizeChartNote) sizeChartNote.textContent = "";
     }
 
@@ -1074,7 +1044,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
     const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
-    const sizeChartConfig = getSizeChartConfig(product, sizes);
+    const sizeChartConfig = getSizeChartConfig(product);
 
     let selectedColor = colors[0] || null;
     let selectedSize = sizes[0] || null;
@@ -1117,6 +1087,10 @@ const imagePlaceholder = document.getElementById("productImagePlaceholder");
 function getImagesForSelection() {
   if (!product.images?.length) return [];
 
+  const galleryImages = product.images.filter(img => !isPrintifySizeChartImage(img));
+
+  if (!galleryImages.length) return [];
+
   const matchingVariants = parsed.filter(v =>
     (selectedColor ? v.color === selectedColor : true) &&
     (selectedSize ? v.size === selectedSize : true)
@@ -1124,12 +1098,12 @@ function getImagesForSelection() {
 
   const variantIds = matchingVariants.map(v => String(v.id));
 
-  const filtered = product.images.filter(img =>
+  const filtered = galleryImages.filter(img =>
     Array.isArray(img.variant_ids) &&
     img.variant_ids.some(id => variantIds.includes(String(id)))
   );
 
-  return filtered.length ? filtered : product.images;
+  return filtered.length ? filtered : galleryImages;
 }
 
 function setImagePlaceholder(isVisible) {
@@ -1140,7 +1114,7 @@ function setImagePlaceholder(isVisible) {
 function renderImages() {
   if (!mainImage || !thumbContainer) return;
 
-  const images = getImagesForSelection().filter(img => img?.src);
+  const images = getImagesForSelection().filter(img => getImageSrc(img));
   if (!images.length) {
     mainImage.removeAttribute("src");
     mainImage.alt = product.title || "Product image";
@@ -1150,7 +1124,7 @@ function renderImages() {
     return;
   }
 
-const first = images[0].src;
+const first = getImageSrc(images[0]);
 mainImage.style.display = "none";
 mainImage.alt = product.title || "Product image";
 setImagePlaceholder(false);
@@ -1168,7 +1142,7 @@ mainImage.style.objectFit = "contain";
 mainImage.style.background = "#111";
   thumbContainer.innerHTML = images.map((img, i) => `
     <button class="product-thumb ${i === 0 ? 'active' : ''}">
-      <img src="${img.src}" alt="${product.title}">
+      <img src="${getImageSrc(img)}" alt="${product.title}">
     </button>
   `).join("");
 
