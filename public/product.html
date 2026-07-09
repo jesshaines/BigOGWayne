@@ -14,12 +14,15 @@
 .product-page{
   background:var(--obsidian);
   padding:clamp(2.5rem,5vw,4rem) 0 clamp(4rem,8vw,6rem);
+  overflow-x:hidden;
 }
 
 .product-page-inner{
   max-width:1320px;
   margin:0 auto;
   padding:0 clamp(1rem,4vw,2rem);
+  min-width:0;
+  box-sizing:border-box;
 }
 
 .product-breadcrumbs{
@@ -46,18 +49,27 @@
   grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);
   gap:2rem;
   align-items:start;
+  min-width:0;
 }
 
 .product-gallery{
   display:grid;
   grid-template-columns:96px minmax(0,1fr);
   gap:1rem;
+  align-items:start;
+  min-width:0;
 }
 
 .product-thumbs{
   display:flex;
   flex-direction:column;
   gap:.75rem;
+  max-height:min(72vh,640px);
+  overflow-y:auto;
+  padding-right:.25rem;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
 }
 
 .product-thumb{
@@ -67,6 +79,7 @@
   overflow:hidden;
   cursor:pointer;
   transition:border-color .15s ease,transform .15s ease;
+  flex:0 0 auto;
 }
 
 .product-thumb:hover,
@@ -83,19 +96,26 @@
 
 .product-main-image{
   width: 100%;
-  height: 100%;
+  height:min(72vh,640px);
+  max-height:min(72vh,640px);
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
   position:relative;
   background:var(--carbon);
   border:1px solid var(--iron);
   aspect-ratio:4/5;
-  /*overflow:hidden;*/
-  object-fit: contain; 
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .product-main-image img{
   width:100%;
   height:100%;
-  object-fit:cover;
+  object-fit:contain;
+  object-position:center;
 }
 
 .product-image-placeholder{
@@ -136,6 +156,8 @@
   background:var(--carbon);
   border:1px solid var(--iron);
   padding:1.5rem;
+  min-width:0;
+  box-sizing:border-box;
 }
 
 .product-collection{
@@ -311,12 +333,25 @@
   grid-template-columns:1fr 1fr;
   gap:1rem;
   margin-top:2rem;
+  min-width:0;
+}
+
+.product-extra.single-panel{
+  grid-template-columns:minmax(0,1fr);
+}
+
+.product-extra[hidden],
+.product-panel[hidden],
+.product-secondary-btn[hidden]{
+  display:none;
 }
 
 .product-panel{
   background:var(--carbon);
   border:1px solid var(--iron);
   padding:1.25rem;
+  min-width:0;
+  box-sizing:border-box;
 }
 
 .product-panel-title{
@@ -381,10 +416,66 @@
 
 .related-products-grid{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(150px,220px));
   gap:1px;
+  justify-content:start;
   background:var(--iron);
   border:1px solid var(--iron);
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+}
+
+.related-products-grid .shop-card{
+  min-width:0;
+}
+
+.related-product-card{
+  color:inherit;
+  text-decoration:none;
+}
+
+.related-product-card:focus-visible{
+  outline:2px solid var(--red);
+  outline-offset:3px;
+  z-index:3;
+}
+
+.related-products-grid .shop-card-media{
+  aspect-ratio:1/1;
+}
+
+.related-products-grid .shop-card-info{
+  padding:.75rem .8rem .85rem;
+}
+
+.related-products-grid .shop-card-collection{
+  font-size:.5rem;
+  letter-spacing:.12em;
+  margin-bottom:.4rem;
+}
+
+.related-products-grid .shop-card-name{
+  font-size:.74rem;
+  line-height:1.2;
+  margin-bottom:.4rem;
+}
+
+.related-products-grid .shop-card-meta{
+  margin-bottom:.55rem;
+}
+
+.related-products-grid .shop-card-price{
+  font-size:.84rem;
+}
+
+.related-empty{
+  grid-column:1 / -1;
+  background:var(--carbon);
+  color:var(--mist);
+  padding:1.25rem;
+  text-align:center;
+  font-size:.86rem;
 }
 
 @media (max-width:980px){
@@ -405,21 +496,39 @@
   .product-thumbs{
     order:2;
     flex-direction:row;
+    max-height:none;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding-right:0;
+    padding-bottom:.35rem;
   }
 
   .product-main-image{
     order:1;
+    height:min(70vh,560px);
+    max-height:min(70vh,560px);
+  }
+
+  .product-thumb{
+    width:76px;
   }
 
   .related-products-grid{
-    grid-template-columns:1fr;
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
+
   .product-page {
   opacity: 0;
   transition: opacity 0.2s ease;
   }
   .product-page.loaded {
   opacity: 1;
+  }
+}
+
+@media (max-width:520px){
+  .related-products-grid{
+    grid-template-columns:1fr;
   }
 }
 </style>
@@ -510,7 +619,7 @@
 
         <div class="product-buy-actions">
           <button class="product-buy-btn" id="addToLootBagBtn" type="button">Add to Loot Bag</button>
-          <button class="product-secondary-btn" type="button" onclick="document.getElementById('size-chart').scrollIntoView({behavior:'smooth'});">Size Chart Below</button>
+          <button class="product-secondary-btn" id="sizeChartButton" type="button" hidden>Size Chart Below</button>
         </div>
 
         <div class="product-notes">
@@ -522,8 +631,8 @@
       </div>
     </div>
 
-    <div class="product-extra">
-      <div class="product-panel" id="size-chart">
+    <div class="product-extra single-panel">
+      <div class="product-panel" id="size-chart" hidden>
         <div class="product-panel-title">Sizing Chart</div>
         <table class="size-chart-table">
           <thead><tr><th>Size</th><th>Chest</th><th>Length</th></tr></thead>
@@ -537,7 +646,7 @@
         </table>
       </div>
 
-      <div class="product-panel">
+      <div class="product-panel" id="dropDetailsPanel">
         <div class="product-panel-title">Drop Details</div>
         <div class="product-panel-text">
           Official Big OG Wayne merch. Product details and sizing may vary by item.
@@ -548,49 +657,18 @@
   <h2 id="related-title">More from this collection</h2>
 <div id="related-products" class="related-products-grid"></div>
 </div>
-<!-- <div class="related-products">
-      <div class="related-products-header">
-        <h2 class="related-products-title">More from Stinky Pinky</h2>
-      </div>
-      <div class="related-products-grid">
-        <article class="shop-card">
-          <div class="shop-card-media"><div class="shop-card-placeholder">SP</div></div>
-          <div class="shop-card-info">
-            <div class="shop-card-collection">Stinky Pinky</div>
-            <div class="shop-card-name">Stinky Pinky Snapback</div>
-            <div class="shop-card-meta"><div class="shop-card-price">$40.00</div><div class="shop-card-tag">Hat</div></div>
-            <div class="shop-card-actions"><a href="/products/stinky-pinky-snapback" class="shop-card-btn primary">View Product</a></div>
-          </div>
-        </article>
-
-        <article class="shop-card">
-          <div class="shop-card-media">
-            <img src="/assets/images/products/collections/stinkypinky/stinkypinky-whitetshirt.png">SP</div>
-          <div class="shop-card-info">
-            <div class="shop-card-collection">Stinky Pinky</div>
-            <div class="shop-card-name">Stinky Pinky Tee</div>
-            <div class="shop-card-meta"><div class="shop-card-price">$35.00</div><div class="shop-card-tag">Tee</div></div>
-            <div class="shop-card-actions"><a href="/products/stinky-pinky-tee" class="shop-card-btn primary">View Product</a></div>
-          </div>
-        </article>
-
-        <article class="shop-card">
-          <div class="shop-card-media">
-            <img src="/assets/images/logo/StinkyPinky_Logo_Blackbkg.png">SP</div>
-          <div class="shop-card-info">
-            <div class="shop-card-collection">Stinky Pinky</div>
-            <div class="shop-card-name">Stinky Pinky Poster</div>
-            <div class="shop-card-meta"><div class="shop-card-price">$24.00</div><div class="shop-card-tag">Poster</div></div>
-            <div class="shop-card-actions"><a href="/products/stinky-pinky-poster" class="shop-card-btn primary">View Product</a></div>
-          </div>
-        </article>
-      </div>
-    </div-->
   </div>
 </section>
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
   const loadingState = document.getElementById("loadingState");
+  const KNOWN_COLLECTIONS = [
+    { slug: "streetwise", label: "Streetwise", matches: ["streetwise"] },
+    { slug: "hoodrat-mama", label: "Hoodrat Mama", matches: ["hoodrat-mama", "hoodrat"] },
+    { slug: "no-bluff", label: "No Bluff", matches: ["no-bluff"] },
+    { slug: "stinky-pinky", label: "Stinky Pinky", matches: ["stinky-pinky"] }
+  ];
+  const APPAREL_SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
   function showStatus(message) {
     if (loadingState) {
@@ -611,10 +689,141 @@ document.addEventListener("DOMContentLoaded", async () => {
       .replace(/\b\w/g, l => l.toUpperCase());
   }
 
+  function slugify(value = "") {
+    return String(value)
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function escapeHtml(value = "") {
+    const div = document.createElement("div");
+    div.textContent = String(value);
+    return div.innerHTML;
+  }
+
   function plainTextFromHtml(value = "") {
     const div = document.createElement("div");
     div.innerHTML = String(value);
     return div.textContent.trim();
+  }
+
+  function findKnownCollection(value) {
+    const normalized = slugify(value);
+
+    if (!normalized) return null;
+
+    return KNOWN_COLLECTIONS.find(collection =>
+      collection.matches.some(match => normalized.includes(match))
+    ) || null;
+  }
+
+  function getProductCollection(productData = {}) {
+    const tagCandidates = Array.isArray(productData.tags) ? productData.tags : [];
+    const candidates = [
+      ...tagCandidates,
+      productData.collection,
+      productData.title,
+      productData.name
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+      const knownCollection = findKnownCollection(candidate);
+      if (knownCollection) return knownCollection;
+    }
+
+    const fallback = candidates[0];
+    const fallbackSlug = slugify(fallback);
+
+    if (!fallbackSlug) return null;
+
+    return {
+      slug: fallbackSlug,
+      label: formatCollection(fallbackSlug)
+    };
+  }
+
+  function getProductImage(productData = {}) {
+    if (!Array.isArray(productData.images)) return "";
+
+    return productData.images.find(image => image?.src)?.src || "";
+  }
+
+  function getProductPrice(productData = {}) {
+    const variants = Array.isArray(productData.variants) ? productData.variants : [];
+    const variant = variants.find(item =>
+      item?.is_enabled !== false && Number.isFinite(Number(item.price))
+    );
+
+    return variant ? `$${(Number(variant.price) / 100).toFixed(2)}` : "Price unavailable";
+  }
+
+  function getPlaceholderText(value = "") {
+    const words = String(value).trim().split(/\s+/).filter(Boolean);
+
+    return words
+      .slice(0, 2)
+      .map(word => word[0])
+      .join("")
+      .toUpperCase() || "BOW";
+  }
+
+  function renderRelatedProducts(products = [], currentProduct = {}, currentCollection = null) {
+    const container = document.getElementById("related-products");
+    const titleEl = document.getElementById("related-title");
+
+    if (!container) return;
+
+    if (titleEl) {
+      titleEl.textContent = currentCollection
+        ? `More from the ${currentCollection.label} Collection`
+        : "More from this collection";
+    }
+
+    if (!currentCollection?.slug) {
+      container.innerHTML = `<div class="related-empty">More from this collection coming soon.</div>`;
+      return;
+    }
+
+    const relatedProducts = products
+      .filter(item => item?.id)
+      .filter(item => String(item?.id) !== String(currentProduct.id))
+      .filter(item => getProductCollection(item)?.slug === currentCollection.slug)
+      .slice(0, 4);
+
+    if (!relatedProducts.length) {
+      container.innerHTML = `<div class="related-empty">More from this collection coming soon.</div>`;
+      return;
+    }
+
+    container.innerHTML = relatedProducts.map(item => {
+      const relatedCollection = getProductCollection(item);
+      const image = getProductImage(item);
+      const title = item.title || item.name || "Big OG Wayne Product";
+      const price = getProductPrice(item);
+      const placeholder = getPlaceholderText(relatedCollection?.label || title);
+      const url = `/product.html?id=${encodeURIComponent(item.id)}`;
+
+      return `
+        <a class="shop-card related-product-card" href="${url}" aria-label="View ${escapeHtml(title)}">
+          <div class="shop-card-media">
+            ${image
+              ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}">`
+              : `<div class="shop-card-placeholder">${escapeHtml(placeholder)}</div>`}
+          </div>
+
+          <div class="shop-card-info">
+            <div class="shop-card-collection">${escapeHtml(relatedCollection?.label || "Collection")}</div>
+            <div class="shop-card-name">${escapeHtml(title)}</div>
+
+            <div class="shop-card-meta">
+              <div class="shop-card-price">${escapeHtml(price)}</div>
+            </div>
+          </div>
+        </a>
+      `;
+    }).join("");
   }
 
   async function readProductsResponse(response) {
@@ -648,6 +857,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     addToLootBagBtn.disabled = !isEnabled;
     addToLootBagBtn.textContent = label;
+  }
+
+  function configureSizeChart(showSizeChart) {
+    const productExtra = document.querySelector(".product-extra");
+    const sizeChartPanel = document.getElementById("size-chart");
+    const dropDetailsPanel = document.getElementById("dropDetailsPanel");
+    const sizeChartButton = document.getElementById("sizeChartButton");
+
+    if (sizeChartPanel) {
+      sizeChartPanel.hidden = !showSizeChart;
+    }
+
+    if (sizeChartButton) {
+      sizeChartButton.hidden = !showSizeChart;
+      sizeChartButton.disabled = !showSizeChart;
+      sizeChartButton.onclick = showSizeChart
+        ? () => sizeChartPanel?.scrollIntoView({ behavior: "smooth" })
+        : null;
+    }
+
+    if (!productExtra) return;
+
+    const hasVisibleDropDetails = !dropDetailsPanel || !dropDetailsPanel.hidden;
+
+    productExtra.hidden = !showSizeChart && !hasVisibleDropDetails;
+    productExtra.classList.toggle("single-panel", !showSizeChart && hasVisibleDropDetails);
   }
 
   try {
@@ -705,10 +940,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const priceEl = document.querySelector(".product-price");
     const descriptionEl = document.getElementById("productDescription");
     const collectionLabel = document.getElementById("productCollection");
-    const collection = Array.isArray(product.tags) && product.tags.length
-      ? product.tags[0]
-      : "";
-    const formattedCollection = formatCollection(collection);
+    const productCollection = getProductCollection(product);
+    const collectionSlug = productCollection?.slug || "";
+    const formattedCollection = productCollection?.label || "Collection";
 
     if (titleEl) titleEl.textContent = product.title;
     if (descriptionEl) {
@@ -761,6 +995,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
     const sizes = [...new Set(parsed.map(v => v.size).filter(Boolean))];
+    const hasApparelSizeVariants = sizes.some(size => APPAREL_SIZE_ORDER.includes(size));
 
     let selectedColor = colors[0] || null;
     let selectedSize = sizes[0] || null;
@@ -790,7 +1025,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.body.dataset.productPrice = variant.price / 100;
       document.body.dataset.productId = product.id;
       document.body.dataset.productName = product.title;
-      document.body.dataset.productCollection = collection;
+      document.body.dataset.productCollection = collectionSlug;
       document.body.dataset.productUrl = `/product.html?id=${product.id}`;
 
       return variant;
@@ -850,10 +1085,8 @@ preload.onload = () => {
 
 preload.src = first;
 
-const isSizeChart = first.includes("size-chart");
-
-mainImage.style.objectFit = isSizeChart ? "contain" : "cover";
-mainImage.style.background = isSizeChart ? "#111" : "transparent";
+mainImage.style.objectFit = "contain";
+mainImage.style.background = "#111";
   thumbContainer.innerHTML = images.map((img, i) => `
     <button class="product-thumb ${i === 0 ? 'active' : ''}">
       <img src="${img.src}" alt="${product.title}">
@@ -870,15 +1103,8 @@ if (img) {
   mainImage.src = img.src;
   mainImage.alt = img.alt || product.title || "Product image";
 
-  const isSizeChart = img.src.includes("size-chart");
-
-  if (isSizeChart) {
-    mainImage.style.objectFit = "contain";
-    mainImage.style.background = "#111";
-  } else {
-    mainImage.style.objectFit = "cover";
-    mainImage.style.background = "transparent";
-  }
+  mainImage.style.objectFit = "contain";
+  mainImage.style.background = "#111";
 }    });
   });
 }
@@ -938,11 +1164,9 @@ function renderSizes() {
 
   sizeGroup.style.display = "flex";
 
-  const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
-
   availableSizes = availableSizes.sort((a, b) => {
-    const aIndex = SIZE_ORDER.indexOf(a);
-    const bIndex = SIZE_ORDER.indexOf(b);
+    const aIndex = APPAREL_SIZE_ORDER.indexOf(a);
+    const bIndex = APPAREL_SIZE_ORDER.indexOf(b);
     return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
   });
 
@@ -978,7 +1202,7 @@ const productEl = document.getElementById("breadcrumbProduct");
 
 if (collectionEl) {
   collectionEl.textContent = formattedCollection;
-  collectionEl.href = `/shop#${collection}`;
+  collectionEl.href = collectionSlug ? `/shop#${collectionSlug}` : "/shop";
 }
 
 
@@ -986,6 +1210,8 @@ if (productEl) {
   productEl.textContent = product.title;
 }
 
+    renderRelatedProducts(products, product, productCollection);
+    configureSizeChart(hasApparelSizeVariants);
     renderSizes();
     renderImages();
 
@@ -1036,75 +1262,6 @@ document.querySelectorAll('.product-option-values').forEach(group => {
 });
 </script> -->
 
-
-<!-- RELATED PRODUCTS/MORE FROM COLLECTION -->
-<script>
-async function loadRelatedProducts() {
-  try {
-    const currentCollection = document.body.dataset.productCollection;
-
-    const titleEl = document.getElementById("related-title");
-
-    if (titleEl && currentCollection) {
-      const formatted = currentCollection
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, l => l.toUpperCase());
-
-      titleEl.textContent = `More from the ${formatted} Collection`;
-    }
-
-    const res = await fetch("/data/products.json");
-    if (!res.ok) {
-      throw new Error("Failed to load products.json");
-    }
-
-    const products = await res.json();
-
-    const container = document.getElementById("related-products");
-
-    if (!container) {
-      console.error("Missing #related-products container");
-      return;
-    }
-    
-    const currentProductId = document.body.dataset.productId;
-    const filtered = products.filter(p => p.collection === currentCollection && true);
-    if (!filtered.length) {
-      container.innerHTML = "<p style='color:white;'>No related products found.</p>";
-      return;
-    }
-
-    container.innerHTML = filtered.map(p => `
-  <div class="shop-card">
-    <div class="shop-card-media">
-      <img src="${p.image}" alt="${p.name}">
-    </div>
-
-    <div class="shop-card-info">
-      <div class="shop-card-collection">${p.collection}</div>
-      <div class="shop-card-name">${p.name}</div>
-
-      <div class="shop-card-meta">
-        <div class="shop-card-price">$${p.price}</div>
-      </div>
-
-      <div class="shop-card-actions">
-        <a href="product.html?id=${p.id}" class="shop-card-btn">
-          View Product
-        </a>
-      </div>
-    </div>
-  </div>
-`).join("");
-
-  } catch (err) {
-    console.error("Related products error:", err);
-  }
-}
-
-loadRelatedProducts();
-
-</script>
 <!-- GLOBAL LOOT BAG -->
 <script src="/assets/js/globalcart.js"></script>
 
