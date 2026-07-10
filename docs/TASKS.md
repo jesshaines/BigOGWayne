@@ -154,6 +154,8 @@ Completed Scope
 Future Enhancement
 
 - Product Type, Size, and Sort filtering may be added later when the catalog is large enough to justify more granular browsing controls.
+- Undeveloped support/content links now route to a shared `/coming-soon/` page until those pages are ready.
+- Privacy, Terms, Track Orders, FAQ, Contact, Returns, and About remain future content areas.
 
 ### 📋 Backlog
 
