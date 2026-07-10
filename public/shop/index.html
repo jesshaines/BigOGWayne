@@ -398,6 +398,22 @@ function buildFilterData(products = []) {
   ];
 }
 
+function applyInitialCollectionFromUrl() {
+  const requestedCollection = new URLSearchParams(window.location.search).get("collection");
+
+  if (!requestedCollection) {
+    activeCollection = "all";
+    return;
+  }
+
+  const requestedSlug = slugify(requestedCollection);
+  const hasRequestedCollection = collectionFilters.some(collection =>
+    collection.slug === requestedSlug
+  );
+
+  activeCollection = hasRequestedCollection ? requestedSlug : "all";
+}
+
 function renderFilters() {
   const collectionContainer = document.getElementById("shopCollectionFilters");
 
@@ -482,6 +498,7 @@ async function loadShop() {
 
     allProducts = products;
     buildFilterData(allProducts);
+    applyInitialCollectionFromUrl();
     renderFilters();
     renderShopProducts();
 

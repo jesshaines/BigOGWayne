@@ -154,6 +154,23 @@ Completed Scope
 Future Enhancement
 
 - Product Type, Size, and Sort filtering may be added later when the catalog is large enough to justify more granular browsing controls.
+- Individual collection detail pages may be added later if collection catalogs grow. For now, `/collections/` acts as a landing page with cards linking to pre-filtered shop views.
+
+#### SHOP-001D Collections landing page
+
+Status: Completed
+
+Description
+
+Create a branded `/collections/` landing page that shows collection/drop cards and routes shoppers into pre-filtered shop results.
+
+Completed Scope
+
+- Collection cards render from existing homepage collection metadata.
+- Cards link to `/shop/?collection=COLLECTION_SLUG`.
+- Shop reads the `collection` query parameter and applies the matching collection filter after products load.
+- Missing or invalid collection parameters default to All Collections.
+- Individual collection pages remain a future upgrade rather than current scope.
 
 ### 📋 Backlog
 
