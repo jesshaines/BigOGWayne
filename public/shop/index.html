@@ -52,10 +52,25 @@
 }
 
 .shop-filters{
+  background:rgba(17,17,17,.86);
+  border:1px solid var(--iron);
+  padding:1rem;
+  margin:0 0 1.5rem;
+}
+
+.shop-filter-label{
+  color:var(--mist);
+  font-size:.64rem;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  margin-bottom:.65rem;
+}
+
+.shop-collection-filters{
   display:flex;
   flex-wrap:wrap;
   gap:.65rem;
-  margin:0 0 1.5rem;
 }
 
 .shop-filter-btn{
@@ -243,7 +258,10 @@
       <p class="shop-intro-copy">Official merch from the music, the movement, and the mayhem.</p>
     </div>
 
-    <div class="shop-filters" id="shopFilters" aria-label="Filter products by collection"></div>
+    <section class="shop-filters" aria-label="Shop filters">
+      <div class="shop-filter-label">Collections</div>
+      <div class="shop-collection-filters" id="shopCollectionFilters"></div>
+    </section>
 
     <div id="shopGrid" class="shop-grid"></div>
 
@@ -262,16 +280,11 @@
 </footer>
 
 <script>
-const COLLECTIONS = [
-  { slug: "all", label: "All" },
-  { slug: "streetwise", label: "Streetwise" },
-  { slug: "hoodrat-mama", label: "Hoodrat Mama" },
-  { slug: "no-bluff", label: "No Bluff" },
-  { slug: "stinky-pinky", label: "Stinky Pinky" }
-];
+const KNOWN_COLLECTION_ORDER = ["Streetwise", "Hoodrat Mama", "No Bluff", "Stinky Pinky"];
 
 let allProducts = [];
 let activeCollection = "all";
+let collectionFilters = [{ slug: "all", label: "All Collections" }];
 
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, char => ({
@@ -327,32 +340,69 @@ function getPlaceholderText(value = "") {
     .toUpperCase() || "BOW";
 }
 
-function inferProductCollection(product = {}) {
-  const title = String(product.title || product.name || "").trim().toLowerCase();
-  if (!title) return null;
+function slugify(value = "") {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-  return COLLECTIONS
-    .filter(collection => collection.slug !== "all")
-    .find(collection => {
-      const label = collection.label.toLowerCase();
-      return title === label ||
-        title.startsWith(`${label} `) ||
-        title.startsWith(`${label}-`) ||
-        title.startsWith(`${label}–`) ||
-        title.startsWith(`${label}—`) ||
-        title.startsWith(`${label} -`) ||
-        title.startsWith(`${label} –`) ||
-        title.startsWith(`${label} —`) ||
-        title.startsWith(`${label}:`) ||
-        title.startsWith(`${label}|`);
-    }) || null;
+function splitProductTitle(product = {}) {
+  const title = String(product.title || product.name || "").trim();
+  const titleMatch = title.match(/^(.+?)\s+[—–-]\s+(.+)$/);
+
+  return {
+    collectionName: titleMatch ? titleMatch[1].trim() : "",
+    productTypeText: titleMatch ? titleMatch[2].trim() : title
+  };
+}
+
+function inferProductCollection(product = {}) {
+  const { collectionName } = splitProductTitle(product);
+  if (!collectionName) return null;
+
+  return {
+    slug: slugify(collectionName),
+    label: collectionName
+  };
+}
+
+function compareCollections(a, b) {
+  const aKnown = KNOWN_COLLECTION_ORDER.indexOf(a.label);
+  const bKnown = KNOWN_COLLECTION_ORDER.indexOf(b.label);
+
+  if (aKnown !== -1 || bKnown !== -1) {
+    if (aKnown === -1) return 1;
+    if (bKnown === -1) return -1;
+    return aKnown - bKnown;
+  }
+
+  return a.label.localeCompare(b.label);
+}
+
+function buildFilterData(products = []) {
+  const collections = new Map();
+
+  products.forEach(product => {
+    const collection = inferProductCollection(product);
+    if (collection && !collections.has(collection.slug)) {
+      collections.set(collection.slug, collection);
+    }
+  });
+
+  collectionFilters = [
+    { slug: "all", label: "All Collections" },
+    ...Array.from(collections.values()).sort(compareCollections)
+  ];
 }
 
 function renderFilters() {
-  const filters = document.getElementById("shopFilters");
-  if (!filters) return;
+  const collectionContainer = document.getElementById("shopCollectionFilters");
 
-  filters.innerHTML = COLLECTIONS.map(collection => `
+  if (collectionContainer) {
+    collectionContainer.innerHTML = collectionFilters.map(collection => `
     <button
       class="shop-filter-btn"
       type="button"
@@ -363,13 +413,14 @@ function renderFilters() {
     </button>
   `).join("");
 
-  filters.querySelectorAll(".shop-filter-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      activeCollection = button.dataset.filter || "all";
-      renderFilters();
-      renderShopProducts();
+    collectionContainer.querySelectorAll(".shop-filter-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        activeCollection = button.dataset.filter || "all";
+        renderFilters();
+        renderShopProducts();
+      });
     });
-  });
+  }
 }
 
 function renderShopProducts() {
@@ -381,12 +432,7 @@ function renderShopProducts() {
     : allProducts.filter(product => inferProductCollection(product)?.slug === activeCollection);
 
   if (!visibleProducts.length) {
-    const collection = COLLECTIONS.find(item => item.slug === activeCollection);
-    const message = activeCollection === "all"
-      ? "No products available"
-      : `${collection?.label || "This collection"} products coming soon.`;
-
-    grid.innerHTML = `<div class="shop-empty">${escapeHtml(message)}</div>`;
+    grid.innerHTML = `<div class="shop-empty">No products match this collection yet.</div>`;
     return;
   }
 
@@ -435,6 +481,7 @@ async function loadShop() {
     }
 
     allProducts = products;
+    buildFilterData(allProducts);
     renderFilters();
     renderShopProducts();
 
