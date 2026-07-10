@@ -128,6 +128,33 @@ Acceptance Criteria
 
 ## Shop/Product Cleanup
 
+### ✅ Completed
+
+#### SHOP-001C Collection-only shop browsing
+
+Status: Completed
+
+Description
+
+Refine the shop browsing experience with dynamic music/drop collection browsing.
+
+Completed Scope
+
+- Dynamic collection buttons generated from Printify product title prefixes using `[Collection Name] — [Product Type]`.
+- Preferred known collection order:
+  - Streetwise
+  - Hoodrat Mama
+  - No Bluff
+  - Stinky Pinky
+- Future collections appear automatically after known collections.
+- Collection-only browsing keeps the shop simple for the current catalog size.
+- Empty filter results show a clean message.
+- Product cards remain fully clickable and preserve live Printify product links.
+
+Future Enhancement
+
+- Product Type, Size, and Sort filtering may be added later when the catalog is large enough to justify more granular browsing controls.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

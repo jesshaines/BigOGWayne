@@ -10,7 +10,7 @@
 <style>
 .shop-page{
   background:var(--obsidian);
-  padding:clamp(3rem,6vw,5rem) 0;
+  padding:calc(var(--header-h) + clamp(2.25rem,5vw,4rem)) 0 clamp(3rem,6vw,5rem);
 }
 
 .shop-inner{
@@ -20,7 +20,8 @@
 }
 
 .shop-header{
-  margin-bottom:2.5rem;
+  margin-bottom:1.75rem;
+  max-width:760px;
 }
 
 .shop-title{
@@ -30,33 +31,97 @@
   text-transform:uppercase;
   letter-spacing:-.03em;
   color:var(--white);
+  line-height:.95;
 }
 
 .shop-sub{
-  color:var(--chrome);
-  font-size:.85rem;
-  letter-spacing:.12em;
+  color:var(--red);
+  font-size:.74rem;
+  font-weight:800;
+  letter-spacing:.18em;
   text-transform:uppercase;
+  margin-bottom:.65rem;
+}
+
+.shop-intro-copy{
+  color:var(--silver);
+  font-size:clamp(.95rem,1.5vw,1.1rem);
+  line-height:1.65;
+  margin-top:.85rem;
+  max-width:620px;
+}
+
+.shop-filters{
+  background:rgba(17,17,17,.86);
+  border:1px solid var(--iron);
+  padding:1rem;
+  margin:0 0 1.5rem;
+}
+
+.shop-filter-label{
+  color:var(--mist);
+  font-size:.64rem;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  margin-bottom:.65rem;
+}
+
+.shop-collection-filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.65rem;
+}
+
+.shop-filter-btn{
+  border:1px solid var(--iron);
+  color:var(--chrome);
+  background:var(--carbon);
+  padding:.75rem 1rem;
+  font-size:.68rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  transition:background .15s ease,border-color .15s ease,color .15s ease;
+}
+
+.shop-filter-btn:hover,
+.shop-filter-btn:focus-visible{
+  border-color:var(--red);
+  color:var(--white);
+}
+
+.shop-filter-btn[aria-pressed="true"]{
+  background:var(--red);
+  border-color:var(--red);
+  color:var(--white);
 }
 
 .shop-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
   gap:1px;
-  background:var(--iron);
-  border:1px solid var(--iron);
+  background:transparent;
+  min-width:0;
 }
 
 /* CARD */
 .shop-card{
   background:var(--carbon);
+  border:1px solid var(--iron);
   display:flex;
   flex-direction:column;
-  transition:transform .15s ease;
+  transition:transform .15s ease,box-shadow .15s ease;
+  min-width:0;
+  color:inherit;
+  text-decoration:none;
 }
 
-.shop-card:hover{
+.shop-card:hover,
+.shop-card:focus-visible{
   transform:translateY(-2px);
+  box-shadow:0 0 0 1px var(--red), 0 10px 28px rgba(0,0,0,.45);
+  outline:none;
 }
 
 .shop-card-media{
@@ -71,7 +136,7 @@
 .shop-card-media img{
   width:100%;
   height:100%;
-  object-fit:cover;
+  object-fit:contain;
 }
 
 .shop-card-info{
@@ -81,12 +146,21 @@
   gap:.5rem;
 }
 
+.shop-card-collection{
+  color:var(--red);
+  font-size:.62rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
 .shop-card-name{
   font-family:var(--font-display);
   font-weight:900;
   text-transform:uppercase;
   font-size:.85rem;
   color:var(--white);
+  line-height:1.25;
 }
 
 .shop-card-price{
@@ -94,27 +168,35 @@
   font-weight:700;
 }
 
-.shop-card-btn{
-  margin-top:.75rem;
-  display:inline-block;
-  text-align:center;
-  padding:.7rem;
-  border:1px solid var(--red);
-  color:var(--white);
+.shop-card-placeholder{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:rgba(255,255,255,.12);
+  font-family:var(--font-display);
+  font-size:2.5rem;
+  font-weight:900;
   text-transform:uppercase;
-  font-size:.7rem;
-  letter-spacing:.15em;
-  transition:all .15s ease;
-}
-
-.shop-card-btn:hover{
-  background:var(--red);
 }
 
 .shop-empty{
   padding:3rem;
   text-align:center;
   color:var(--chrome);
+  grid-column:1/-1;
+}
+
+@media (max-width:560px){
+  .shop-grid{
+    grid-template-columns:1fr;
+  }
+
+  .shop-filter-btn{
+    flex:1 1 calc(50% - .65rem);
+    min-width:0;
+  }
 }
 </style>
 </head>
@@ -123,93 +205,325 @@
 
 <header class="header">
   <div class="header-inner">
-    <a href="/" class="header-logo">
-      <img src="/assets/images/logo/bow_logo.png">
+    <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
+      <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne logo">
     </a>
+
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/shop/" class="nav-link">Shop</a>
+      <a href="/collections/" class="nav-link">Collections</a>
+      <a href="/#social" class="nav-link">Connect</a>
+      <a href="/about" class="nav-link">About</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="/order-lookup" class="header-action orders-link">Orders</a>
+      <button class="cart-btn" type="button" aria-label="Open loot bag">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.75"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+          <line x1="3" x2="21" y1="6" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span class="cart-dot" aria-live="polite">0</span>
+      </button>
+      <button class="hamburger-btn" id="hamburgerBtn"
+              type="button" aria-label="Toggle menu"
+              aria-expanded="false" aria-controls="mobileNavDrawer">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </header>
-
 
 <!-- Mobile navigation drawer -->
 <nav class="mobile-nav-drawer" id="mobileNavDrawer"
      aria-label="Mobile navigation" aria-hidden="true">
-  <a href="/shop"        class="mobile-nav-link">Shop</a>
-  <a href="/collections" class="mobile-nav-link">Collections</a>
-  <a href="#social"      class="mobile-nav-link">Connect</a>
-  <a href="/about"       class="mobile-nav-link">About</a>
+  <a href="/shop/" class="mobile-nav-link">Shop</a>
+  <a href="/collections/" class="mobile-nav-link">Collections</a>
+  <a href="/#social" class="mobile-nav-link">Connect</a>
+  <a href="/about" class="mobile-nav-link">About</a>
   <div class="mobile-nav-actions">
     <a href="/order-lookup" class="btn-secondary">Track Orders</a>
   </div>
 </nav>
 
-<!-- Spacer prevents body content from hiding under fixed header -->
-<div style="height:var(--header-h);background:var(--obsidian);display:flex;align-items:center;justify-content:center;color:var(--fog);font-family:var(--font-body);font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;">Page content begins here</div>
-
-</header>
-
 <section class="shop-page">
   <div class="shop-inner">
 
     <div class="shop-header">
-      <div class="shop-sub">Official Merch</div>
-      <h1 class="shop-title">Shop</h1>
+      <div class="shop-sub">Shop Official Merch</div>
+      <h1 class="shop-title">REP BIG OG WAYNE</h1>
+      <p class="shop-intro-copy">Official merch from the music, the movement, and the mayhem.</p>
     </div>
+
+    <section class="shop-filters" aria-label="Shop filters">
+      <div class="shop-filter-label">Collections</div>
+      <div class="shop-collection-filters" id="shopCollectionFilters"></div>
+    </section>
 
     <div id="shopGrid" class="shop-grid"></div>
 
   </div>
 </section>
 
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-footer-copy">© 2025 <strong>Big OG Wayne</strong>. All rights reserved.</p>
+    <p class="site-footer-copy">Designed and built by <strong><a href="https://www.olympicembers.com">Olympic Embers Media</a></strong></p>
+    <nav class="site-footer-legal" aria-label="Footer legal links">
+      <a href="/policies">Privacy</a>
+      <a href="/policies">Terms</a>
+    </nav>
+  </div>
+</footer>
+
 <script>
-async function loadShop() {
-  try {
-    const res = await fetch("/products");
-    const json = await res.json();
+const KNOWN_COLLECTION_ORDER = ["Streetwise", "Hoodrat Mama", "No Bluff", "Stinky Pinky"];
 
-    const products = json.data || json;
-    const grid = document.getElementById("shopGrid");
+let allProducts = [];
+let activeCollection = "all";
+let collectionFilters = [{ slug: "all", label: "All Collections" }];
 
-    if (!products.length) {
-      grid.innerHTML = `<div class="shop-empty">No products available</div>`;
-      return;
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
+}
+
+function getProductsFromResponse(json) {
+  if (Array.isArray(json)) return json;
+  if (Array.isArray(json?.data)) return json.data;
+  if (Array.isArray(json?.products)) return json.products;
+  return [];
+}
+
+function getImageSrc(image = {}) {
+  return image?.src || image?.url || "";
+}
+
+function isPrintifySizeChartImage(image = {}) {
+  const src = getImageSrc(image).toLowerCase();
+  const mockupId = String(image?.mockup_id || "").toLowerCase();
+
+  return src.includes("camera_label=size-chart") || mockupId.includes("size-chart");
+}
+
+function getProductImage(product = {}) {
+  if (!Array.isArray(product.images)) return "";
+
+  const image = product.images.find(item => !isPrintifySizeChartImage(item) && getImageSrc(item));
+  return getImageSrc(image);
+}
+
+function getProductPrice(product = {}) {
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const variant = variants.find(item =>
+    item?.is_enabled !== false && Number.isFinite(Number(item.price))
+  );
+
+  return variant ? `$${(Number(variant.price) / 100).toFixed(2)}` : "Price unavailable";
+}
+
+function getPlaceholderText(value = "") {
+  const words = String(value).trim().split(/\s+/).filter(Boolean);
+
+  return words
+    .slice(0, 2)
+    .map(word => word[0])
+    .join("")
+    .toUpperCase() || "BOW";
+}
+
+function slugify(value = "") {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function splitProductTitle(product = {}) {
+  const title = String(product.title || product.name || "").trim();
+  const titleMatch = title.match(/^(.+?)\s+[—–-]\s+(.+)$/);
+
+  return {
+    collectionName: titleMatch ? titleMatch[1].trim() : "",
+    productTypeText: titleMatch ? titleMatch[2].trim() : title
+  };
+}
+
+function inferProductCollection(product = {}) {
+  const { collectionName } = splitProductTitle(product);
+  if (!collectionName) return null;
+
+  return {
+    slug: slugify(collectionName),
+    label: collectionName
+  };
+}
+
+function compareCollections(a, b) {
+  const aKnown = KNOWN_COLLECTION_ORDER.indexOf(a.label);
+  const bKnown = KNOWN_COLLECTION_ORDER.indexOf(b.label);
+
+  if (aKnown !== -1 || bKnown !== -1) {
+    if (aKnown === -1) return 1;
+    if (bKnown === -1) return -1;
+    return aKnown - bKnown;
+  }
+
+  return a.label.localeCompare(b.label);
+}
+
+function buildFilterData(products = []) {
+  const collections = new Map();
+
+  products.forEach(product => {
+    const collection = inferProductCollection(product);
+    if (collection && !collections.has(collection.slug)) {
+      collections.set(collection.slug, collection);
     }
+  });
 
-    grid.innerHTML = products.map(product => {
-      const image = product.images?.[0]?.src || "";
-      const variant = product.variants?.[0];
+  collectionFilters = [
+    { slug: "all", label: "All Collections" },
+    ...Array.from(collections.values()).sort(compareCollections)
+  ];
+}
 
-      return `
-        <div class="shop-card">
+function renderFilters() {
+  const collectionContainer = document.getElementById("shopCollectionFilters");
 
-          <div class="shop-card-media">
-            <img src="${image}" alt="${product.title}">
-          </div>
+  if (collectionContainer) {
+    collectionContainer.innerHTML = collectionFilters.map(collection => `
+    <button
+      class="shop-filter-btn"
+      type="button"
+      data-filter="${collection.slug}"
+      aria-pressed="${collection.slug === activeCollection}"
+    >
+      ${escapeHtml(collection.label)}
+    </button>
+  `).join("");
 
-          <div class="shop-card-info">
-            <div class="shop-card-name">${product.title}</div>
-
-            <div class="shop-card-price">
-              $${(variant.price / 100).toFixed(2)}
-            </div>
-
-            <a href="/product.html?id=${product.id}" class="shop-card-btn">
-              View Product
-            </a>
-          </div>
-
-        </div>
-      `;
-    }).join("");
-
-  } catch (err) {
-    console.error(err);
-    document.getElementById("shopGrid").innerHTML =
-      `<div class="shop-empty">Failed to load products</div>`;
+    collectionContainer.querySelectorAll(".shop-filter-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        activeCollection = button.dataset.filter || "all";
+        renderFilters();
+        renderShopProducts();
+      });
+    });
   }
 }
 
+function renderShopProducts() {
+  const grid = document.getElementById("shopGrid");
+  if (!grid) return;
+
+  const visibleProducts = activeCollection === "all"
+    ? allProducts
+    : allProducts.filter(product => inferProductCollection(product)?.slug === activeCollection);
+
+  if (!visibleProducts.length) {
+    grid.innerHTML = `<div class="shop-empty">No products match this collection yet.</div>`;
+    return;
+  }
+
+  grid.innerHTML = visibleProducts.map(product => {
+    const title = product.title || product.name || "Untitled product";
+    const image = getProductImage(product);
+    const price = getProductPrice(product);
+    const collection = inferProductCollection(product);
+    const productUrl = `/product.html?id=${encodeURIComponent(product.id || "")}`;
+    const placeholder = getPlaceholderText(title);
+
+    return `
+      <a class="shop-card" href="${escapeHtml(productUrl)}" aria-label="View ${escapeHtml(title)}">
+        <div class="shop-card-media">
+          ${image
+            ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy">`
+            : `<div class="shop-card-placeholder">${escapeHtml(placeholder)}</div>`}
+        </div>
+
+        <div class="shop-card-info">
+          ${collection ? `<div class="shop-card-collection">${escapeHtml(collection.label)}</div>` : ""}
+          <div class="shop-card-name">${escapeHtml(title)}</div>
+          <div class="shop-card-price">${escapeHtml(price)}</div>
+        </div>
+      </a>
+    `;
+  }).join("");
+}
+
+async function loadShop() {
+  const grid = document.getElementById("shopGrid");
+
+  try {
+    const res = await fetch("/products");
+    const json = await res.json();
+    const products = getProductsFromResponse(json);
+
+    if (!res.ok) {
+      console.error("Failed to load /products:", {
+        status: res.status,
+        statusText: res.statusText,
+        response: json
+      });
+      grid.innerHTML = `<div class="shop-empty">Failed to load products</div>`;
+      return;
+    }
+
+    allProducts = products;
+    buildFilterData(allProducts);
+    renderFilters();
+    renderShopProducts();
+
+  } catch (err) {
+    console.error("Failed to load shop products:", err);
+    if (grid) {
+      grid.innerHTML = `<div class="shop-empty">Failed to load products</div>`;
+    }
+  }
+}
+
+renderFilters();
 loadShop();
 </script>
+
+<!-- LOOT BAG DRAWER -->
+<aside class="lootbag-drawer" id="lootbagDrawer" aria-hidden="true">
+  <div class="lootbag-backdrop" id="lootbagBackdrop"></div>
+
+  <div class="lootbag-panel">
+    <div class="lootbag-header">
+      <h2 class="lootbag-title">Loot Bag</h2>
+      <button class="lootbag-close" id="lootbagClose" type="button">✕</button>
+    </div>
+
+    <div class="lootbag-body" id="lootbagItems"></div>
+
+    <div class="lootbag-footer">
+      <div class="lootbag-total-row">
+        <span>Subtotal</span>
+        <strong id="lootbagSubtotal">$0.00</strong>
+      </div>
+
+      <button id="lootbagCheckoutBtn" class="checkout-trigger lootbag-checkout-btn" type="button">
+        Checkout
+      </button>
+    </div>
+  </div>
+</aside>
+
+<script src="/assets/js/globalcart.js"></script>
+<script src="/assets/js/site-shell.js"></script>
 
 </body>
 </html>
