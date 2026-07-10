@@ -28,7 +28,7 @@ export const homepageConfig = {
     ],
     merchCta: {
       label: "REP BIG OG WAYNE",
-      url: "/collections/streetwise"
+      url: "/shop/?collection=streetwise"
     }
   },
   collections: [
@@ -38,7 +38,7 @@ export const homepageConfig = {
       displayName: "Street<br/>wise",
       badge: "FEATURED RELEASE",
       story: "Built from real stories, sharp instincts, and the current era.",
-      url: "/collections/streetwise",
+      url: "/shop/?collection=streetwise",
       artwork: {
         src: "/assets/images/products/collections/streetwise/streetwise_textonly.png",
         alt: "Streetwise"
@@ -53,7 +53,7 @@ export const homepageConfig = {
       displayName: "Hoodrat<br/>Mama",
       badge: "NEW RELEASE",
       story: "Here we go again. Money for the kids but it vanishes once again.",
-      url: "/collections",
+      url: "/shop/?collection=hoodrat-mama",
       artwork: {
         src: "/assets/images/products/collections/hoodrat/hoodrat_transparent_full.png",
         alt: "Hoodrat Mama"
@@ -67,7 +67,7 @@ export const homepageConfig = {
       displayName: "No<br/>Bluff",
       badge: "SIGNATURE SERIES",
       story: "Direct, grounded, and made for the ones who recognize the truth in the music.",
-      url: "/collections/no-bluff",
+      url: "/shop/?collection=no-bluff",
       artwork: {
         src: "/assets/images/logo/NoBluff_Logo_BlackBkg.png",
         alt: "No Bluff"
@@ -81,7 +81,7 @@ export const homepageConfig = {
       displayName: "Stinky<br/>Pinky",
       badge: "FAN FAVORITE",
       story: "A fan-favorite release that keeps the older Big OG Wayne energy alive.",
-      url: "/collections/stinky-pinky",
+      url: "/shop/?collection=stinky-pinky",
       artwork: {
         src: "/assets/images/logo/StinkyPinky_Logo_Blackbkg.png",
         alt: "Stinky Pinky"

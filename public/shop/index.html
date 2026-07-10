@@ -99,8 +99,10 @@
 
 .shop-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(240px,320px));
   gap:1px;
+  justify-content:start;
+  align-items:start;
   background:transparent;
   min-width:0;
 }
@@ -284,7 +286,7 @@ const KNOWN_COLLECTION_ORDER = ["Streetwise", "Hoodrat Mama", "No Bluff", "Stink
 
 let allProducts = [];
 let activeCollection = "all";
-let collectionFilters = [{ slug: "all", label: "All Collections" }];
+let collectionFilters = [{ slug: "all", label: "All Items" }];
 
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, char => ({
@@ -393,7 +395,7 @@ function buildFilterData(products = []) {
   });
 
   collectionFilters = [
-    { slug: "all", label: "All Collections" },
+    { slug: "all", label: "All Items" },
     ...Array.from(collections.values()).sort(compareCollections)
   ];
 }

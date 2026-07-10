@@ -64,7 +64,7 @@
   display:flex;
   flex-direction:column;
   gap:.75rem;
-  max-height:min(72vh,640px);
+  max-height:min(64vh,560px);
   overflow-y:auto;
   padding-right:.25rem;
   min-width:0;
@@ -95,16 +95,16 @@
 }
 
 .product-main-image{
-  width: 100%;
-  height:min(72vh,640px);
-  max-height:min(72vh,640px);
+  width:100%;
+  height:auto;
+  max-height:min(64vh,560px);
   min-width:0;
   max-width:100%;
   box-sizing:border-box;
   position:relative;
-  background:var(--carbon);
+  background:#111;
   border:1px solid var(--iron);
-  aspect-ratio:4/5;
+  aspect-ratio:1/1;
   overflow:hidden;
   display:flex;
   align-items:center;
@@ -140,8 +140,8 @@
 
 .product-badge{
   position:absolute;
-  top:1rem;
-  left:1rem;
+  top:.75rem;
+  left:.75rem;
   z-index:2;
   background:var(--red);
   color:var(--white);
@@ -150,6 +150,7 @@
   letter-spacing:.1em;
   text-transform:uppercase;
   padding:.35rem .55rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
 }
 
 .product-badge[hidden]{
@@ -425,8 +426,8 @@
   grid-template-columns:repeat(auto-fit,minmax(150px,220px));
   gap:1px;
   justify-content:start;
-  background:var(--iron);
-  border:1px solid var(--iron);
+  background:transparent;
+  border:0;
   min-width:0;
   max-width:100%;
   box-sizing:border-box;
@@ -511,8 +512,8 @@
 
   .product-main-image{
     order:1;
-    height:min(70vh,560px);
-    max-height:min(70vh,560px);
+    height:auto;
+    max-height:min(62vh,520px);
   }
 
   .product-thumb{
@@ -663,8 +664,8 @@
       </div>
 
       <div class="product-panel" id="dropDetailsPanel">
-        <div class="product-panel-title">Drop Details</div>
-        <div class="product-panel-text">
+        <div class="product-panel-title">About the Drop</div>
+        <div class="product-panel-text" id="dropDetailsText">
           Official Big OG Wayne merch. Product details and sizing may vary by item.
         </div>
       </div>
@@ -696,25 +697,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       label: "Streetwise",
       matches: ["streetwise"],
       badge: "FEATURED RELEASE",
-      isFeatured: true
+      isFeatured: true,
+      story: "Built around the Streetwise release — sharp graphics, street-level energy, and merch made to rep the track."
     },
     {
       slug: "hoodrat-mama",
       label: "Hoodrat Mama",
       matches: ["hoodrat-mama", "hoodrat"],
-      badge: "NEW RELEASE"
+      badge: "NEW RELEASE",
+      story: "A drop pulled straight from the song’s chaos, attitude, and story. Rep the track with official Hoodrat Mama merch."
     },
     {
       slug: "no-bluff",
       label: "No Bluff",
       matches: ["no-bluff"],
-      badge: "SIGNATURE SERIES"
+      badge: "SIGNATURE SERIES",
+      story: "Straightforward, bold, and built around the no-nonsense energy of the track."
     },
     {
       slug: "stinky-pinky",
       label: "Stinky Pinky",
       matches: ["stinky-pinky"],
-      badge: "FAN FAVORITE"
+      badge: "FAN FAVORITE",
+      story: "A fan-favorite drop with playful chaos, loud personality, and merch that does not take itself too seriously."
     }
   ];
   const APPAREL_SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
@@ -999,6 +1004,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     productExtra.hidden = !showSizeChart && !hasVisibleDropDetails;
     productExtra.classList.toggle("single-panel", !showSizeChart && hasVisibleDropDetails);
+  }
+
+  function updateDropDetails(productCollection) {
+    const dropDetailsPanel = document.getElementById("dropDetailsPanel");
+    const dropDetailsText = document.getElementById("dropDetailsText");
+
+    if (!dropDetailsPanel || !dropDetailsText) return;
+
+    if (!productCollection?.story) {
+      dropDetailsPanel.hidden = true;
+      return;
+    }
+
+    dropDetailsText.textContent = productCollection.story;
+    dropDetailsPanel.hidden = false;
   }
 
   try {
@@ -1323,7 +1343,9 @@ const productEl = document.getElementById("breadcrumbProduct");
 
 if (collectionEl) {
   collectionEl.textContent = formattedCollection;
-  collectionEl.href = collectionSlug ? `/shop#${collectionSlug}` : "/shop";
+  collectionEl.href = collectionSlug
+    ? `/shop/?collection=${encodeURIComponent(collectionSlug)}`
+    : "/shop";
 }
 
 
@@ -1332,6 +1354,7 @@ if (productEl) {
 }
 
     renderRelatedProducts(products, product, productCollection);
+    updateDropDetails(productCollection);
     configureSizeChart(sizeChartConfig);
     renderSizes();
     renderImages();
