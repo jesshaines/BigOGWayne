@@ -13,7 +13,7 @@
 <style>
 .product-page{
   background:var(--obsidian);
-  padding:clamp(2.5rem,5vw,4rem) 0 clamp(4rem,8vw,6rem);
+  padding:calc(var(--header-h) + clamp(2.5rem,5vw,4rem)) 0 clamp(4rem,8vw,6rem);
   overflow-x:hidden;
 }
 
@@ -150,6 +150,10 @@
   letter-spacing:.1em;
   text-transform:uppercase;
   padding:.35rem .55rem;
+}
+
+.product-badge[hidden]{
+  display:none;
 }
 
 .product-info-panel{
@@ -592,7 +596,7 @@
        <div class="product-thumbs"></div>
 
 <div class="product-main-image">
-  <div class="product-badge">Featured</div>
+  <div class="product-badge" id="productBadge" hidden></div>
 
   <img
   id="mainProductImage"
@@ -687,10 +691,31 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const loadingState = document.getElementById("loadingState");
   const KNOWN_COLLECTIONS = [
-    { slug: "streetwise", label: "Streetwise", matches: ["streetwise"] },
-    { slug: "hoodrat-mama", label: "Hoodrat Mama", matches: ["hoodrat-mama", "hoodrat"] },
-    { slug: "no-bluff", label: "No Bluff", matches: ["no-bluff"] },
-    { slug: "stinky-pinky", label: "Stinky Pinky", matches: ["stinky-pinky"] }
+    {
+      slug: "streetwise",
+      label: "Streetwise",
+      matches: ["streetwise"],
+      badge: "FEATURED RELEASE",
+      isFeatured: true
+    },
+    {
+      slug: "hoodrat-mama",
+      label: "Hoodrat Mama",
+      matches: ["hoodrat-mama", "hoodrat"],
+      badge: "NEW RELEASE"
+    },
+    {
+      slug: "no-bluff",
+      label: "No Bluff",
+      matches: ["no-bluff"],
+      badge: "SIGNATURE SERIES"
+    },
+    {
+      slug: "stinky-pinky",
+      label: "Stinky Pinky",
+      matches: ["stinky-pinky"],
+      badge: "FAN FAVORITE"
+    }
   ];
   const APPAREL_SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
@@ -766,6 +791,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       slug: fallbackSlug,
       label: formatCollection(fallbackSlug)
     };
+  }
+
+  function updateProductBadge(productCollection = null) {
+    const productBadge = document.getElementById("productBadge");
+    if (!productBadge) return;
+
+    if (!productCollection?.badge) {
+      productBadge.textContent = "";
+      productBadge.hidden = true;
+      return;
+    }
+
+    productBadge.textContent = productCollection.badge;
+    productBadge.hidden = false;
   }
 
   function getProductImage(productData = {}) {
@@ -1030,6 +1069,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (collectionLabel) {
       collectionLabel.textContent = formattedCollection;
     }
+    updateProductBadge(productCollection);
 
     const rawVariants = Array.isArray(product.variants)
       ? product.variants

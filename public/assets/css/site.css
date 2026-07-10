@@ -49,7 +49,7 @@ button{
 
 /* Header */
 .header{
-  position:sticky;
+  position:fixed;
   top:0;
   left:0;
   right:0;
@@ -92,9 +92,14 @@ button{
   height:68px;
   width:auto;
   object-fit:contain;
+  display:block;
+  image-rendering:-webkit-optimize-contrast;
+  image-rendering:crisp-edges;
   filter:
     drop-shadow(0 2px 8px rgba(0,0,0,0.75))
     drop-shadow(0 0 1px rgba(0,0,0,0.4));
+  transform:translateZ(0);
+  will-change:transform;
 }
 .nav{
   display:flex;
@@ -124,6 +129,9 @@ button{
 }
 .nav-link:hover{
   color:var(--white);
+}
+.nav-link:hover::after{
+  width:100%;
 }
 .nav-link:focus-visible{
   color:var(--white);
