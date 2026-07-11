@@ -13,11 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
           <nav class="nav" aria-label="Main navigation">
             <a href="/shop" class="nav-link">Shop</a>
             <a href="/collections" class="nav-link">Collections</a>
-            <a href="/about" class="nav-link">About</a>
+            <a href="/coming-soon/" class="nav-link">About</a>
           </nav>
 
           <div class="header-actions">
-            <a href="/order-lookup" class="header-action">Orders</a>
+            <a href="/coming-soon/" class="header-action">Orders</a>
             <button class="cart-btn" type="button" aria-label="Open cart">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="1.75"
