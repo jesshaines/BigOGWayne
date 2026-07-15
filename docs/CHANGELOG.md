@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Updated shop/product pages to respect Printify variant availability, block out-of-stock variants from the Loot Bag, and defer low-stock messaging.
 - Cleaned up the Coming Soon page hero layout and marquee image presentation.
 - Added a branded Coming Soon page and routed unfinished internal links there.
 - Corrected shop browsing copy so the default filter reads `All Items`.

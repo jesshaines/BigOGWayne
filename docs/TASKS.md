@@ -155,6 +155,22 @@ Future Enhancement
 
 - Product Type, Size, and Sort filtering may be added later when the catalog is large enough to justify more granular browsing controls.
 
+#### SHOP-001G Printify variant availability
+
+Status: Completed
+
+Description
+
+Basic launch-readiness out-of-stock handling for live Printify products.
+
+Completed Scope
+
+- Shop and product pages now treat variants as purchasable only when `is_enabled !== false` and `is_available !== false`.
+- Shop cards prefer pricing from the first purchasable variant.
+- Products with no purchasable variants stay visible but show an Out of Stock state.
+- Product pages disable Add to Loot Bag when no purchasable variant is available.
+- Low-stock labels are deferred because Printify `quantity` is not reliable in the current `/products` payload.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

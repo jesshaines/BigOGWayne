@@ -819,12 +819,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     return getImageSrc(image);
   }
 
+  function isVariantEnabled(variant = {}) {
+    return variant?.is_enabled !== false;
+  }
+
+  function isVariantAvailable(variant = {}) {
+    return variant?.is_available !== false;
+  }
+
+  function isVariantPurchasable(variant = {}) {
+    return isVariantEnabled(variant) && isVariantAvailable(variant);
+  }
+
+  function getPurchasableVariants(productData = {}) {
+    return Array.isArray(productData.variants)
+      ? productData.variants.filter(isVariantPurchasable)
+      : [];
+  }
+
   function getProductPrice(productData = {}) {
-    const variants = Array.isArray(productData.variants) ? productData.variants : [];
+    const variants = getPurchasableVariants(productData);
     const variant = variants.find(item =>
-      item?.is_enabled !== false && Number.isFinite(Number(item.price))
+      Number.isFinite(Number(item.price))
     );
 
+    if (!variants.length) return "Out of Stock";
     return variant ? `$${(Number(variant.price) / 100).toFixed(2)}` : "Price unavailable";
   }
 
@@ -954,6 +973,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     addToLootBagBtn.disabled = !isEnabled;
     addToLootBagBtn.textContent = label;
+  }
+
+  function clearSelectedVariantData() {
+    delete document.body.dataset.variantId;
+    delete document.body.dataset.productPrice;
   }
 
   function configureSizeChart(sizeChartConfig) {
@@ -1094,9 +1118,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const rawVariants = Array.isArray(product.variants)
       ? product.variants
       : [];
-    const enabledVariants = rawVariants.filter(v => v && v.is_enabled !== false);
-    const optionVariants = enabledVariants.filter(v => v.title && v.title !== "Default");
-    const variantsToUse = optionVariants.length ? optionVariants : enabledVariants;
+    const purchasableVariants = rawVariants.filter(isVariantPurchasable);
+    const optionVariants = purchasableVariants.filter(v => v.title && v.title !== "Default");
+    const variantsToUse = optionVariants.length ? optionVariants : purchasableVariants;
 
     const parsed = variantsToUse.map(v => {
       const parts = v.title && v.title !== "Default"
@@ -1122,12 +1146,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
   }).filter(v => v.id && Number.isFinite(v.price));
 
-    const hasAvailableVariants = parsed.length > 0;
+    const hasPurchasableVariants = parsed.length > 0;
 
-    if (!hasAvailableVariants) {
-      if (priceEl) priceEl.textContent = "Price unavailable";
-      setAddToBagEnabled(false, "Unavailable");
-      showStatus("Product options are unavailable.");
+    if (!hasPurchasableVariants) {
+      if (priceEl) priceEl.textContent = "Out of Stock";
+      clearSelectedVariantData();
+      setAddToBagEnabled(false, "Out of Stock");
+      showStatus("This product is currently out of stock.");
     }
 
     const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
@@ -1147,8 +1172,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     function updateVariant() {
       const variant = findVariant();
       if (!variant) {
-        setAddToBagEnabled(false, "Unavailable");
-        showStatus("Selected variant is unavailable.");
+        clearSelectedVariantData();
+        setAddToBagEnabled(false, "Select Available Options");
+        showStatus("Select an available option.");
         return null;
       }
 
@@ -1157,6 +1183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       setAddToBagEnabled(true);
+      clearStatus();
 
       document.body.dataset.variantId = variant.id;
       document.body.dataset.productPrice = variant.price / 100;
@@ -1359,9 +1386,8 @@ if (productEl) {
     renderSizes();
     renderImages();
 
-    if (hasAvailableVariants) {
+    if (hasPurchasableVariants) {
       updateVariant();
-      clearStatus();
     }
 
   } catch (err) {
