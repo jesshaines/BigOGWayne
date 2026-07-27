@@ -297,6 +297,10 @@ if (continueBtn) {
 </script>
 
 <script>
+function getCheckoutErrorMessage(data = {}) {
+  return data.message || data.error || "Checkout failed.";
+}
+
 async function goToCheckout() {
   const cart = getLootBag();
 
@@ -318,8 +322,13 @@ async function goToCheckout() {
 
     console.log("SERVER RESPONSE:", data); // debug line
 
+    if (!res.ok) {
+      alert(getCheckoutErrorMessage(data));
+      return;
+    }
+
     if (!data.url) {
-      alert("Checkout failed. No URL returned.");
+      alert(getCheckoutErrorMessage(data));
       return;
     }
 

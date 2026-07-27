@@ -171,6 +171,23 @@ Completed Scope
 - Product pages disable Add to Loot Bag when no purchasable variant is available.
 - Low-stock labels are deferred because Printify `quantity` is not reliable in the current `/products` payload.
 
+#### SHOP-001H Server-side checkout validation
+
+Status: Completed
+
+Description
+
+Harden checkout trust before Square payment links are created.
+
+Completed Scope
+
+- `/create-checkout` now validates cart shape and line-item quantities before contacting Square.
+- Checkout validates product IDs and variant IDs against fresh Printify product data.
+- Checkout rejects deleted, hidden, unavailable, disabled, stale, or invalid product variants.
+- Square line item names and prices now come from Printify product/variant data instead of browser cart values.
+- Duplicate product/variant cart lines are merged server-side and limited to a launch-safe maximum quantity of 10.
+- Low-stock labels remain deferred because Printify `quantity` is not reliable in the current `/products` payload.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

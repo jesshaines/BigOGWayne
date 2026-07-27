@@ -24,6 +24,10 @@ function formatMoney(value) {
   return `$${Number(value).toFixed(2)}`;
 }
 
+function getCheckoutErrorMessage(data = {}) {
+  return data.message || data.error || 'Checkout failed.';
+}
+
 function updateCartCount() {
   const cart = getLootBag();
 
@@ -279,8 +283,13 @@ async function goToCheckout() {
 
     console.log('CHECKOUT RESPONSE:', data);
 
+    if (!res.ok) {
+      alert(getCheckoutErrorMessage(data));
+      return;
+    }
+
     if (!data.url) {
-      alert('Checkout failed.');
+      alert(getCheckoutErrorMessage(data));
       return;
     }
 

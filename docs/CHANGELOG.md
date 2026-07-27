@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Checkout now validates cart items server-side against Printify before creating Square payment links, uses Printify variant prices, and rejects stale or unavailable variants.
 - Updated shop/product pages to respect Printify variant availability, block out-of-stock variants from the Loot Bag, and defer low-stock messaging.
 - Cleaned up the Coming Soon page hero layout and marquee image presentation.
 - Added a branded Coming Soon page and routed unfinished internal links there.
