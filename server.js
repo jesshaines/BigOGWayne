@@ -395,6 +395,21 @@ function isSquareNotFoundError(error = {}) {
   return errors.some(item => String(item?.code || "").toUpperCase() === "NOT_FOUND");
 }
 
+function isSquareForbiddenError(error = {}) {
+  if (error?.statusCode === 403 || error?.response?.status === 403) {
+    return true;
+  }
+
+  const errorBody = error?.body || error?.response?.data || error?.errors || [];
+  const errors = Array.isArray(errorBody?.errors)
+    ? errorBody.errors
+    : Array.isArray(errorBody)
+      ? errorBody
+      : [];
+
+  return errors.some(item => String(item?.code || "").toUpperCase() === "FORBIDDEN");
+}
+
 function getSquareMoney(payment = {}) {
   return payment.totalMoney || payment.total_money || payment.amountMoney || payment.amount_money || {};
 }
@@ -842,38 +857,6 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
     return res.status(500).json({ error: "Pending order lookup failed" });
   }
 
-  if (!pendingOrder && squareOrderId && !pendingOrderId) {
-    try {
-      order = await fetchSquareOrder(squareOrderId);
-      pendingOrderId = getPendingOrderIdFromSquareData({ payment, order });
-      pendingOrder = await findPendingOrderSafely();
-    } catch (error) {
-      if (isSquareNotFoundError(error) && payloadHasPayment) {
-        const body = await markSquareEventUnmatched(eventId, {
-          result: "payment_not_found_sample_or_unmatched",
-          squarePaymentId: paymentId,
-          squareOrderId
-        });
-        return res.status(200).json(body);
-      }
-
-      await updateSquareEvent(eventId, {
-        status: "failed",
-        result: "Square order fetch failed",
-        squarePaymentId: paymentId,
-        squareOrderId,
-        error
-      });
-      console.error("SQUARE WEBHOOK ORDER FETCH ERROR", {
-        eventId,
-        paymentId,
-        squareOrderId,
-        message: error.message
-      });
-      return res.status(502).json({ error: "Square order fetch failed" });
-    }
-  }
-
   if (!pendingOrder && !payloadHasPayment) {
     try {
       const fetchedPayment = await fetchSquarePayment(paymentId);
@@ -882,9 +865,11 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
       pendingOrderId = getPendingOrderIdFromSquareData({ payment });
       pendingOrder = await findPendingOrderSafely();
     } catch (error) {
-      if (isSquareNotFoundError(error)) {
+      if (isSquareNotFoundError(error) || isSquareForbiddenError(error)) {
         const body = await markSquareEventUnmatched(eventId, {
-          result: "payment_not_found_sample_or_unmatched",
+          result: isSquareForbiddenError(error)
+            ? "payment_forbidden_sample_or_unmatched"
+            : "payment_not_found_sample_or_unmatched",
           squarePaymentId: paymentId,
           squareOrderId
         });
@@ -909,7 +894,9 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
 
   if (!pendingOrder) {
     const body = await markSquareEventUnmatched(eventId, {
-      result: "No matching pending order found",
+      result: payloadHasPayment && squareOrderId && !pendingOrderId
+        ? "square_order_forbidden_sample_or_unmatched"
+        : "No matching pending order found",
       squarePaymentId: paymentId,
       squareOrderId
     });
