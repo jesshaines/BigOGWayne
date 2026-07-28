@@ -17,10 +17,22 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const SQUARE_ENVIRONMENT = String(process.env.SQUARE_ENVIRONMENT || "sandbox").toLowerCase();
+const SQUARE_RESOLVED_ENVIRONMENT =
+  SQUARE_ENVIRONMENT === "production" ? "production" : "sandbox";
+const SQUARE_BASE_URL =
+  SQUARE_RESOLVED_ENVIRONMENT === "production"
+    ? "https://connect.squareup.com"
+    : "https://connect.squareupsandbox.com";
+const SQUARE_LOCATION_ID = process.env.SQUARE_LOCATION_ID || "LR7K2G01EY6CW";
+
+console.log("Square environment:", SQUARE_RESOLVED_ENVIRONMENT);
+console.log("Square base URL:", SQUARE_BASE_URL);
+
 // ✅ Square client
 const squareClient = new SquareClient({
   token: process.env.SQUARE_ACCESS_TOKEN,
-  baseUrl: "https://connect.squareupsandbox.com",
+  baseUrl: SQUARE_BASE_URL,
 });
 
 const CHECKOUT_MAX_QUANTITY = 10;
@@ -307,7 +319,7 @@ app.post("/create-checkout", async (req, res) => {
     const response = await squareClient.checkout.paymentLinks.create({
       idempotencyKey: Date.now().toString(),
       order: {
-        locationId: "LR7K2G01EY6CW",
+        locationId: SQUARE_LOCATION_ID,
         lineItems,
       },
     });
