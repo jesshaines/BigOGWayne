@@ -188,6 +188,23 @@ Completed Scope
 - Duplicate product/variant cart lines are merged server-side and limited to a launch-safe maximum quantity of 10.
 - Low-stock labels remain deferred because Printify `quantity` is not reliable in the current `/products` payload.
 
+#### SHOP-001I Database-backed pending orders
+
+Status: Completed
+
+Description
+
+Phase 1 fulfillment foundation for storing server-verified orders before Square checkout.
+
+Completed Scope
+
+- Checkout now requires `DATABASE_URL` before creating Square payment links.
+- `/create-checkout` stores a pending order record after Printify validation and before Square payment link creation.
+- Pending order line items store server-verified Printify product IDs, variant IDs, titles, quantities, unit prices, and line totals.
+- Square payment links include the pending order ID as the Square order reference and metadata.
+- Pending orders are updated with Square checkout URL/payment link data after link creation.
+- Square webhook handling and Printify order creation remain future phases.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization
