@@ -205,6 +205,23 @@ Completed Scope
 - Pending orders are updated with Square checkout URL/payment link data after link creation.
 - Square webhook handling and Printify order creation remain future phases.
 
+#### SHOP-001J Square paid webhook updates
+
+Status: Completed
+
+Description
+
+Phase 2 fulfillment foundation for verifying Square webhooks and marking paid pending orders.
+
+Completed Scope
+
+- Added a `POST /webhooks/square` endpoint with route-specific raw body handling for Square signature verification.
+- Square webhook signatures are verified with `x-square-hmacsha256-signature`, the configured notification URL, and `SQUARE_WEBHOOK_SIGNATURE_KEY`.
+- `payment.updated` events are processed only when Square payment status is `COMPLETED`.
+- Completed payments can mark matching pending orders as `paid` after amount and currency checks.
+- Duplicate Square webhook events are tracked and ignored safely using `processed_square_events`.
+- Printify order creation remains Phase 3.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

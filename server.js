@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
-import { SquareClient } from "square";
+import { SquareClient, WebhooksHelper } from "square";
 import axios from "axios";
 import pg from "pg";
 
@@ -13,7 +13,6 @@ dotenv.config();
 const app = express();
 
 app.use(cors());
-app.use(express.json());
 
 // ✅ Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +26,12 @@ const SQUARE_BASE_URL =
     ? "https://connect.squareup.com"
     : "https://connect.squareupsandbox.com";
 const SQUARE_LOCATION_ID = process.env.SQUARE_LOCATION_ID || "LR7K2G01EY6CW";
+const SQUARE_WEBHOOK_SIGNATURE_KEY = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
+const SQUARE_WEBHOOK_NOTIFICATION_URL =
+  process.env.SQUARE_WEBHOOK_NOTIFICATION_URL ||
+  (process.env.SITE_BASE_URL
+    ? `${process.env.SITE_BASE_URL.replace(/\/+$/, "")}/webhooks/square`
+    : "");
 const DATABASE_URL = process.env.DATABASE_URL;
 const DATABASE_SSL_ENABLED =
   Boolean(DATABASE_URL) &&
@@ -63,6 +68,7 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   updated_at timestamptz NOT NULL DEFAULT now(),
   square_payment_link_id text,
   square_order_id text,
+  square_payment_id text,
   square_checkout_url text,
   printify_order_id text,
   currency text NOT NULL DEFAULT 'USD',
@@ -70,16 +76,35 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   line_items_json jsonb NOT NULL,
   customer_json jsonb,
   shipping_json jsonb,
+  payment_json jsonb,
+  paid_at timestamptz,
   error_json jsonb
 );
+
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS square_payment_id text;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS payment_json jsonb;
 
 CREATE TABLE IF NOT EXISTS processed_square_events (
   event_id text PRIMARY KEY,
   pending_order_id uuid REFERENCES pending_orders(id),
   event_type text,
+  received_at timestamptz NOT NULL DEFAULT now(),
   processed_at timestamptz NOT NULL DEFAULT now(),
+  status text,
+  result text,
+  square_payment_id text,
+  square_order_id text,
+  error_json jsonb,
   payload_json jsonb
 );
+
+ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS received_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS status text;
+ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS result text;
+ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS square_payment_id text;
+ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS square_order_id text;
+ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS error_json jsonb;
 `;
 
 const PRINTIFY_API = "https://api.printify.com/v1";
@@ -97,6 +122,10 @@ const printify = axios.create({
 });
 
 function sanitizeLogBody(value) {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+
   if (Array.isArray(value)) {
     return value.map(item => sanitizeLogBody(item));
   }
@@ -335,6 +364,246 @@ function createSafeErrorJson(error) {
   });
 }
 
+function getSquareAmountValue(money = {}) {
+  const amount = money.amount ?? money.value;
+  if (typeof amount === "bigint") return Number(amount);
+  return Number(amount);
+}
+
+function isUuid(value = "") {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value)
+  );
+}
+
+function getSquareMoney(payment = {}) {
+  return payment.totalMoney || payment.total_money || payment.amountMoney || payment.amount_money || {};
+}
+
+function getSquarePaymentIdFromEvent(event = {}) {
+  return event?.data?.object?.payment?.id || event?.data?.id || "";
+}
+
+function getSquarePaymentStatus(payment = {}) {
+  return String(payment.status || "").toUpperCase();
+}
+
+function getSquarePaymentOrderId(payment = {}) {
+  return payment.orderId || payment.order_id || "";
+}
+
+function getSquarePaymentMetadata(payment = {}) {
+  return payment.metadata || {};
+}
+
+function getSquareOrderReferenceId(order = {}) {
+  return order.referenceId || order.reference_id || "";
+}
+
+function getSquareOrderMetadata(order = {}) {
+  return order.metadata || {};
+}
+
+function getSquareEventId(event = {}) {
+  return String(event.event_id || event.eventId || event.id || "").trim();
+}
+
+function getSquareEventType(event = {}) {
+  return String(event.type || "").trim();
+}
+
+function getSquarePaymentFromResponse(response = {}) {
+  return response.payment || response.result?.payment || null;
+}
+
+function getSquareOrderFromResponse(response = {}) {
+  return response.order || response.result?.order || null;
+}
+
+async function fetchSquarePayment(paymentId) {
+  const response = await squareClient.payments.get({ paymentId });
+  return getSquarePaymentFromResponse(response);
+}
+
+async function fetchSquareOrder(orderId) {
+  const response = await squareClient.orders.get({ orderId });
+  return getSquareOrderFromResponse(response);
+}
+
+async function verifySquareWebhookSignature(signatureHeader, requestBody) {
+  if (!SQUARE_WEBHOOK_SIGNATURE_KEY || !SQUARE_WEBHOOK_NOTIFICATION_URL) {
+    throw new Error("Square webhook signature configuration is missing.");
+  }
+
+  return WebhooksHelper.verifySignature({
+    requestBody,
+    signatureHeader,
+    signatureKey: SQUARE_WEBHOOK_SIGNATURE_KEY,
+    notificationUrl: SQUARE_WEBHOOK_NOTIFICATION_URL
+  });
+}
+
+async function claimSquareEvent(eventId, eventType, payload) {
+  if (!dbPool) {
+    throw new Error("DATABASE_URL is required for Square webhook processing.");
+  }
+
+  const inserted = await dbPool.query(
+    `INSERT INTO processed_square_events (
+      event_id,
+      event_type,
+      status,
+      result,
+      payload_json
+    )
+    VALUES ($1, $2, 'processing', 'claimed', $3::jsonb)
+    ON CONFLICT (event_id) DO NOTHING
+    RETURNING event_id`,
+    [eventId, eventType, JSON.stringify(sanitizeLogBody(payload))]
+  );
+
+  if (inserted.rowCount > 0) {
+    return { claimed: true };
+  }
+
+  const existing = await dbPool.query(
+    `SELECT status
+     FROM processed_square_events
+     WHERE event_id = $1`,
+    [eventId]
+  );
+
+  if (existing.rows[0]?.status === "failed") {
+    await dbPool.query(
+      `UPDATE processed_square_events
+       SET status = 'processing',
+         result = 'retrying',
+         payload_json = $2::jsonb,
+         processed_at = now(),
+         error_json = NULL
+       WHERE event_id = $1`,
+      [eventId, JSON.stringify(sanitizeLogBody(payload))]
+    );
+
+    return { claimed: true, retry: true };
+  }
+
+  return { claimed: false, status: existing.rows[0]?.status || "duplicate" };
+}
+
+async function updateSquareEvent(eventId, updates = {}) {
+  if (!dbPool) return;
+
+  await dbPool.query(
+    `UPDATE processed_square_events
+     SET pending_order_id = COALESCE($2, pending_order_id),
+       status = COALESCE($3, status),
+       result = COALESCE($4, result),
+       square_payment_id = COALESCE($5, square_payment_id),
+       square_order_id = COALESCE($6, square_order_id),
+       error_json = $7::jsonb,
+       processed_at = now()
+     WHERE event_id = $1`,
+    [
+      eventId,
+      updates.pendingOrderId || null,
+      updates.status || null,
+      updates.result || null,
+      updates.squarePaymentId || null,
+      updates.squareOrderId || null,
+      updates.error ? JSON.stringify(createSafeErrorJson(updates.error)) : null
+    ]
+  );
+}
+
+async function findPendingOrder({ pendingOrderId, squareOrderId } = {}) {
+  if (!dbPool) {
+    throw new Error("DATABASE_URL is required for Square webhook processing.");
+  }
+
+  if (pendingOrderId && isUuid(pendingOrderId)) {
+    const byId = await dbPool.query(
+      `SELECT *
+       FROM pending_orders
+       WHERE id = $1`,
+      [pendingOrderId]
+    );
+
+    if (byId.rows[0]) return byId.rows[0];
+  }
+
+  if (squareOrderId) {
+    const bySquareOrderId = await dbPool.query(
+      `SELECT *
+       FROM pending_orders
+       WHERE square_order_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [squareOrderId]
+    );
+
+    if (bySquareOrderId.rows[0]) return bySquareOrderId.rows[0];
+  }
+
+  return null;
+}
+
+function getPendingOrderIdFromSquareData({ payment = {}, order = {} } = {}) {
+  return (
+    getSquarePaymentMetadata(payment).pending_order_id ||
+    getSquareOrderMetadata(order).pending_order_id ||
+    getSquareOrderReferenceId(order) ||
+    ""
+  );
+}
+
+function getPaymentSnapshot(payment = {}, order = {}) {
+  return sanitizeLogBody({
+    payment_id: payment.id || null,
+    order_id: getSquarePaymentOrderId(payment) || order.id || null,
+    status: getSquarePaymentStatus(payment),
+    amount_money: getSquareMoney(payment),
+    buyer_email_address: payment.buyerEmailAddress || payment.buyer_email_address || null,
+    reference_id: getSquareOrderReferenceId(order) || null
+  });
+}
+
+async function markPendingOrderPaid(pendingOrder, payment, order) {
+  const paymentId = payment.id;
+  const squareOrderId = getSquarePaymentOrderId(payment) || order?.id || pendingOrder.square_order_id;
+  const paymentSnapshot = getPaymentSnapshot(payment, order);
+
+  await dbPool.query(
+    `UPDATE pending_orders
+     SET status = 'paid',
+       square_payment_id = $2,
+       square_order_id = COALESCE($3, square_order_id),
+       payment_json = $4::jsonb,
+       paid_at = COALESCE(paid_at, now()),
+       updated_at = now()
+     WHERE id = $1`,
+    [
+      pendingOrder.id,
+      paymentId,
+      squareOrderId || null,
+      JSON.stringify(paymentSnapshot)
+    ]
+  );
+}
+
+async function markPendingOrderPaymentMismatch(pendingOrder, errorDetails) {
+  await dbPool.query(
+    `UPDATE pending_orders
+     SET error_json = $2::jsonb,
+       updated_at = now()
+     WHERE id = $1`,
+    [
+      pendingOrder.id,
+      JSON.stringify(sanitizeLogBody(errorDetails))
+    ]
+  );
+}
+
 async function createPendingOrder({ pendingLineItems = [], subtotalCents = 0 }) {
   if (!dbPool) {
     throw new Error("DATABASE_URL is required for checkout pending order storage.");
@@ -425,6 +694,238 @@ async function markPendingOrderPaymentLinkFailed(pendingOrderId, error) {
     });
   }
 }
+
+app.post("/webhooks/square", express.raw({ type: "application/json" }), async (req, res) => {
+  const signatureHeader = req.get("x-square-hmacsha256-signature") || "";
+  const rawBody = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : "";
+
+  try {
+    const isVerified = await verifySquareWebhookSignature(signatureHeader, rawBody);
+
+    if (!isVerified) {
+      console.warn("Square webhook rejected: invalid signature");
+      return res.status(403).json({ error: "Invalid signature" });
+    }
+  } catch (error) {
+    console.error("SQUARE WEBHOOK SIGNATURE ERROR", {
+      message: error.message
+    });
+    return res.status(503).json({ error: "Webhook verification unavailable" });
+  }
+
+  let event;
+
+  try {
+    event = JSON.parse(rawBody);
+  } catch (error) {
+    console.warn("Square webhook rejected: invalid JSON");
+    return res.status(400).json({ error: "Invalid JSON" });
+  }
+
+  const eventId = getSquareEventId(event);
+  const eventType = getSquareEventType(event);
+
+  if (!eventId) {
+    console.warn("Square webhook ignored: missing event ID");
+    return res.status(200).json({ received: true, ignored: true });
+  }
+
+  let claim;
+
+  try {
+    claim = await claimSquareEvent(eventId, eventType, event);
+  } catch (error) {
+    console.error("SQUARE WEBHOOK EVENT CLAIM ERROR", {
+      eventId,
+      eventType,
+      message: error.message
+    });
+    return res.status(500).json({ error: "Webhook event claim failed" });
+  }
+
+  if (!claim.claimed) {
+    return res.status(200).json({
+      received: true,
+      duplicate: true,
+      status: claim.status
+    });
+  }
+
+  if (eventType !== "payment.updated") {
+    await updateSquareEvent(eventId, {
+      status: "ignored",
+      result: `Ignored event type ${eventType || "unknown"}`
+    });
+    return res.status(200).json({ received: true, ignored: true });
+  }
+
+  const webhookPayment = event?.data?.object?.payment || {};
+  const paymentId = getSquarePaymentIdFromEvent(event);
+
+  if (!paymentId) {
+    await updateSquareEvent(eventId, {
+      status: "ignored",
+      result: "Payment event missing payment ID"
+    });
+    return res.status(200).json({ received: true, ignored: true });
+  }
+
+  let payment = webhookPayment;
+
+  try {
+    const fetchedPayment = await fetchSquarePayment(paymentId);
+    payment = fetchedPayment || webhookPayment;
+  } catch (error) {
+    await updateSquareEvent(eventId, {
+      status: "failed",
+      result: "Square payment fetch failed",
+      squarePaymentId: paymentId,
+      error
+    });
+    console.error("SQUARE WEBHOOK PAYMENT FETCH ERROR", {
+      eventId,
+      paymentId,
+      message: error.message
+    });
+    return res.status(502).json({ error: "Square payment fetch failed" });
+  }
+
+  const paymentStatus = getSquarePaymentStatus(payment);
+  const squareOrderId = getSquarePaymentOrderId(payment);
+
+  if (paymentStatus !== "COMPLETED") {
+    await updateSquareEvent(eventId, {
+      status: "ignored",
+      result: `Payment status ${paymentStatus || "unknown"} ignored`,
+      squarePaymentId: paymentId,
+      squareOrderId
+    });
+    return res.status(200).json({ received: true, ignored: true });
+  }
+
+  let order = null;
+
+  if (squareOrderId) {
+    try {
+      order = await fetchSquareOrder(squareOrderId);
+    } catch (error) {
+      await updateSquareEvent(eventId, {
+        status: "failed",
+        result: "Square order fetch failed",
+        squarePaymentId: paymentId,
+        squareOrderId,
+        error
+      });
+      console.error("SQUARE WEBHOOK ORDER FETCH ERROR", {
+        eventId,
+        paymentId,
+        squareOrderId,
+        message: error.message
+      });
+      return res.status(502).json({ error: "Square order fetch failed" });
+    }
+  }
+
+  const pendingOrderId = getPendingOrderIdFromSquareData({ payment, order });
+
+  let pendingOrder;
+
+  try {
+    pendingOrder = await findPendingOrder({ pendingOrderId, squareOrderId });
+  } catch (error) {
+    await updateSquareEvent(eventId, {
+      status: "failed",
+      result: "Pending order lookup failed",
+      squarePaymentId: paymentId,
+      squareOrderId,
+      error
+    });
+    console.error("SQUARE WEBHOOK PENDING ORDER LOOKUP ERROR", {
+      eventId,
+      paymentId,
+      squareOrderId,
+      message: error.message
+    });
+    return res.status(500).json({ error: "Pending order lookup failed" });
+  }
+
+  if (!pendingOrder) {
+    await updateSquareEvent(eventId, {
+      status: "unmatched",
+      result: "No matching pending order found",
+      squarePaymentId: paymentId,
+      squareOrderId
+    });
+    console.warn("Square webhook unmatched payment", {
+      eventId,
+      paymentId,
+      squareOrderId
+    });
+    return res.status(200).json({ received: true, unmatched: true });
+  }
+
+  const paymentMoney = getSquareMoney(payment);
+  const paidAmountCents = getSquareAmountValue(paymentMoney);
+  const paymentCurrency = String(paymentMoney.currency || pendingOrder.currency || "").toUpperCase();
+  const expectedAmountCents = Number(pendingOrder.subtotal_cents);
+  const expectedCurrency = String(pendingOrder.currency || "USD").toUpperCase();
+
+  if (paidAmountCents !== expectedAmountCents || paymentCurrency !== expectedCurrency) {
+    const mismatch = {
+      message: "Square payment amount does not match pending order subtotal.",
+      expected_amount_cents: expectedAmountCents,
+      paid_amount_cents: paidAmountCents,
+      expected_currency: expectedCurrency,
+      paid_currency: paymentCurrency,
+      square_payment_id: paymentId,
+      square_order_id: squareOrderId
+    };
+
+    await markPendingOrderPaymentMismatch(pendingOrder, mismatch);
+    await updateSquareEvent(eventId, {
+      pendingOrderId: pendingOrder.id,
+      status: "amount_mismatch",
+      result: "Amount mismatch; pending order not marked paid",
+      squarePaymentId: paymentId,
+      squareOrderId,
+      error: mismatch
+    });
+
+    return res.status(200).json({ received: true, amountMismatch: true });
+  }
+
+  try {
+    await markPendingOrderPaid(pendingOrder, payment, order);
+    await updateSquareEvent(eventId, {
+      pendingOrderId: pendingOrder.id,
+      status: "paid",
+      result: "Pending order marked paid",
+      squarePaymentId: paymentId,
+      squareOrderId
+    });
+  } catch (error) {
+    await updateSquareEvent(eventId, {
+      pendingOrderId: pendingOrder.id,
+      status: "failed",
+      result: "Pending order paid update failed",
+      squarePaymentId: paymentId,
+      squareOrderId,
+      error
+    });
+    console.error("SQUARE WEBHOOK PAID UPDATE ERROR", {
+      eventId,
+      pendingOrderId: pendingOrder.id,
+      paymentId,
+      message: error.message
+    });
+    return res.status(500).json({ error: "Pending order paid update failed" });
+  }
+
+  // Phase 3 will create the Printify order from this paid pending order.
+  return res.status(200).json({ received: true, paid: true });
+});
+
+app.use(express.json());
 
 // ✅ API route
 app.post("/create-checkout", async (req, res) => {

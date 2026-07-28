@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Square webhook endpoint now verifies signatures, marks completed pending orders as paid, and ignores duplicate webhook events safely.
 - Checkout now creates a database-backed pending order before generating a Square payment link.
 - Square checkout now supports environment-based sandbox and production API base URLs.
 - Checkout now validates cart items server-side against Printify before creating Square payment links, uses Printify variant prices, and rejects stale or unavailable variants.
