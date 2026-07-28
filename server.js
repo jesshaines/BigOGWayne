@@ -370,10 +370,29 @@ function getSquareAmountValue(money = {}) {
   return Number(amount);
 }
 
+function hasObjectData(value = {}) {
+  return Boolean(value && typeof value === "object" && Object.keys(value).length);
+}
+
 function isUuid(value = "") {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     String(value)
   );
+}
+
+function isSquareNotFoundError(error = {}) {
+  if (error?.statusCode === 404 || error?.response?.status === 404) {
+    return true;
+  }
+
+  const errorBody = error?.body || error?.response?.data || error?.errors || [];
+  const errors = Array.isArray(errorBody?.errors)
+    ? errorBody.errors
+    : Array.isArray(errorBody)
+      ? errorBody
+      : [];
+
+  return errors.some(item => String(item?.code || "").toUpperCase() === "NOT_FOUND");
 }
 
 function getSquareMoney(payment = {}) {
@@ -555,6 +574,25 @@ function getPendingOrderIdFromSquareData({ payment = {}, order = {} } = {}) {
     getSquareOrderReferenceId(order) ||
     ""
   );
+}
+
+async function markSquareEventUnmatched(eventId, {
+  result = "No matching pending order found",
+  squarePaymentId = "",
+  squareOrderId = ""
+} = {}) {
+  await updateSquareEvent(eventId, {
+    status: "unmatched",
+    result,
+    squarePaymentId,
+    squareOrderId
+  });
+
+  return {
+    received: true,
+    unmatched: true,
+    reason: result
+  };
 }
 
 function getPaymentSnapshot(payment = {}, order = {}) {
@@ -761,6 +799,7 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
 
   const webhookPayment = event?.data?.object?.payment || {};
   const paymentId = getSquarePaymentIdFromEvent(event);
+  const payloadHasPayment = hasObjectData(webhookPayment);
 
   if (!paymentId) {
     await updateSquareEvent(eventId, {
@@ -771,44 +810,53 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
   }
 
   let payment = webhookPayment;
+  let order = null;
+  let squareOrderId = getSquarePaymentOrderId(payment);
+  let pendingOrderId = getPendingOrderIdFromSquareData({ payment });
+  let pendingOrder;
+
+  const findPendingOrderSafely = async () => {
+    try {
+      return await findPendingOrder({ pendingOrderId, squareOrderId });
+    } catch (error) {
+      await updateSquareEvent(eventId, {
+        status: "failed",
+        result: "Pending order lookup failed",
+        squarePaymentId: paymentId,
+        squareOrderId,
+        error
+      });
+      console.error("SQUARE WEBHOOK PENDING ORDER LOOKUP ERROR", {
+        eventId,
+        paymentId,
+        squareOrderId,
+        message: error.message
+      });
+      throw error;
+    }
+  };
 
   try {
-    const fetchedPayment = await fetchSquarePayment(paymentId);
-    payment = fetchedPayment || webhookPayment;
+    pendingOrder = await findPendingOrderSafely();
   } catch (error) {
-    await updateSquareEvent(eventId, {
-      status: "failed",
-      result: "Square payment fetch failed",
-      squarePaymentId: paymentId,
-      error
-    });
-    console.error("SQUARE WEBHOOK PAYMENT FETCH ERROR", {
-      eventId,
-      paymentId,
-      message: error.message
-    });
-    return res.status(502).json({ error: "Square payment fetch failed" });
+    return res.status(500).json({ error: "Pending order lookup failed" });
   }
 
-  const paymentStatus = getSquarePaymentStatus(payment);
-  const squareOrderId = getSquarePaymentOrderId(payment);
-
-  if (paymentStatus !== "COMPLETED") {
-    await updateSquareEvent(eventId, {
-      status: "ignored",
-      result: `Payment status ${paymentStatus || "unknown"} ignored`,
-      squarePaymentId: paymentId,
-      squareOrderId
-    });
-    return res.status(200).json({ received: true, ignored: true });
-  }
-
-  let order = null;
-
-  if (squareOrderId) {
+  if (!pendingOrder && squareOrderId && !pendingOrderId) {
     try {
       order = await fetchSquareOrder(squareOrderId);
+      pendingOrderId = getPendingOrderIdFromSquareData({ payment, order });
+      pendingOrder = await findPendingOrderSafely();
     } catch (error) {
+      if (isSquareNotFoundError(error) && payloadHasPayment) {
+        const body = await markSquareEventUnmatched(eventId, {
+          result: "payment_not_found_sample_or_unmatched",
+          squarePaymentId: paymentId,
+          squareOrderId
+        });
+        return res.status(200).json(body);
+      }
+
       await updateSquareEvent(eventId, {
         status: "failed",
         result: "Square order fetch failed",
@@ -826,32 +874,41 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
     }
   }
 
-  const pendingOrderId = getPendingOrderIdFromSquareData({ payment, order });
+  if (!pendingOrder && !payloadHasPayment) {
+    try {
+      const fetchedPayment = await fetchSquarePayment(paymentId);
+      payment = fetchedPayment || webhookPayment;
+      squareOrderId = getSquarePaymentOrderId(payment);
+      pendingOrderId = getPendingOrderIdFromSquareData({ payment });
+      pendingOrder = await findPendingOrderSafely();
+    } catch (error) {
+      if (isSquareNotFoundError(error)) {
+        const body = await markSquareEventUnmatched(eventId, {
+          result: "payment_not_found_sample_or_unmatched",
+          squarePaymentId: paymentId,
+          squareOrderId
+        });
+        return res.status(200).json(body);
+      }
 
-  let pendingOrder;
-
-  try {
-    pendingOrder = await findPendingOrder({ pendingOrderId, squareOrderId });
-  } catch (error) {
-    await updateSquareEvent(eventId, {
-      status: "failed",
-      result: "Pending order lookup failed",
-      squarePaymentId: paymentId,
-      squareOrderId,
-      error
-    });
-    console.error("SQUARE WEBHOOK PENDING ORDER LOOKUP ERROR", {
-      eventId,
-      paymentId,
-      squareOrderId,
-      message: error.message
-    });
-    return res.status(500).json({ error: "Pending order lookup failed" });
+      await updateSquareEvent(eventId, {
+        status: "failed",
+        result: "Square payment fetch failed",
+        squarePaymentId: paymentId,
+        squareOrderId,
+        error
+      });
+      console.error("SQUARE WEBHOOK PAYMENT FETCH ERROR", {
+        eventId,
+        paymentId,
+        message: error.message
+      });
+      return res.status(502).json({ error: "Square payment fetch failed" });
+    }
   }
 
   if (!pendingOrder) {
-    await updateSquareEvent(eventId, {
-      status: "unmatched",
+    const body = await markSquareEventUnmatched(eventId, {
       result: "No matching pending order found",
       squarePaymentId: paymentId,
       squareOrderId
@@ -861,7 +918,64 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
       paymentId,
       squareOrderId
     });
-    return res.status(200).json({ received: true, unmatched: true });
+    return res.status(200).json(body);
+  }
+
+  try {
+    const fetchedPayment = await fetchSquarePayment(paymentId);
+    payment = fetchedPayment || payment;
+    squareOrderId = getSquarePaymentOrderId(payment) || squareOrderId;
+  } catch (error) {
+    await updateSquareEvent(eventId, {
+      pendingOrderId: pendingOrder.id,
+      status: "failed",
+      result: "Square payment fetch failed for matched pending order",
+      squarePaymentId: paymentId,
+      squareOrderId,
+      error
+    });
+    console.error("SQUARE WEBHOOK PAYMENT FETCH ERROR", {
+      eventId,
+      pendingOrderId: pendingOrder.id,
+      paymentId,
+      message: error.message
+    });
+    return res.status(502).json({ error: "Square payment fetch failed" });
+  }
+
+  const paymentStatus = getSquarePaymentStatus(payment);
+
+  if (paymentStatus !== "COMPLETED") {
+    await updateSquareEvent(eventId, {
+      status: "ignored",
+      result: `Payment status ${paymentStatus || "unknown"} ignored`,
+      squarePaymentId: paymentId,
+      squareOrderId
+    });
+    return res.status(200).json({ received: true, ignored: true });
+  }
+
+  if (squareOrderId && !order) {
+    try {
+      order = await fetchSquareOrder(squareOrderId);
+    } catch (error) {
+      await updateSquareEvent(eventId, {
+        pendingOrderId: pendingOrder.id,
+        status: "failed",
+        result: "Square order fetch failed for matched pending order",
+        squarePaymentId: paymentId,
+        squareOrderId,
+        error
+      });
+      console.error("SQUARE WEBHOOK ORDER FETCH ERROR", {
+        eventId,
+        pendingOrderId: pendingOrder.id,
+        paymentId,
+        squareOrderId,
+        message: error.message
+      });
+      return res.status(502).json({ error: "Square order fetch failed" });
+    }
   }
 
   const paymentMoney = getSquareMoney(payment);
