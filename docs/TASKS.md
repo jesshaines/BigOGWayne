@@ -222,6 +222,25 @@ Completed Scope
 - Duplicate Square webhook events are tracked and ignored safely using `processed_square_events`.
 - Printify order creation remains Phase 3.
 
+#### SHOP-001K Printify order creation after paid webhook
+
+Status: Completed
+
+Description
+
+Phase 3 fulfillment foundation for submitting paid pending orders to Printify exactly once.
+
+Completed Scope
+
+- First-time paid Square webhook transitions can submit a Printify order from `pending_orders.line_items_json`.
+- Printify orders use the paid pending order ID as `external_id`.
+- Fulfillment submission is atomically claimed with `paid -> fulfillment_pending` before the Printify API call.
+- Duplicate Square `payment.updated` events do not create duplicate Printify orders.
+- Printify order success is stored with `printify_order_id`, `printify_status`, `printify_order_json`, and `printify_submitted_at`.
+- Missing shipping/customer address data blocks fulfillment with `printify_address_missing` or `fulfillment_blocked`.
+- Printify API failures move orders to `fulfillment_failed` for owner/manual recovery.
+- No separate Printify `send_to_production` call is made.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

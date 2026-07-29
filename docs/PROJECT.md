@@ -176,6 +176,17 @@ Tour Dates (future)
 
 ---
 
+# Fulfillment Configuration
+
+Printify remains the source of truth for live products, variants, pricing, and submitted fulfillment orders.
+
+Optional fulfillment environment variables:
+
+- `PRINTIFY_DEFAULT_SHIPPING_METHOD`: defaults to `1` for standard shipping.
+- `PRINTIFY_SEND_SHIPPING_NOTIFICATION`: defaults to `true`; set to `false` to disable Printify shipment emails.
+
+---
+
 # Non-Negotiables
 
 Preserve working functionality.

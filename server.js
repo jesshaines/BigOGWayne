@@ -71,6 +71,11 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   square_payment_id text,
   square_checkout_url text,
   printify_order_id text,
+  printify_status text,
+  printify_order_json jsonb,
+  printify_submitted_at timestamptz,
+  fulfillment_attempted_at timestamptz,
+  fulfillment_error_json jsonb,
   currency text NOT NULL DEFAULT 'USD',
   subtotal_cents integer NOT NULL DEFAULT 0,
   line_items_json jsonb NOT NULL,
@@ -84,6 +89,11 @@ CREATE TABLE IF NOT EXISTS pending_orders (
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS square_payment_id text;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS payment_json jsonb;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_status text;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_order_json jsonb;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_submitted_at timestamptz;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS fulfillment_attempted_at timestamptz;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS fulfillment_error_json jsonb;
 
 CREATE TABLE IF NOT EXISTS processed_square_events (
   event_id text PRIMARY KEY,
@@ -112,6 +122,11 @@ const PRINTIFY_API_TOKEN = process.env.PRINTIFY_API_TOKEN;
 const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID;
 const PRINTIFY_PRODUCTS_ENDPOINT = `/shops/${PRINTIFY_SHOP_ID}/products.json`;
 const PRINTIFY_PRODUCTS_ENDPOINT_LABEL = "/shops/[PRINTIFY_SHOP_ID]/products.json";
+const PRINTIFY_ORDERS_ENDPOINT = `/shops/${PRINTIFY_SHOP_ID}/orders.json`;
+const PRINTIFY_ORDERS_ENDPOINT_LABEL = "/shops/[PRINTIFY_SHOP_ID]/orders.json";
+const PRINTIFY_DEFAULT_SHIPPING_METHOD = Number(process.env.PRINTIFY_DEFAULT_SHIPPING_METHOD || 1);
+const PRINTIFY_SEND_SHIPPING_NOTIFICATION =
+  process.env.PRINTIFY_SEND_SHIPPING_NOTIFICATION !== "false";
 
 const printify = axios.create({
   baseURL: PRINTIFY_API,
@@ -411,7 +426,7 @@ function isSquareForbiddenError(error = {}) {
 }
 
 function getSquareMoney(payment = {}) {
-  return payment.totalMoney || payment.total_money || payment.amountMoney || payment.amount_money || {};
+  return payment?.totalMoney || payment?.total_money || payment?.amountMoney || payment?.amount_money || {};
 }
 
 function getSquarePaymentIdFromEvent(event = {}) {
@@ -419,23 +434,23 @@ function getSquarePaymentIdFromEvent(event = {}) {
 }
 
 function getSquarePaymentStatus(payment = {}) {
-  return String(payment.status || "").toUpperCase();
+  return String(payment?.status || "").toUpperCase();
 }
 
 function getSquarePaymentOrderId(payment = {}) {
-  return payment.orderId || payment.order_id || "";
+  return payment?.orderId || payment?.order_id || "";
 }
 
 function getSquarePaymentMetadata(payment = {}) {
-  return payment.metadata || {};
+  return payment?.metadata || {};
 }
 
 function getSquareOrderReferenceId(order = {}) {
-  return order.referenceId || order.reference_id || "";
+  return order?.referenceId || order?.reference_id || "";
 }
 
 function getSquareOrderMetadata(order = {}) {
-  return order.metadata || {};
+  return order?.metadata || {};
 }
 
 function getSquareEventId(event = {}) {
@@ -611,18 +626,32 @@ async function markSquareEventUnmatched(eventId, {
 }
 
 function getPaymentSnapshot(payment = {}, order = {}) {
+  const squareOrder = order || {};
+
   return sanitizeLogBody({
     payment_id: payment.id || null,
-    order_id: getSquarePaymentOrderId(payment) || order.id || null,
+    order_id: getSquarePaymentOrderId(payment) || squareOrder.id || null,
     status: getSquarePaymentStatus(payment),
     amount_money: getSquareMoney(payment),
     buyer_email_address: payment.buyerEmailAddress || payment.buyer_email_address || null,
-    reference_id: getSquareOrderReferenceId(order) || null
+    reference_id: getSquareOrderReferenceId(squareOrder) || null
   });
 }
 
 function isPendingOrderPaid(pendingOrder = {}) {
   return String(pendingOrder.status || "").toLowerCase() === "paid";
+}
+
+function hasPrintifyFulfillmentStarted(pendingOrder = {}) {
+  const status = String(pendingOrder.status || "").toLowerCase();
+  return Boolean(pendingOrder.printify_order_id) ||
+    [
+      "fulfillment_pending",
+      "printify_submitted",
+      "fulfillment_blocked",
+      "printify_address_missing",
+      "fulfillment_failed"
+    ].includes(status);
 }
 
 function shouldCreatePrintifyOrderForPaidTransition(transition = {}) {
@@ -651,7 +680,8 @@ async function markPendingOrderPaid(pendingOrder, payment, order) {
        paid_at = COALESCE(paid_at, now()),
        updated_at = now()
      WHERE id = $1
-       AND status <> 'paid'
+       AND status IN ('pending_payment', 'payment_link_created')
+       AND printify_order_id IS NULL
      RETURNING id`,
     [
       pendingOrder.id,
@@ -679,6 +709,353 @@ async function markPendingOrderPaymentMismatch(pendingOrder, errorDetails) {
       JSON.stringify(sanitizeLogBody(errorDetails))
     ]
   );
+}
+
+function getField(value = {}, camelKey, snakeKey = "") {
+  return value?.[camelKey] ?? (snakeKey ? value?.[snakeKey] : undefined) ?? "";
+}
+
+function normalizeString(value) {
+  return String(value || "").trim();
+}
+
+function splitFullName(fullName = "") {
+  const parts = normalizeString(fullName).split(/\s+/).filter(Boolean);
+
+  if (!parts.length) {
+    return { firstName: "", lastName: "" };
+  }
+
+  return {
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" ") || "Customer"
+  };
+}
+
+function getSquareAddressValue(address = {}, camelKey, snakeKey = "") {
+  return normalizeString(getField(address, camelKey, snakeKey));
+}
+
+function getSquareShippingAddress(payment = {}) {
+  return payment.shippingAddress || payment.shipping_address || null;
+}
+
+function getSquareBillingAddress(payment = {}) {
+  return payment.billingAddress || payment.billing_address || null;
+}
+
+function getSquareBuyerEmail(payment = {}) {
+  return normalizeString(payment.buyerEmailAddress || payment.buyer_email_address);
+}
+
+function getSquareFulfillmentRecipient(order = {}) {
+  const fulfillments = Array.isArray(order?.fulfillments) ? order.fulfillments : [];
+
+  for (const fulfillment of fulfillments) {
+    const shipmentDetails = fulfillment.shipmentDetails || fulfillment.shipment_details || {};
+    const deliveryDetails = fulfillment.deliveryDetails || fulfillment.delivery_details || {};
+    const pickupDetails = fulfillment.pickupDetails || fulfillment.pickup_details || {};
+    const recipient =
+      shipmentDetails.recipient ||
+      deliveryDetails.recipient ||
+      pickupDetails.recipient ||
+      null;
+
+    if (recipient) return recipient;
+  }
+
+  return null;
+}
+
+function buildPrintifyAddressFromSquare({ payment = {}, order = {} } = {}) {
+  const recipient = getSquareFulfillmentRecipient(order) || {};
+  const recipientAddress = recipient.address || {};
+  const paymentShippingAddress = getSquareShippingAddress(payment) || {};
+  const paymentBillingAddress = getSquareBillingAddress(payment) || {};
+  const address = hasObjectData(recipientAddress)
+    ? recipientAddress
+    : hasObjectData(paymentShippingAddress)
+      ? paymentShippingAddress
+      : paymentBillingAddress;
+  const displayName = normalizeString(
+    recipient.displayName ||
+    recipient.display_name ||
+    `${getSquareAddressValue(address, "firstName", "first_name")} ${getSquareAddressValue(address, "lastName", "last_name")}`
+  );
+  const splitName = splitFullName(displayName);
+  const firstName = getSquareAddressValue(address, "firstName", "first_name") || splitName.firstName;
+  const lastName = getSquareAddressValue(address, "lastName", "last_name") || splitName.lastName;
+
+  return {
+    first_name: firstName,
+    last_name: lastName,
+    email: normalizeString(recipient.emailAddress || recipient.email_address) || getSquareBuyerEmail(payment),
+    phone: normalizeString(recipient.phoneNumber || recipient.phone_number),
+    country: getSquareAddressValue(address, "country"),
+    region: getSquareAddressValue(address, "administrativeDistrictLevel1", "administrative_district_level_1"),
+    address1: getSquareAddressValue(address, "addressLine1", "address_line_1"),
+    address2: getSquareAddressValue(address, "addressLine2", "address_line_2"),
+    city: getSquareAddressValue(address, "locality"),
+    zip: getSquareAddressValue(address, "postalCode", "postal_code")
+  };
+}
+
+function validatePrintifyAddress(addressTo = {}) {
+  const requiredFields = [
+    "first_name",
+    "last_name",
+    "email",
+    "country",
+    "region",
+    "address1",
+    "city",
+    "zip"
+  ];
+  const missingFields = requiredFields.filter(field => !normalizeString(addressTo[field]));
+
+  return {
+    valid: missingFields.length === 0,
+    missingFields
+  };
+}
+
+function getPendingLineItems(pendingOrder = {}) {
+  if (Array.isArray(pendingOrder.line_items_json)) {
+    return pendingOrder.line_items_json;
+  }
+
+  if (typeof pendingOrder.line_items_json === "string") {
+    try {
+      const parsed = JSON.parse(pendingOrder.line_items_json);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function buildPrintifyLineItems(pendingOrder = {}) {
+  return getPendingLineItems(pendingOrder).map(item => ({
+    product_id: normalizeString(item.product_id),
+    variant_id: Number(item.variant_id),
+    quantity: Number(item.quantity)
+  }));
+}
+
+function validatePrintifyLineItems(lineItems = []) {
+  const invalidItems = lineItems
+    .map((item, index) => ({
+      index,
+      product_id: item.product_id,
+      variant_id: item.variant_id,
+      quantity: item.quantity
+    }))
+    .filter(item => (
+      !item.product_id ||
+      !Number.isSafeInteger(item.variant_id) ||
+      item.variant_id <= 0 ||
+      !Number.isSafeInteger(item.quantity) ||
+      item.quantity <= 0
+    ));
+
+  return {
+    valid: invalidItems.length === 0 && lineItems.length > 0,
+    invalidItems
+  };
+}
+
+function buildPrintifyOrderPayload(pendingOrder, addressTo) {
+  return {
+    external_id: pendingOrder.id,
+    line_items: buildPrintifyLineItems(pendingOrder),
+    shipping_method: PRINTIFY_DEFAULT_SHIPPING_METHOD,
+    send_shipping_notification: PRINTIFY_SEND_SHIPPING_NOTIFICATION,
+    address_to: addressTo
+  };
+}
+
+function getPrintifyOrderId(responseData = {}) {
+  return normalizeString(responseData.id || responseData.order?.id || responseData.data?.id);
+}
+
+function getPrintifyStatus(responseData = {}) {
+  return normalizeString(responseData.status || responseData.order?.status || responseData.data?.status);
+}
+
+async function claimPendingOrderFulfillment(pendingOrderId) {
+  const result = await dbPool.query(
+    `UPDATE pending_orders
+     SET status = 'fulfillment_pending',
+       fulfillment_attempted_at = now(),
+       updated_at = now()
+     WHERE id = $1
+       AND status = 'paid'
+       AND printify_order_id IS NULL
+     RETURNING *`,
+    [pendingOrderId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function markPendingOrderFulfillmentBlocked(pendingOrder, {
+  status = "printify_address_missing",
+  customer = {},
+  shipping = {},
+  error = {}
+} = {}) {
+  await dbPool.query(
+    `UPDATE pending_orders
+     SET status = $2,
+       customer_json = $3::jsonb,
+       shipping_json = $4::jsonb,
+       fulfillment_error_json = $5::jsonb,
+       updated_at = now()
+     WHERE id = $1`,
+    [
+      pendingOrder.id,
+      status,
+      JSON.stringify(sanitizeLogBody(customer)),
+      JSON.stringify(sanitizeLogBody(shipping)),
+      JSON.stringify(sanitizeLogBody(error))
+    ]
+  );
+}
+
+async function markPendingOrderFulfillmentFailed(pendingOrder, error) {
+  await dbPool.query(
+    `UPDATE pending_orders
+     SET status = 'fulfillment_failed',
+       fulfillment_error_json = $2::jsonb,
+       updated_at = now()
+     WHERE id = $1`,
+    [
+      pendingOrder.id,
+      JSON.stringify(createSafeErrorJson(error))
+    ]
+  );
+}
+
+async function markPendingOrderPrintifySubmitted(pendingOrder, responseData) {
+  await dbPool.query(
+    `UPDATE pending_orders
+     SET status = 'printify_submitted',
+       printify_order_id = $2,
+       printify_status = $3,
+       printify_order_json = $4::jsonb,
+       printify_submitted_at = now(),
+       fulfillment_error_json = NULL,
+       updated_at = now()
+     WHERE id = $1`,
+    [
+      pendingOrder.id,
+      getPrintifyOrderId(responseData) || null,
+      getPrintifyStatus(responseData) || "submitted",
+      JSON.stringify(sanitizeLogBody(responseData))
+    ]
+  );
+}
+
+async function createPrintifyOrder(payload) {
+  const response = await printify.post(PRINTIFY_ORDERS_ENDPOINT, payload);
+  return response.data;
+}
+
+async function submitPrintifyOrderForPendingOrder(pendingOrderId, { payment = {}, order = {} } = {}) {
+  const pendingOrder = await claimPendingOrderFulfillment(pendingOrderId);
+
+  if (!pendingOrder) {
+    return {
+      attempted: false,
+      skipped: true,
+      reason: "fulfillment_not_claimed"
+    };
+  }
+
+  const addressTo = buildPrintifyAddressFromSquare({ payment, order });
+  const customer = {
+    email: addressTo.email,
+    phone: addressTo.phone,
+    first_name: addressTo.first_name,
+    last_name: addressTo.last_name
+  };
+  const addressValidation = validatePrintifyAddress(addressTo);
+  const payload = buildPrintifyOrderPayload(pendingOrder, addressTo);
+  const lineItemsValidation = validatePrintifyLineItems(payload.line_items);
+
+  if (!addressValidation.valid || !lineItemsValidation.valid) {
+    const error = {
+      message: "Printify fulfillment blocked before order creation.",
+      missing_address_fields: addressValidation.missingFields,
+      invalid_line_items: lineItemsValidation.invalidItems
+    };
+
+    await markPendingOrderFulfillmentBlocked(pendingOrder, {
+      status: addressValidation.valid ? "fulfillment_blocked" : "printify_address_missing",
+      customer,
+      shipping: addressTo,
+      error
+    });
+
+    console.error("PRINTIFY FULFILLMENT BLOCKED", {
+      pendingOrderId: pendingOrder.id,
+      missingAddressFields: addressValidation.missingFields,
+      invalidLineItemCount: lineItemsValidation.invalidItems.length
+    });
+
+    return {
+      attempted: true,
+      blocked: true,
+      status: addressValidation.valid ? "fulfillment_blocked" : "printify_address_missing",
+      error
+    };
+  }
+
+  console.log("PRINTIFY ORDER CREATE REQUEST", {
+    pendingOrderId: pendingOrder.id,
+    endpoint: PRINTIFY_ORDERS_ENDPOINT_LABEL,
+    lineItems: payload.line_items.map(item => ({
+      product_id: item.product_id,
+      variant_id: item.variant_id,
+      quantity: item.quantity
+    })),
+    addressPresent: true
+  });
+
+  try {
+    const responseData = await createPrintifyOrder(payload);
+    await markPendingOrderPrintifySubmitted(pendingOrder, responseData);
+
+    console.log("PRINTIFY ORDER CREATED", {
+      pendingOrderId: pendingOrder.id,
+      printifyOrderId: getPrintifyOrderId(responseData) || null,
+      printifyStatus: getPrintifyStatus(responseData) || null
+    });
+
+    return {
+      attempted: true,
+      submitted: true,
+      printifyOrderId: getPrintifyOrderId(responseData) || null
+    };
+  } catch (error) {
+    await markPendingOrderFulfillmentFailed(pendingOrder, error);
+    console.error("PRINTIFY ORDER CREATE ERROR", {
+      pendingOrderId: pendingOrder.id,
+      endpoint: PRINTIFY_ORDERS_ENDPOINT_LABEL,
+      message: error.message,
+      status: error.response?.status || null,
+      response: error.response?.data ? sanitizeLogBody(error.response.data) : null,
+      noResponseReceived: !error.response
+    });
+
+    return {
+      attempted: true,
+      failed: true,
+      error: createSafeErrorJson(error)
+    };
+  }
 }
 
 async function createPendingOrder({ pendingLineItems = [], subtotalCents = 0 }) {
@@ -966,18 +1343,19 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
     return res.status(200).json({ received: true, ignored: true });
   }
 
-  if (isPendingOrderPaid(pendingOrder)) {
+  if (isPendingOrderPaid(pendingOrder) && hasPrintifyFulfillmentStarted(pendingOrder)) {
     await updateSquareEvent(eventId, {
       pendingOrderId: pendingOrder.id,
       status: "duplicate_paid_update",
-      result: "Pending order already paid; duplicate completed payment update ignored",
+      result: "Fulfillment already started; duplicate completed payment update ignored",
       squarePaymentId: paymentId,
       squareOrderId
     });
 
     return res.status(200).json({
       received: true,
-      alreadyPaid: true
+      alreadyPaid: true,
+      fulfillmentAlreadyStarted: true
     });
   }
 
@@ -1034,6 +1412,55 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
     return res.status(200).json({ received: true, amountMismatch: true });
   }
 
+  if (hasPrintifyFulfillmentStarted(pendingOrder)) {
+    await updateSquareEvent(eventId, {
+      pendingOrderId: pendingOrder.id,
+      status: "duplicate_paid_update",
+      result: "Fulfillment already started; duplicate completed payment update ignored",
+      squarePaymentId: paymentId,
+      squareOrderId
+    });
+
+    return res.status(200).json({
+      received: true,
+      alreadyPaid: true,
+      fulfillmentAlreadyStarted: true
+    });
+  }
+
+  if (isPendingOrderPaid(pendingOrder)) {
+    const fulfillment = await submitPrintifyOrderForPendingOrder(pendingOrder.id, { payment, order });
+    const eventStatus = fulfillment.submitted
+      ? "printify_submitted"
+      : fulfillment.blocked
+        ? fulfillment.status
+        : fulfillment.failed
+          ? "fulfillment_failed"
+          : "fulfillment_skipped";
+    const eventResult = fulfillment.submitted
+      ? "Paid pending order submitted to Printify"
+      : fulfillment.blocked
+        ? "Paid pending order fulfillment blocked"
+        : fulfillment.failed
+          ? "Paid pending order Printify order creation failed"
+          : "Paid pending order fulfillment was not claimed";
+
+    await updateSquareEvent(eventId, {
+      pendingOrderId: pendingOrder.id,
+      status: eventStatus,
+      result: eventResult,
+      squarePaymentId: paymentId,
+      squareOrderId
+    });
+
+    return res.status(200).json({
+      received: true,
+      paid: true,
+      fulfillment: eventStatus,
+      printifyOrderId: fulfillment.printifyOrderId || null
+    });
+  }
+
   try {
     const paidTransition = await markPendingOrderPaid(pendingOrder, payment, order);
 
@@ -1052,13 +1479,54 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
       });
     }
 
+    const fulfillment = await submitPrintifyOrderForPendingOrder(pendingOrder.id, { payment, order });
+    const eventStatus = fulfillment.submitted
+      ? "printify_submitted"
+      : fulfillment.blocked
+        ? fulfillment.status
+        : fulfillment.failed
+          ? "fulfillment_failed"
+          : "fulfillment_skipped";
+    const eventResult = fulfillment.submitted
+      ? "Pending order paid and Printify order submitted"
+      : fulfillment.blocked
+        ? "Pending order paid but Printify fulfillment blocked"
+        : fulfillment.failed
+          ? "Pending order paid but Printify order creation failed"
+          : "Pending order paid but Printify fulfillment was not claimed";
+
     await updateSquareEvent(eventId, {
       pendingOrderId: pendingOrder.id,
-      status: "paid",
-      result: "Pending order marked paid",
+      status: eventStatus,
+      result: eventResult,
       squarePaymentId: paymentId,
       squareOrderId
     });
+
+    if (fulfillment.submitted) {
+      return res.status(200).json({
+        received: true,
+        paid: true,
+        fulfillment: "printify_submitted",
+        printifyOrderId: fulfillment.printifyOrderId || null
+      });
+    }
+
+    if (fulfillment.blocked) {
+      return res.status(200).json({
+        received: true,
+        paid: true,
+        fulfillment: fulfillment.status
+      });
+    }
+
+    if (fulfillment.failed) {
+      return res.status(200).json({
+        received: true,
+        paid: true,
+        fulfillment: "fulfillment_failed"
+      });
+    }
   } catch (error) {
     await updateSquareEvent(eventId, {
       pendingOrderId: pendingOrder.id,
