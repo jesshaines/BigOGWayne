@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Square checkout now requests buyer shipping addresses so paid orders can submit to Printify fulfillment when address data is available.
 - Added Printify order creation after first-time paid Square webhooks, with an exactly-once fulfillment claim and blocked/failed fulfillment statuses for manual recovery.
 - Square webhook endpoint now verifies signatures, marks completed pending orders as paid, and ignores duplicate webhook events safely.
 - Checkout now creates a database-backed pending order before generating a Square payment link.

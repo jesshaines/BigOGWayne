@@ -117,6 +117,14 @@ ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS square_order_id tex
 ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS error_json jsonb;
 `;
 
+const FULFILLMENT_SCHEMA_SQL = `
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_status text;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_order_json jsonb;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_submitted_at timestamptz;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS fulfillment_attempted_at timestamptz;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS fulfillment_error_json jsonb;
+`;
+
 const PRINTIFY_API = "https://api.printify.com/v1";
 const PRINTIFY_API_TOKEN = process.env.PRINTIFY_API_TOKEN;
 const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID;
@@ -174,7 +182,8 @@ async function initializeDatabase() {
   }
 
   await dbPool.query(PENDING_ORDER_SCHEMA_SQL);
-  console.log("Database initialized: pending_orders ready");
+  await dbPool.query(FULFILLMENT_SCHEMA_SQL);
+  console.log("Database initialized: pending_orders and fulfillment columns ready");
 }
 
 function isVariantPurchasable(variant = {}) {
@@ -1651,6 +1660,9 @@ app.post("/create-checkout", async (req, res) => {
             pending_order_id: pendingOrderId
           },
           lineItems,
+        },
+        checkoutOptions: {
+          askForShippingAddress: true
         },
       });
     } catch (error) {

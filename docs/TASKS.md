@@ -240,6 +240,7 @@ Completed Scope
 - Missing shipping/customer address data blocks fulfillment with `printify_address_missing` or `fulfillment_blocked`.
 - Printify API failures move orders to `fulfillment_failed` for owner/manual recovery.
 - No separate Printify `send_to_production` call is made.
+- Square hosted checkout now requests buyer shipping address for Printify fulfillment.
 
 ### 📋 Backlog
 
