@@ -184,6 +184,7 @@ Optional fulfillment environment variables:
 
 - `PRINTIFY_DEFAULT_SHIPPING_METHOD`: defaults to `1` for standard shipping.
 - `PRINTIFY_SEND_SHIPPING_NOTIFICATION`: defaults to `true`; set to `false` to disable Printify shipment emails.
+- `PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS`: required positive integer for production checkout; flat customer shipping fee added to Square checkout in cents.
 
 ---
 

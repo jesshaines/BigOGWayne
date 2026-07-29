@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   fulfillment_error_json jsonb,
   currency text NOT NULL DEFAULT 'USD',
   subtotal_cents integer NOT NULL DEFAULT 0,
+  shipping_cents integer,
+  total_cents integer,
   line_items_json jsonb NOT NULL,
   customer_json jsonb,
   shipping_json jsonb,
@@ -40,7 +42,7 @@ CREATE TABLE IF NOT EXISTS processed_square_events (
 -- Fulfillment recovery checks
 --
 -- Recent pending orders:
--- select id, status, square_order_id, square_payment_id, printify_order_id, subtotal_cents, created_at, updated_at
+-- select id, status, square_order_id, square_payment_id, printify_order_id, subtotal_cents, shipping_cents, total_cents, created_at, updated_at
 -- from pending_orders
 -- order by created_at desc
 -- limit 20;

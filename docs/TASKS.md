@@ -241,6 +241,7 @@ Completed Scope
 - Printify API failures move orders to `fulfillment_failed` for owner/manual recovery.
 - No separate Printify `send_to_production` call is made.
 - Square hosted checkout now requests buyer shipping address for Printify fulfillment.
+- Square hosted checkout charges a configured flat shipping fee as a Square order service charge and webhook amount verification uses `total_cents`.
 
 ### 📋 Backlog
 

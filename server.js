@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   fulfillment_error_json jsonb,
   currency text NOT NULL DEFAULT 'USD',
   subtotal_cents integer NOT NULL DEFAULT 0,
+  shipping_cents integer,
+  total_cents integer,
   line_items_json jsonb NOT NULL,
   customer_json jsonb,
   shipping_json jsonb,
@@ -89,6 +91,8 @@ CREATE TABLE IF NOT EXISTS pending_orders (
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS square_payment_id text;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS payment_json jsonb;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_cents integer;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS total_cents integer;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_status text;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_order_json jsonb;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_submitted_at timestamptz;
@@ -118,6 +122,8 @@ ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS error_json jsonb;
 `;
 
 const FULFILLMENT_SCHEMA_SQL = `
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_cents integer;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS total_cents integer;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_status text;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_order_json jsonb;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_submitted_at timestamptz;
@@ -135,6 +141,83 @@ const PRINTIFY_ORDERS_ENDPOINT_LABEL = "/shops/[PRINTIFY_SHOP_ID]/orders.json";
 const PRINTIFY_DEFAULT_SHIPPING_METHOD = Number(process.env.PRINTIFY_DEFAULT_SHIPPING_METHOD || 1);
 const PRINTIFY_SEND_SHIPPING_NOTIFICATION =
   process.env.PRINTIFY_SEND_SHIPPING_NOTIFICATION !== "false";
+
+function parseConfiguredShippingFeeCents() {
+  const rawValue = process.env.PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS;
+  const value = Number(rawValue);
+
+  if (!rawValue || !Number.isSafeInteger(value) || value <= 0) {
+    return null;
+  }
+
+  return value;
+}
+
+function buildSquareShippingServiceCharge(shippingCents) {
+  return {
+    name: "Shipping",
+    amountMoney: {
+      amount: BigInt(shippingCents),
+      currency: "USD"
+    },
+    calculationPhase: "TOTAL_PHASE",
+    taxable: false
+  };
+}
+
+function buildSquarePaymentLinkRequest({
+  pendingOrderId,
+  lineItems,
+  shippingCents
+}) {
+  return {
+    idempotencyKey: pendingOrderId,
+    order: {
+      locationId: SQUARE_LOCATION_ID,
+      referenceId: pendingOrderId,
+      metadata: {
+        pending_order_id: pendingOrderId
+      },
+      lineItems,
+      serviceCharges: [
+        buildSquareShippingServiceCharge(shippingCents)
+      ]
+    },
+    checkoutOptions: {
+      askForShippingAddress: true
+    }
+  };
+}
+
+function squarePaymentLinkRequestIncludesShippingFee(request = {}) {
+  const serviceCharges = Array.isArray(request.order?.serviceCharges)
+    ? request.order.serviceCharges
+    : [];
+
+  return serviceCharges.some(serviceCharge => (
+    serviceCharge?.name === "Shipping" &&
+    Number(serviceCharge?.amountMoney?.amount) > 0 &&
+    serviceCharge?.amountMoney?.currency === "USD"
+  ));
+}
+
+function logSquarePaymentLinkRequestShape({ request = {}, subtotalCents = 0, shippingCents = 0, totalCents = 0 }) {
+  const checkoutOptions = request.checkoutOptions || {};
+  const serviceCharges = Array.isArray(request.order?.serviceCharges)
+    ? request.order.serviceCharges
+    : [];
+
+  console.log("SQUARE PAYMENT LINK REQUEST SHAPE", {
+    subtotal_cents: subtotalCents,
+    shipping_cents: shippingCents,
+    total_cents: totalCents,
+    checkoutOptionsPresent: hasObjectData(checkoutOptions),
+    askForShippingAddress: checkoutOptions.askForShippingAddress === true,
+    checkoutOptionsIncludesShippingFee: Boolean(checkoutOptions.shippingFee),
+    orderIncludesShippingServiceCharge: squarePaymentLinkRequestIncludesShippingFee(request),
+    shippingServiceChargeCount: serviceCharges.filter(serviceCharge => serviceCharge?.name === "Shipping").length
+  });
+}
 
 const printify = axios.create({
   baseURL: PRINTIFY_API,
@@ -1067,7 +1150,12 @@ async function submitPrintifyOrderForPendingOrder(pendingOrderId, { payment = {}
   }
 }
 
-async function createPendingOrder({ pendingLineItems = [], subtotalCents = 0 }) {
+async function createPendingOrder({
+  pendingLineItems = [],
+  subtotalCents = 0,
+  shippingCents = 0,
+  totalCents = 0
+}) {
   if (!dbPool) {
     throw new Error("DATABASE_URL is required for checkout pending order storage.");
   }
@@ -1080,14 +1168,18 @@ async function createPendingOrder({ pendingLineItems = [], subtotalCents = 0 }) 
       status,
       currency,
       subtotal_cents,
+      shipping_cents,
+      total_cents,
       line_items_json,
       customer_json,
       shipping_json
     )
-    VALUES ($1, 'pending_payment', 'USD', $2, $3::jsonb, NULL, NULL)`,
+    VALUES ($1, 'pending_payment', 'USD', $2, $3, $4, $5::jsonb, NULL, NULL)`,
     [
       pendingOrderId,
       subtotalCents,
+      shippingCents,
+      totalCents,
       JSON.stringify(pendingLineItems)
     ]
   );
@@ -1394,12 +1486,36 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
   const paymentMoney = getSquareMoney(payment);
   const paidAmountCents = getSquareAmountValue(paymentMoney);
   const paymentCurrency = String(paymentMoney.currency || pendingOrder.currency || "").toUpperCase();
-  const expectedAmountCents = Number(pendingOrder.subtotal_cents);
+  const expectedAmountCents = Number(pendingOrder.total_cents);
   const expectedCurrency = String(pendingOrder.currency || "USD").toUpperCase();
+
+  if (!Number.isSafeInteger(expectedAmountCents) || expectedAmountCents <= 0) {
+    const amountVerificationError = {
+      message: "Pending order total_cents is missing; payment amount cannot be verified.",
+      pending_order_id: pendingOrder.id,
+      subtotal_cents: pendingOrder.subtotal_cents,
+      shipping_cents: pendingOrder.shipping_cents,
+      total_cents: pendingOrder.total_cents,
+      square_payment_id: paymentId,
+      square_order_id: squareOrderId
+    };
+
+    await markPendingOrderPaymentMismatch(pendingOrder, amountVerificationError);
+    await updateSquareEvent(eventId, {
+      pendingOrderId: pendingOrder.id,
+      status: "amount_verification_blocked",
+      result: "Missing pending order total; pending order not marked paid",
+      squarePaymentId: paymentId,
+      squareOrderId,
+      error: amountVerificationError
+    });
+
+    return res.status(200).json({ received: true, amountVerificationBlocked: true });
+  }
 
   if (paidAmountCents !== expectedAmountCents || paymentCurrency !== expectedCurrency) {
     const mismatch = {
-      message: "Square payment amount does not match pending order subtotal.",
+      message: "Square payment amount does not match pending order total.",
       expected_amount_cents: expectedAmountCents,
       paid_amount_cents: paidAmountCents,
       expected_currency: expectedCurrency,
@@ -1632,10 +1748,30 @@ app.post("/create-checkout", async (req, res) => {
       });
     }
 
+    const shippingCents = parseConfiguredShippingFeeCents();
+
+    if (shippingCents === null) {
+      console.error("CHECKOUT SHIPPING FEE CONFIG ERROR", {
+        message: "PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS is missing or invalid; refusing to create Square payment link."
+      });
+
+      return res.status(503).json({
+        error: "Checkout unavailable",
+        message: CHECKOUT_TEMPORARY_UNAVAILABLE_MESSAGE,
+        items: []
+      });
+    }
+
+    const totalCents = subtotalCents + shippingCents;
     let pendingOrderId;
 
     try {
-      pendingOrderId = await createPendingOrder({ pendingLineItems, subtotalCents });
+      pendingOrderId = await createPendingOrder({
+        pendingLineItems,
+        subtotalCents,
+        shippingCents,
+        totalCents
+      });
     } catch (error) {
       console.error("PENDING ORDER CREATE ERROR", {
         message: error.message
@@ -1649,22 +1785,40 @@ app.post("/create-checkout", async (req, res) => {
     }
 
     let response;
+    const paymentLinkRequest = buildSquarePaymentLinkRequest({
+      pendingOrderId,
+      lineItems,
+      shippingCents
+    });
+
+    logSquarePaymentLinkRequestShape({
+      request: paymentLinkRequest,
+      subtotalCents,
+      shippingCents,
+      totalCents
+    });
+
+    if (!squarePaymentLinkRequestIncludesShippingFee(paymentLinkRequest)) {
+      await markPendingOrderPaymentLinkFailed(
+        pendingOrderId,
+        new Error("Square payment link request is missing shipping service charge")
+      );
+
+      console.error("SQUARE PAYMENT LINK SHIPPING CONFIG ERROR", {
+        pendingOrderId,
+        shippingCents,
+        message: "Refusing to create Square payment link without a customer shipping charge."
+      });
+
+      return res.status(503).json({
+        error: "Checkout unavailable",
+        message: CHECKOUT_TEMPORARY_UNAVAILABLE_MESSAGE,
+        items: []
+      });
+    }
 
     try {
-      response = await squareClient.checkout.paymentLinks.create({
-        idempotencyKey: pendingOrderId,
-        order: {
-          locationId: SQUARE_LOCATION_ID,
-          referenceId: pendingOrderId,
-          metadata: {
-            pending_order_id: pendingOrderId
-          },
-          lineItems,
-        },
-        checkoutOptions: {
-          askForShippingAddress: true
-        },
-      });
+      response = await squareClient.checkout.paymentLinks.create(paymentLinkRequest);
     } catch (error) {
       await markPendingOrderPaymentLinkFailed(pendingOrderId, error);
       console.error("SQUARE PAYMENT LINK ERROR", {
