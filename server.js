@@ -621,12 +621,28 @@ function getPaymentSnapshot(payment = {}, order = {}) {
   });
 }
 
+function isPendingOrderPaid(pendingOrder = {}) {
+  return String(pendingOrder.status || "").toLowerCase() === "paid";
+}
+
+function shouldCreatePrintifyOrderForPaidTransition(transition = {}) {
+  return transition.markedPaid === true;
+}
+
 async function markPendingOrderPaid(pendingOrder, payment, order) {
   const paymentId = payment.id;
   const squareOrderId = getSquarePaymentOrderId(payment) || order?.id || pendingOrder.square_order_id;
   const paymentSnapshot = getPaymentSnapshot(payment, order);
 
-  await dbPool.query(
+  if (isPendingOrderPaid(pendingOrder)) {
+    return {
+      markedPaid: false,
+      alreadyPaid: true,
+      pendingOrderId: pendingOrder.id
+    };
+  }
+
+  const result = await dbPool.query(
     `UPDATE pending_orders
      SET status = 'paid',
        square_payment_id = $2,
@@ -634,7 +650,9 @@ async function markPendingOrderPaid(pendingOrder, payment, order) {
        payment_json = $4::jsonb,
        paid_at = COALESCE(paid_at, now()),
        updated_at = now()
-     WHERE id = $1`,
+     WHERE id = $1
+       AND status <> 'paid'
+     RETURNING id`,
     [
       pendingOrder.id,
       paymentId,
@@ -642,6 +660,12 @@ async function markPendingOrderPaid(pendingOrder, payment, order) {
       JSON.stringify(paymentSnapshot)
     ]
   );
+
+  return {
+    markedPaid: result.rowCount > 0,
+    alreadyPaid: result.rowCount === 0,
+    pendingOrderId: pendingOrder.id
+  };
 }
 
 async function markPendingOrderPaymentMismatch(pendingOrder, errorDetails) {
@@ -942,6 +966,21 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
     return res.status(200).json({ received: true, ignored: true });
   }
 
+  if (isPendingOrderPaid(pendingOrder)) {
+    await updateSquareEvent(eventId, {
+      pendingOrderId: pendingOrder.id,
+      status: "duplicate_paid_update",
+      result: "Pending order already paid; duplicate completed payment update ignored",
+      squarePaymentId: paymentId,
+      squareOrderId
+    });
+
+    return res.status(200).json({
+      received: true,
+      alreadyPaid: true
+    });
+  }
+
   if (squareOrderId && !order) {
     try {
       order = await fetchSquareOrder(squareOrderId);
@@ -996,7 +1035,23 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
   }
 
   try {
-    await markPendingOrderPaid(pendingOrder, payment, order);
+    const paidTransition = await markPendingOrderPaid(pendingOrder, payment, order);
+
+    if (!shouldCreatePrintifyOrderForPaidTransition(paidTransition)) {
+      await updateSquareEvent(eventId, {
+        pendingOrderId: pendingOrder.id,
+        status: "duplicate_paid_update",
+        result: "Pending order already paid; duplicate completed payment update ignored",
+        squarePaymentId: paymentId,
+        squareOrderId
+      });
+
+      return res.status(200).json({
+        received: true,
+        alreadyPaid: true
+      });
+    }
+
     await updateSquareEvent(eventId, {
       pendingOrderId: pendingOrder.id,
       status: "paid",
@@ -1022,7 +1077,7 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
     return res.status(500).json({ error: "Pending order paid update failed" });
   }
 
-  // Phase 3 will create the Printify order from this paid pending order.
+  // Phase 3 should create the Printify order only after a true first-time paid transition.
   return res.status(200).json({ received: true, paid: true });
 });
 
