@@ -270,35 +270,7 @@ async function goToCheckout() {
     return;
   }
 
-  try {
-    const res = await fetch('/create-checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ cart })
-    });
-
-    const data = await res.json();
-
-    console.log('CHECKOUT RESPONSE:', data);
-
-    if (!res.ok) {
-      alert(getCheckoutErrorMessage(data));
-      return;
-    }
-
-    if (!data.url) {
-      alert(getCheckoutErrorMessage(data));
-      return;
-    }
-
-    window.location.href = data.url;
-
-  } catch (err) {
-    console.error(err);
-    alert('Checkout error.');
-  }
+  window.location.href = '/checkout.html';
 }
 
 /* =========================================================

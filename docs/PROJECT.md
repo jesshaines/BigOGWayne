@@ -182,9 +182,14 @@ Printify remains the source of truth for live products, variants, pricing, and s
 
 Optional fulfillment environment variables:
 
-- `PRINTIFY_DEFAULT_SHIPPING_METHOD`: defaults to `1` for standard shipping.
+- `PRINTIFY_DEFAULT_SHIPPING_METHOD`: defaults to `1` for standard shipping. Checkout quotes this method from Printify before creating the Square payment link.
 - `PRINTIFY_SEND_SHIPPING_NOTIFICATION`: defaults to `true`; set to `false` to disable Printify shipment emails.
-- `PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS`: required positive integer for production checkout; flat customer shipping fee added to Square checkout in cents.
+
+Checkout collects the buyer shipping address before payment, requests a live Printify shipping quote, stores that quote on the pending order, and charges the quoted shipping amount in Square as a `Shipping` service charge.
+
+Deprecated fulfillment environment variables:
+
+- `PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS`: no longer used by active checkout. Shipping is calculated from Printify instead of a configured flat fee.
 
 ---
 

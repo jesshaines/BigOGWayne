@@ -80,6 +80,9 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   subtotal_cents integer NOT NULL DEFAULT 0,
   shipping_cents integer,
   total_cents integer,
+  shipping_quote_json jsonb,
+  shipping_source text,
+  shipping_method integer,
   line_items_json jsonb NOT NULL,
   customer_json jsonb,
   shipping_json jsonb,
@@ -93,6 +96,9 @@ ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS payment_json jsonb;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_cents integer;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS total_cents integer;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_quote_json jsonb;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_source text;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_method integer;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_status text;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_order_json jsonb;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_submitted_at timestamptz;
@@ -124,6 +130,9 @@ ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS error_json jsonb;
 const FULFILLMENT_SCHEMA_SQL = `
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_cents integer;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS total_cents integer;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_quote_json jsonb;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_source text;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_method integer;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_status text;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_order_json jsonb;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS printify_submitted_at timestamptz;
@@ -138,20 +147,16 @@ const PRINTIFY_PRODUCTS_ENDPOINT = `/shops/${PRINTIFY_SHOP_ID}/products.json`;
 const PRINTIFY_PRODUCTS_ENDPOINT_LABEL = "/shops/[PRINTIFY_SHOP_ID]/products.json";
 const PRINTIFY_ORDERS_ENDPOINT = `/shops/${PRINTIFY_SHOP_ID}/orders.json`;
 const PRINTIFY_ORDERS_ENDPOINT_LABEL = "/shops/[PRINTIFY_SHOP_ID]/orders.json";
-const PRINTIFY_DEFAULT_SHIPPING_METHOD = Number(process.env.PRINTIFY_DEFAULT_SHIPPING_METHOD || 1);
+const PRINTIFY_SHIPPING_ENDPOINT = `/shops/${PRINTIFY_SHOP_ID}/orders/shipping.json`;
+const PRINTIFY_SHIPPING_ENDPOINT_LABEL = "/shops/[PRINTIFY_SHOP_ID]/orders/shipping.json";
+const CONFIGURED_PRINTIFY_SHIPPING_METHOD = Number(process.env.PRINTIFY_DEFAULT_SHIPPING_METHOD || 1);
+const PRINTIFY_DEFAULT_SHIPPING_METHOD =
+  Number.isSafeInteger(CONFIGURED_PRINTIFY_SHIPPING_METHOD) &&
+  CONFIGURED_PRINTIFY_SHIPPING_METHOD > 0
+    ? CONFIGURED_PRINTIFY_SHIPPING_METHOD
+    : 1;
 const PRINTIFY_SEND_SHIPPING_NOTIFICATION =
   process.env.PRINTIFY_SEND_SHIPPING_NOTIFICATION !== "false";
-
-function parseConfiguredShippingFeeCents() {
-  const rawValue = process.env.PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS;
-  const value = Number(rawValue);
-
-  if (!rawValue || !Number.isSafeInteger(value) || value <= 0) {
-    return null;
-  }
-
-  return value;
-}
 
 function buildSquareShippingServiceCharge(shippingCents) {
   return {
@@ -295,6 +300,58 @@ function createValidationError(status, items, message = CHECKOUT_STALE_CART_MESS
       items
     }
   };
+}
+
+function normalizeCountryCode(value = "") {
+  const normalized = String(value || "").trim().toUpperCase();
+
+  if (["UNITED STATES", "UNITED STATES OF AMERICA", "USA", "U.S.", "U.S.A."].includes(normalized)) {
+    return "US";
+  }
+
+  return normalized || "US";
+}
+
+function normalizeCheckoutAddress({ customer = {}, shipping = {} } = {}) {
+  const source = {
+    ...customer,
+    ...shipping
+  };
+
+  return {
+    first_name: String(source.first_name || source.firstName || "").trim(),
+    last_name: String(source.last_name || source.lastName || "").trim(),
+    email: String(source.email || "").trim(),
+    phone: String(source.phone || "").trim(),
+    country: normalizeCountryCode(source.country || "US"),
+    region: String(source.region || source.state || "").trim().toUpperCase(),
+    address1: String(source.address1 || source.address || "").trim(),
+    address2: String(source.address2 || "").trim(),
+    city: String(source.city || "").trim(),
+    zip: String(source.zip || source.postal_code || source.postalCode || "").trim()
+  };
+}
+
+function createCustomerFromCheckoutAddress(addressTo = {}) {
+  return {
+    first_name: addressTo.first_name,
+    last_name: addressTo.last_name,
+    email: addressTo.email,
+    phone: addressTo.phone
+  };
+}
+
+function validateCheckoutAddress(addressTo = {}) {
+  const validation = validatePrintifyAddress(addressTo);
+
+  if (!validation.valid) {
+    return createValidationError(400, validation.missingFields.map(field => ({
+      field,
+      reason: "Required shipping field is missing"
+    })), "Please complete your shipping address before checkout.");
+  }
+
+  return null;
 }
 
 function buildValidatedCartItems(cart = []) {
@@ -928,6 +985,38 @@ function getPendingLineItems(pendingOrder = {}) {
   return [];
 }
 
+function getJsonObject(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  return {};
+}
+
+function getStoredPendingOrderAddress(pendingOrder = {}) {
+  const shipping = getJsonObject(pendingOrder.shipping_json);
+  const customer = getJsonObject(pendingOrder.customer_json);
+
+  if (!hasObjectData(shipping)) return null;
+
+  return {
+    ...shipping,
+    first_name: shipping.first_name || customer.first_name || "",
+    last_name: shipping.last_name || customer.last_name || "",
+    email: shipping.email || customer.email || "",
+    phone: shipping.phone || customer.phone || ""
+  };
+}
+
 function buildPrintifyLineItems(pendingOrder = {}) {
   return getPendingLineItems(pendingOrder).map(item => ({
     product_id: normalizeString(item.product_id),
@@ -958,11 +1047,78 @@ function validatePrintifyLineItems(lineItems = []) {
   };
 }
 
+function getPrintifyShippingMethodName(method = PRINTIFY_DEFAULT_SHIPPING_METHOD) {
+  const methodNumber = Number(method);
+
+  if (methodNumber === 1) return "standard";
+  if (methodNumber === 2) return "priority";
+  if (methodNumber === 3) return "printify_express";
+  if (methodNumber === 4) return "economy";
+  return "standard";
+}
+
+function getShippingQuoteCandidate(responseData = {}, methodName = "standard") {
+  return (
+    responseData?.[methodName] ??
+    responseData?.data?.[methodName] ??
+    responseData?.shipping?.[methodName] ??
+    null
+  );
+}
+
+function getShippingQuoteAmountCents(responseData = {}, methodName = "standard") {
+  const candidate = getShippingQuoteCandidate(responseData, methodName);
+
+  if (typeof candidate === "number") return candidate;
+  if (typeof candidate === "string") return Number(candidate);
+
+  if (candidate && typeof candidate === "object") {
+    const amount =
+      candidate.amount ??
+      candidate.cost ??
+      candidate.shipping_cost ??
+      candidate.shippingCost ??
+      candidate.price;
+
+    return Number(amount);
+  }
+
+  if (Array.isArray(responseData?.data)) {
+    const match = responseData.data.find(item => {
+      const attributes = item.attributes || item;
+      const type = String(attributes.shippingType || attributes.shipping_type || attributes.name || "").toLowerCase();
+      return type === methodName;
+    });
+
+    const cost = match?.attributes?.shippingCost || match?.attributes?.shipping_cost || match?.shippingCost || match?.shipping_cost;
+    const amount = cost?.firstItem?.amount ?? cost?.first_item?.amount ?? cost?.amount;
+    return Number(amount);
+  }
+
+  return NaN;
+}
+
+function buildPrintifyShippingQuotePayload({ lineItems = [], addressTo = {} } = {}) {
+  return {
+    line_items: lineItems.map(item => ({
+      product_id: item.product_id,
+      variant_id: item.variant_id,
+      quantity: item.quantity
+    })),
+    address_to: addressTo
+  };
+}
+
+async function fetchPrintifyShippingQuote(payload) {
+  const response = await printify.post(PRINTIFY_SHIPPING_ENDPOINT, payload);
+  return response.data;
+}
+
 function buildPrintifyOrderPayload(pendingOrder, addressTo) {
   return {
     external_id: pendingOrder.id,
     line_items: buildPrintifyLineItems(pendingOrder),
-    shipping_method: PRINTIFY_DEFAULT_SHIPPING_METHOD,
+    shipping_method: Number(pendingOrder.shipping_method || PRINTIFY_DEFAULT_SHIPPING_METHOD),
     send_shipping_notification: PRINTIFY_SEND_SHIPPING_NOTIFICATION,
     address_to: addressTo
   };
@@ -1066,7 +1222,8 @@ async function submitPrintifyOrderForPendingOrder(pendingOrderId, { payment = {}
     };
   }
 
-  const addressTo = buildPrintifyAddressFromSquare({ payment, order });
+  const storedAddress = getStoredPendingOrderAddress(pendingOrder);
+  const addressTo = storedAddress || buildPrintifyAddressFromSquare({ payment, order });
   const customer = {
     email: addressTo.email,
     phone: addressTo.phone,
@@ -1154,7 +1311,12 @@ async function createPendingOrder({
   pendingLineItems = [],
   subtotalCents = 0,
   shippingCents = 0,
-  totalCents = 0
+  totalCents = 0,
+  customer = {},
+  shipping = {},
+  shippingQuote = {},
+  shippingSource = "printify_calculated",
+  shippingMethod = PRINTIFY_DEFAULT_SHIPPING_METHOD
 }) {
   if (!dbPool) {
     throw new Error("DATABASE_URL is required for checkout pending order storage.");
@@ -1170,17 +1332,25 @@ async function createPendingOrder({
       subtotal_cents,
       shipping_cents,
       total_cents,
+      shipping_quote_json,
+      shipping_source,
+      shipping_method,
       line_items_json,
       customer_json,
       shipping_json
     )
-    VALUES ($1, 'pending_payment', 'USD', $2, $3, $4, $5::jsonb, NULL, NULL)`,
+    VALUES ($1, 'pending_payment', 'USD', $2, $3, $4, $5::jsonb, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb)`,
     [
       pendingOrderId,
       subtotalCents,
       shippingCents,
       totalCents,
-      JSON.stringify(pendingLineItems)
+      JSON.stringify(sanitizeLogBody(shippingQuote)),
+      shippingSource,
+      shippingMethod,
+      JSON.stringify(pendingLineItems),
+      JSON.stringify(sanitizeLogBody(customer)),
+      JSON.stringify(sanitizeLogBody(shipping))
     ]
   );
 
@@ -1679,7 +1849,7 @@ app.use(express.json());
 // ✅ API route
 app.post("/create-checkout", async (req, res) => {
   try {
-    const { cart } = req.body || {};
+    const { cart, customer = {}, shipping = {} } = req.body || {};
 
     if (!Array.isArray(cart) || !cart.length) {
       return res.status(400).json({
@@ -1694,6 +1864,13 @@ app.post("/create-checkout", async (req, res) => {
     if (errors.length) {
       const validationError = createValidationError(400, errors);
       return res.status(validationError.status).json(validationError.body);
+    }
+
+    const addressTo = normalizeCheckoutAddress({ customer, shipping });
+    const addressError = validateCheckoutAddress(addressTo);
+
+    if (addressError) {
+      return res.status(addressError.status).json(addressError.body);
     }
 
     if (!dbPool) {
@@ -1748,16 +1925,53 @@ app.post("/create-checkout", async (req, res) => {
       });
     }
 
-    const shippingCents = parseConfiguredShippingFeeCents();
+    const quoteLineItems = pendingLineItems.map(item => ({
+      product_id: item.product_id,
+      variant_id: Number(item.variant_id),
+      quantity: Number(item.quantity)
+    }));
+    const quotePayload = buildPrintifyShippingQuotePayload({
+      lineItems: quoteLineItems,
+      addressTo
+    });
+    let shippingQuote;
+    const shippingMethod = PRINTIFY_DEFAULT_SHIPPING_METHOD;
+    const shippingMethodName = getPrintifyShippingMethodName(shippingMethod);
+    let shippingCents;
 
-    if (shippingCents === null) {
-      console.error("CHECKOUT SHIPPING FEE CONFIG ERROR", {
-        message: "PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS is missing or invalid; refusing to create Square payment link."
+    try {
+      shippingQuote = await fetchPrintifyShippingQuote(quotePayload);
+      shippingCents = getShippingQuoteAmountCents(shippingQuote, shippingMethodName);
+    } catch (error) {
+      console.error("PRINTIFY SHIPPING QUOTE ERROR", {
+        endpoint: PRINTIFY_SHIPPING_ENDPOINT_LABEL,
+        message: error.message,
+        status: error.response?.status || null,
+        response: error.response?.data ? sanitizeLogBody(error.response.data) : null,
+        noResponseReceived: !error.response,
+        lineItemCount: quoteLineItems.length,
+        country: addressTo.country,
+        region: addressTo.region
       });
 
       return res.status(503).json({
         error: "Checkout unavailable",
-        message: CHECKOUT_TEMPORARY_UNAVAILABLE_MESSAGE,
+        message: "Shipping could not be calculated. Please check your address and try again.",
+        items: []
+      });
+    }
+
+    if (!Number.isSafeInteger(shippingCents) || shippingCents <= 0) {
+      console.error("PRINTIFY SHIPPING QUOTE MISSING STANDARD", {
+        endpoint: PRINTIFY_SHIPPING_ENDPOINT_LABEL,
+        shippingMethod,
+        shippingMethodName,
+        response: sanitizeLogBody(shippingQuote)
+      });
+
+      return res.status(503).json({
+        error: "Shipping unavailable",
+        message: "Standard shipping is not available for this address.",
         items: []
       });
     }
@@ -1770,7 +1984,12 @@ app.post("/create-checkout", async (req, res) => {
         pendingLineItems,
         subtotalCents,
         shippingCents,
-        totalCents
+        totalCents,
+        customer: createCustomerFromCheckoutAddress(addressTo),
+        shipping: addressTo,
+        shippingQuote,
+        shippingSource: "printify_calculated",
+        shippingMethod
       });
     } catch (error) {
       console.error("PENDING ORDER CREATE ERROR", {

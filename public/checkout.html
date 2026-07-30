@@ -117,7 +117,14 @@
   margin-bottom:1rem;
 }
 
-.checkout-form input{
+.checkout-form-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:.75rem;
+}
+
+.checkout-form input,
+.checkout-form select{
   background:var(--graphite);
   border:1px solid var(--iron);
   color:var(--white);
@@ -136,10 +143,40 @@
   letter-spacing:.12em;
 }
 
-.checkout-form input:focus{
+.checkout-form input:focus,
+.checkout-form select:focus{
   outline:none;
   border-color:var(--red);
   background:rgba(255,255,255,0.02);
+}
+
+.checkout-form .full{
+  grid-column:1 / -1;
+}
+
+.checkout-error{
+  min-height:1.2rem;
+  color:var(--red);
+  font-size:.75rem;
+  line-height:1.5;
+}
+
+.checkout-status{
+  min-height:1.2rem;
+  color:var(--chrome);
+  font-size:.75rem;
+  line-height:1.5;
+}
+
+.checkout-btn[disabled]{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+@media (max-width: 720px){
+  .checkout-form-grid{
+    grid-template-columns:1fr;
+  }
 }
 #checkoutStep1,
 #checkoutStep2{
@@ -180,13 +217,26 @@
     <div class="checkout-items" id="checkoutItems"></div>
 
 
-    <!--CHECKOUT FORM-->      
-<div class="checkout-form">
-<input type="email" id="email" placeholder="Email" required>
-<input type="text" id="name" placeholder="Full Name" required>
-<input type="text" id="address" placeholder="Shipping Address" required>
-
-</div>
+    <!--CHECKOUT FORM-->
+<form class="checkout-form" id="checkoutForm">
+  <h2 class="checkout-section-title">Shipping</h2>
+  <div class="checkout-form-grid">
+    <input type="text" id="firstName" name="first_name" placeholder="First Name" autocomplete="given-name" required>
+    <input type="text" id="lastName" name="last_name" placeholder="Last Name" autocomplete="family-name" required>
+    <input class="full" type="email" id="email" name="email" placeholder="Email" autocomplete="email" required>
+    <input class="full" type="tel" id="phone" name="phone" placeholder="Phone" autocomplete="tel">
+    <input class="full" type="text" id="address1" name="address1" placeholder="Address Line 1" autocomplete="address-line1" required>
+    <input class="full" type="text" id="address2" name="address2" placeholder="Address Line 2" autocomplete="address-line2">
+    <input type="text" id="city" name="city" placeholder="City" autocomplete="address-level2" required>
+    <input type="text" id="region" name="region" placeholder="State / Region" autocomplete="address-level1" required>
+    <input type="text" id="zip" name="zip" placeholder="ZIP / Postal Code" autocomplete="postal-code" required>
+    <select id="country" name="country" autocomplete="country" required>
+      <option value="US" selected>United States</option>
+    </select>
+  </div>
+  <div class="checkout-status" id="checkoutStatus" aria-live="polite"></div>
+  <div class="checkout-error" id="checkoutError" aria-live="assertive"></div>
+</form>
       <!-- RIGHT: SUMMARY -->
 <div class="checkout-summary">
   <h2>Summary</h2>
@@ -198,7 +248,7 @@
 
   <div class="checkout-row">
     <span>Shipping</span>
-    <span id="checkoutShipping">Calculated at next step</span>
+    <span id="checkoutShipping">Calculated before payment</span>
   </div>
 
   <div class="checkout-row">
@@ -211,7 +261,7 @@
     <strong id="checkoutTotal">$0.00</strong>
   </div>
 
-<button class="checkout-btn" id="checkoutBtn" onclick="goToCheckout()">Continue to Payment</button>
+<button class="checkout-btn" id="checkoutBtn" type="submit" form="checkoutForm">Continue to Payment</button>
 
 
   <div class="checkout-trust">
@@ -233,10 +283,12 @@ function renderCheckout() {
   const subtotalEl = document.getElementById('checkoutSubtotal');
   const taxEl = document.getElementById('checkoutTax');
   const totalEl = document.getElementById('checkoutTotal');
+  const shippingEl = document.getElementById('checkoutShipping');
 
   if (!cart.length) {
     container.innerHTML = "<p>Your bag is empty</p>";
     subtotalEl.textContent = "$0.00";
+    shippingEl.textContent = "—";
     taxEl.textContent = "—";
     totalEl.textContent = "$0.00";
     return;
@@ -262,12 +314,10 @@ function renderCheckout() {
     `;
   }).join("");
 
-  const tax = subtotal * 0.08;
-  const total = subtotal + tax;
-
   subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-  taxEl.textContent = `$${tax.toFixed(2)}`;
-  totalEl.textContent = `$${total.toFixed(2)}`;
+  shippingEl.textContent = "Calculated before payment";
+  taxEl.textContent = "—";
+  totalEl.textContent = `$${subtotal.toFixed(2)} + shipping`;
 }
 renderCheckout();
 </script>
@@ -301,21 +351,61 @@ function getCheckoutErrorMessage(data = {}) {
   return data.message || data.error || "Checkout failed.";
 }
 
+function getCheckoutAddressPayload() {
+  return {
+    customer: {
+      first_name: document.getElementById('firstName')?.value.trim() || '',
+      last_name: document.getElementById('lastName')?.value.trim() || '',
+      email: document.getElementById('email')?.value.trim() || '',
+      phone: document.getElementById('phone')?.value.trim() || ''
+    },
+    shipping: {
+      first_name: document.getElementById('firstName')?.value.trim() || '',
+      last_name: document.getElementById('lastName')?.value.trim() || '',
+      email: document.getElementById('email')?.value.trim() || '',
+      phone: document.getElementById('phone')?.value.trim() || '',
+      address1: document.getElementById('address1')?.value.trim() || '',
+      address2: document.getElementById('address2')?.value.trim() || '',
+      city: document.getElementById('city')?.value.trim() || '',
+      region: document.getElementById('region')?.value.trim() || '',
+      zip: document.getElementById('zip')?.value.trim() || '',
+      country: document.getElementById('country')?.value || 'US'
+    }
+  };
+}
+
 async function goToCheckout() {
   const cart = getLootBag();
+  const form = document.getElementById('checkoutForm');
+  const button = document.getElementById('checkoutBtn');
+  const statusEl = document.getElementById('checkoutStatus');
+  const errorEl = document.getElementById('checkoutError');
+  let didRedirect = false;
 
   if (!cart.length) {
     alert("Your bag is empty.");
     return;
   }
 
+  if (form && !form.reportValidity()) {
+    return;
+  }
+
+  if (button) button.disabled = true;
+  if (statusEl) statusEl.textContent = "Calculating shipping...";
+  if (errorEl) errorEl.textContent = "";
+
   try {
+    const checkoutPayload = getCheckoutAddressPayload();
     const res = await fetch('/create-checkout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ cart })
+      body: JSON.stringify({
+        cart,
+        ...checkoutPayload
+      })
     });
 
     const data = await res.json();
@@ -323,22 +413,34 @@ async function goToCheckout() {
     console.log("SERVER RESPONSE:", data); // debug line
 
     if (!res.ok) {
-      alert(getCheckoutErrorMessage(data));
+      if (errorEl) errorEl.textContent = getCheckoutErrorMessage(data);
       return;
     }
 
     if (!data.url) {
-      alert(getCheckoutErrorMessage(data));
+      if (errorEl) errorEl.textContent = getCheckoutErrorMessage(data);
       return;
     }
 
+    if (statusEl) statusEl.textContent = "Redirecting to Square...";
+    didRedirect = true;
     window.location.href = data.url;
 
   } catch (err) {
     console.error("Checkout error:", err);
-    alert("Something went wrong.");
+    if (errorEl) errorEl.textContent = "Something went wrong. Please try again.";
+  } finally {
+    if (button && !didRedirect) button.disabled = false;
+    if (statusEl && !didRedirect) {
+      statusEl.textContent = "";
+    }
   }
 }
+
+document.getElementById('checkoutForm')?.addEventListener('submit', event => {
+  event.preventDefault();
+  goToCheckout();
+});
 </script>
 
 </body>
