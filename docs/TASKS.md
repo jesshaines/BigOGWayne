@@ -240,8 +240,9 @@ Completed Scope
 - Missing shipping/customer address data blocks fulfillment with `printify_address_missing` or `fulfillment_blocked`.
 - Printify API failures move orders to `fulfillment_failed` for owner/manual recovery.
 - No separate Printify `send_to_production` call is made.
-- Square hosted checkout now requests buyer shipping address for Printify fulfillment.
+- BigOGWayne checkout now collects buyer shipping address before Square payment link creation.
 - Square hosted checkout is prefilled with buyer email, phone, and address data collected before shipping calculation.
+- Square hosted checkout no longer asks for a separate Square shipping method, preventing a confusing `Shipping Free` display.
 - Checkout now calculates standard shipping from Printify before Square payment link creation.
 - Square hosted checkout charges the calculated Printify shipping quote as a Square order service charge and webhook amount verification uses `total_cents`.
 

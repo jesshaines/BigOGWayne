@@ -189,9 +189,6 @@ function buildSquarePaymentLinkRequest({
         buildSquareShippingServiceCharge(shippingCents)
       ]
     },
-    checkoutOptions: {
-      askForShippingAddress: true
-    },
     prePopulatedData: buildSquarePrePopulatedData(addressTo)
   };
 }
