@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Checkout now calculates standard shipping from Printify before creating Square payment links, stores the quote on the pending order, and charges the customer shipping as a Square order service charge.
+- Square payment links now prefill hosted checkout with the buyer email, phone, and shipping address entered on BigOGWayne.com.
 - Payment verification compares Square totals against pending order `total_cents`.
 - Square checkout now requests buyer shipping addresses so paid orders can submit to Printify fulfillment when address data is available.
 - Added Printify order creation after first-time paid Square webhooks, with an exactly-once fulfillment claim and blocked/failed fulfillment statuses for manual recovery.

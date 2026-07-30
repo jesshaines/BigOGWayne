@@ -173,7 +173,8 @@ function buildSquareShippingServiceCharge(shippingCents) {
 function buildSquarePaymentLinkRequest({
   pendingOrderId,
   lineItems,
-  shippingCents
+  shippingCents,
+  addressTo = {}
 }) {
   return {
     idempotencyKey: pendingOrderId,
@@ -190,8 +191,37 @@ function buildSquarePaymentLinkRequest({
     },
     checkoutOptions: {
       askForShippingAddress: true
-    }
+    },
+    prePopulatedData: buildSquarePrePopulatedData(addressTo)
   };
+}
+
+function buildSquarePrePopulatedData(addressTo = {}) {
+  const buyerAddress = {
+    addressLine1: normalizeString(addressTo.address1),
+    locality: normalizeString(addressTo.city),
+    administrativeDistrictLevel1: normalizeString(addressTo.region),
+    postalCode: normalizeString(addressTo.zip),
+    country: normalizeString(addressTo.country || "US") || "US",
+    firstName: normalizeString(addressTo.first_name),
+    lastName: normalizeString(addressTo.last_name)
+  };
+  const addressLine2 = normalizeString(addressTo.address2);
+  const prePopulatedData = {
+    buyerEmail: normalizeString(addressTo.email),
+    buyerAddress
+  };
+  const buyerPhoneNumber = normalizeString(addressTo.phone);
+
+  if (addressLine2) {
+    buyerAddress.addressLine2 = addressLine2;
+  }
+
+  if (buyerPhoneNumber) {
+    prePopulatedData.buyerPhoneNumber = buyerPhoneNumber;
+  }
+
+  return prePopulatedData;
 }
 
 function squarePaymentLinkRequestIncludesShippingFee(request = {}) {
@@ -208,6 +238,7 @@ function squarePaymentLinkRequestIncludesShippingFee(request = {}) {
 
 function logSquarePaymentLinkRequestShape({ request = {}, subtotalCents = 0, shippingCents = 0, totalCents = 0 }) {
   const checkoutOptions = request.checkoutOptions || {};
+  const prePopulatedData = request.prePopulatedData || {};
   const serviceCharges = Array.isArray(request.order?.serviceCharges)
     ? request.order.serviceCharges
     : [];
@@ -219,6 +250,10 @@ function logSquarePaymentLinkRequestShape({ request = {}, subtotalCents = 0, shi
     checkoutOptionsPresent: hasObjectData(checkoutOptions),
     askForShippingAddress: checkoutOptions.askForShippingAddress === true,
     checkoutOptionsIncludesShippingFee: Boolean(checkoutOptions.shippingFee),
+    prePopulatedDataPresent: hasObjectData(prePopulatedData),
+    prePopulatedBuyerEmailPresent: Boolean(prePopulatedData.buyerEmail),
+    prePopulatedBuyerPhonePresent: Boolean(prePopulatedData.buyerPhoneNumber),
+    prePopulatedBuyerAddressPresent: hasObjectData(prePopulatedData.buyerAddress),
     orderIncludesShippingServiceCharge: squarePaymentLinkRequestIncludesShippingFee(request),
     shippingServiceChargeCount: serviceCharges.filter(serviceCharge => serviceCharge?.name === "Shipping").length
   });
@@ -2007,7 +2042,8 @@ app.post("/create-checkout", async (req, res) => {
     const paymentLinkRequest = buildSquarePaymentLinkRequest({
       pendingOrderId,
       lineItems,
-      shippingCents
+      shippingCents,
+      addressTo
     });
 
     logSquarePaymentLinkRequestShape({
