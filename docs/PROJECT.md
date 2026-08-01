@@ -194,6 +194,11 @@ Customer order lookup lives at `/orders.html` and uses `POST /api/order-status`.
 
 Customer contact lives at `/contact.html` and uses `POST /api/contact` to send order, merch, and business inquiries through Resend.
 
+Customer policy pages:
+
+- `/privacy.html`: Privacy Policy.
+- `/terms.html`: Terms of Service.
+
 Contact email environment variables:
 
 - `RESEND_API_KEY`: server-side Resend API key for sending contact form email.

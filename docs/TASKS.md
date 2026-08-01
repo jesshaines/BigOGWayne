@@ -380,6 +380,21 @@ Completed Scope
 - Contact form email uses the customer email as Reply-To and avoids exposing provider details to the browser.
 - Order confirmation and order lookup pages link to the contact form and can prefill the order number.
 
+#### SHOP-001R Privacy and Terms pages
+
+Status: Completed
+
+Description
+
+Add customer-facing Privacy Policy and Terms of Service pages.
+
+Completed Scope
+
+- Added `/privacy.html` with customer-facing privacy policy content.
+- Added `/terms.html` with customer-facing terms, shipping, cancellation, and returns/issues content.
+- Footer Privacy and Terms links now point to the real policy pages instead of the placeholder route.
+- Terms page includes the requested Return/refund details link opening in a new tab.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

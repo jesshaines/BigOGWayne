@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Privacy Policy and Terms of Service pages added.
 - Contact page added for order, merch, and business inquiries.
 - Customers can check order status using their order number and email.
 - Customer-facing order numbers and post-payment confirmation page added.
