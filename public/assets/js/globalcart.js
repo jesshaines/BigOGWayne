@@ -212,6 +212,10 @@ function renderLootBag() {
   itemsEl.innerHTML = cart.map(item => {
 
     subtotal += item.price * item.quantity;
+    const itemMeta = [
+      item.color ? `Color: ${item.color}` : '',
+      item.size ? `Size: ${item.size}` : ''
+    ].filter(Boolean).join('<br>');
 
     return `
       <div class="lootbag-item">
@@ -225,9 +229,7 @@ function renderLootBag() {
          <div class="lootbag-item-name">${item.name}</div>
 
           <div class="lootbag-item-meta">
-            ${item.collection ? `${item.collection}<br>` : ''}
-            ${item.color ? `Color: ${item.color}<br>` : ''}
-            ${item.size ? `Size: ${item.size}` : ''}
+            ${itemMeta}
           </div>
 
           <div class="lootbag-item-price">${formatMoney(item.price)}</div>

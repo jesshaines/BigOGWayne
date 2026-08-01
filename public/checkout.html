@@ -32,14 +32,6 @@
 .checkout-header img:hover{
   transform:scale(1.03);
 }
-.checkout-brand-tagline{
-  margin-top:.5rem;
-  font-size:.65rem;
-  letter-spacing:.25em;
-  text-transform:uppercase;
-  color:var(--chrome);
-  text-align:center;
-}
 
 .checkout-banner{
   border-bottom:1px solid var(--iron);
@@ -72,6 +64,8 @@
   font-size:.7rem;
   color:var(--chrome);
   line-height:1.6;
+  display:grid;
+  gap:.45rem;
 }
 
 /*CHECKOUT ITEM STYLE*/
@@ -80,6 +74,10 @@
   height:110px;
   object-fit:cover;
   border:1px solid var(--iron);
+}
+
+.checkout-item-info{
+  min-width:0;
 }
 
 .checkout-item-name{
@@ -102,6 +100,12 @@
   color:var(--mist);
   margin-top:.4rem;
 }
+
+.checkout-item-price{
+  color:var(--white);
+  font-weight:700;
+  white-space:nowrap;
+}
 /*empty lootbag*/
 .checkout-empty{
   padding:2rem;
@@ -115,6 +119,9 @@
   flex-direction:column;
   gap:.75rem;
   margin-bottom:1rem;
+  background:var(--carbon);
+  border:1px solid var(--iron);
+  padding:1.25rem;
 }
 
 .checkout-form-grid{
@@ -143,6 +150,10 @@
   letter-spacing:.12em;
 }
 
+.checkout-form select{
+  color:var(--chrome);
+}
+
 .checkout-form input:focus,
 .checkout-form select:focus{
   outline:none;
@@ -152,6 +163,13 @@
 
 .checkout-form .full{
   grid-column:1 / -1;
+}
+
+.checkout-required-note{
+  color:var(--mist);
+  font-size:.72rem;
+  line-height:1.5;
+  margin-top:-.15rem;
 }
 
 .checkout-error{
@@ -168,6 +186,29 @@
   line-height:1.5;
 }
 
+.checkout-total-main{
+  display:inline-flex;
+  align-items:baseline;
+  gap:.35rem;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.checkout-total-note{
+  color:var(--mist);
+  font-size:.66rem;
+  font-family:var(--font-body);
+  font-weight:600;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+#checkoutShipping{
+  color:var(--mist);
+  font-size:.72rem;
+  text-align:right;
+}
+
 .checkout-btn[disabled]{
   opacity:.55;
   cursor:not-allowed;
@@ -176,6 +217,43 @@
 @media (max-width: 720px){
   .checkout-form-grid{
     grid-template-columns:1fr;
+  }
+}
+
+.checkout-layout .checkout-items{
+  grid-column:1;
+}
+
+.checkout-layout .checkout-form{
+  grid-column:1;
+}
+
+.checkout-layout .checkout-summary{
+  grid-column:2;
+  grid-row:1 / span 2;
+}
+
+@media (max-width:768px){
+  .checkout-layout .checkout-items,
+  .checkout-layout .checkout-form,
+  .checkout-layout .checkout-summary{
+    grid-column:auto;
+    grid-row:auto;
+  }
+}
+
+@media (max-width:520px){
+  .checkout-item{
+    grid-template-columns:72px minmax(0,1fr);
+  }
+
+  .checkout-item-media img{
+    width:72px;
+    height:88px;
+  }
+
+  .checkout-item-price{
+    grid-column:2;
   }
 }
 #checkoutStep1,
@@ -193,9 +271,6 @@
 <header class="checkout-header">
   <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne">
 </header>
-  <div class="checkout-brand-tagline">
-  LILLIWAUP'S FINEST
-</div>
 
 
 
@@ -220,6 +295,7 @@
     <!--CHECKOUT FORM-->
 <form class="checkout-form" id="checkoutForm">
   <h2 class="checkout-section-title">Shipping</h2>
+  <p class="checkout-required-note">Required fields help us calculate shipping before secure payment.</p>
   <div class="checkout-form-grid">
     <input type="text" id="firstName" name="first_name" placeholder="First Name" autocomplete="given-name" required>
     <input type="text" id="lastName" name="last_name" placeholder="Last Name" autocomplete="family-name" required>
@@ -261,12 +337,12 @@
     <strong id="checkoutTotal">$0.00</strong>
   </div>
 
-<button class="checkout-btn" id="checkoutBtn" type="submit" form="checkoutForm">Continue to Payment</button>
+<button class="checkout-btn" id="checkoutBtn" type="submit" form="checkoutForm">Continue to Secure Payment</button>
 
 
   <div class="checkout-trust">
   <div>✔ Secure checkout powered by Square</div>
-  <div>✔ Orders ship within 4 weeks</div>
+  <div>✔ Most orders ship within 2-7 business days. Standard US delivery is usually 2-5 business days after shipment.</div>
 </div>
 </div>
 
@@ -301,15 +377,17 @@ function renderCheckout() {
 
     return `
       <div class="checkout-item">
-        <img src="${item.image}" />
-
-        <div>
-          <div>${item.name}</div>
-          <div>${item.color || ''} ${item.size || ''}</div>
-          <div>Qty: ${item.quantity}</div>
+        <div class="checkout-item-media">
+          <img src="${item.image}" alt="${item.name}" />
         </div>
 
-        <div>$${item.price}</div>
+        <div class="checkout-item-info">
+          <div class="checkout-item-name">${item.name}</div>
+          <div class="checkout-item-meta">${[item.color ? `Color: ${item.color}` : '', item.size ? `Size: ${item.size}` : ''].filter(Boolean).join(' · ')}</div>
+          <div class="checkout-item-qty">Qty: ${item.quantity}</div>
+        </div>
+
+        <div class="checkout-item-price">$${Number(item.price).toFixed(2)}</div>
       </div>
     `;
   }).join("");
@@ -317,7 +395,7 @@ function renderCheckout() {
   subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
   shippingEl.textContent = "Calculated before payment";
   taxEl.textContent = "—";
-  totalEl.textContent = `$${subtotal.toFixed(2)} + shipping`;
+  totalEl.innerHTML = `<span class="checkout-total-main">$${subtotal.toFixed(2)} <span class="checkout-total-note">+ shipping</span></span>`;
 }
 renderCheckout();
 </script>
@@ -348,7 +426,7 @@ if (continueBtn) {
 
 <script>
 function getCheckoutErrorMessage(data = {}) {
-  return data.message || data.error || "Checkout failed.";
+  return data.message || data.error || "Checkout could not be completed. Please check your details and try again.";
 }
 
 function getCheckoutAddressPayload() {
@@ -410,8 +488,6 @@ async function goToCheckout() {
 
     const data = await res.json();
 
-    console.log("SERVER RESPONSE:", data); // debug line
-
     if (!res.ok) {
       if (errorEl) errorEl.textContent = getCheckoutErrorMessage(data);
       return;
@@ -422,7 +498,7 @@ async function goToCheckout() {
       return;
     }
 
-    if (statusEl) statusEl.textContent = "Redirecting to Square...";
+    if (statusEl) statusEl.textContent = "Preparing secure checkout...";
     didRedirect = true;
     window.location.href = data.url;
 

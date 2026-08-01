@@ -278,6 +278,22 @@ Completed Scope
 - Collection matching uses the same title-prefix slug convention as shop filters.
 - Empty or failed product loading shows a friendly message instead of misleading shoppable collection cards.
 
+#### SHOP-001N Cart and checkout customer polish
+
+Status: Completed
+
+Description
+
+Clean up customer-facing Loot Bag and checkout display after the real shipping and fulfillment flow was approved.
+
+Completed Scope
+
+- Loot Bag no longer displays internal collection slugs while preserving collection metadata in cart storage.
+- Checkout header no longer shows location-specific tagline copy.
+- Checkout summary now presents `+ shipping` as a smaller helper note beside the subtotal estimate.
+- Outdated `Orders ship within 4 weeks` copy was replaced with the current short shipping timeline.
+- Checkout page form, item rows, summary, loading state, and helper copy were tightened for a more customer-ready experience.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization
