@@ -210,6 +210,49 @@
   margin-bottom:1.5rem;
 }
 
+.product-description p,
+.product-description ul,
+.product-description ol{
+  margin:0 0 .85rem;
+}
+
+.product-description p:last-child,
+.product-description ul:last-child,
+.product-description ol:last-child{
+  margin-bottom:0;
+}
+
+.product-description ul,
+.product-description ol{
+  padding-left:1.1rem;
+}
+
+.product-description li{
+  margin-bottom:.35rem;
+}
+
+.product-description strong,
+.product-description b{
+  color:var(--white);
+  font-weight:700;
+}
+
+.product-description em,
+.product-description i{
+  color:var(--chrome);
+}
+
+.product-description a{
+  color:var(--white);
+  text-decoration:underline;
+  text-decoration-color:var(--red);
+  text-underline-offset:3px;
+}
+
+.product-description a:hover{
+  color:var(--red);
+}
+
 .product-meta-row{
   display:grid;
   gap:1rem;
@@ -672,9 +715,9 @@
         </div>
 
         <div class="product-notes">
-          <div class="product-note"><strong>Made to order:</strong> Orders may be canceled within 12 hours of purchase. After that, your order may already be moving into production and can't be guaranteed cancelable.</div>
-          <div class="product-note"><strong>Shipping timeline:</strong> Most orders ship within 2-7 business days after production submission. Standard US shipping generally takes 2-5 business days after shipment. Delivery timing is estimated, not guaranteed.</div>
-          <div class="product-note"><strong>Returns &amp; issues:</strong> Because items are made to order, returns or exchanges aren't available for wrong size, wrong color, or change of mind. If your item arrives damaged or has a manufacturing issue, contact us within 30 days of delivery with clear photos so we can review replacement/refund options through Printify. <a href="https://help.printify.com/hc/en-us/articles/4483630299025-How-does-Printify-handle-refunds-and-returns" target="_blank" rel="noopener noreferrer">Printify refund &amp; return policy</a></div>
+          <div class="product-note"><strong>Shipping:</strong> Most orders ship within 2-7 business days. Standard US delivery is usually 2-5 business days after shipment.</div>
+          <div class="product-note"><strong>Cancellations:</strong> Orders may be canceled within 12 hours of purchase.</div>
+          <div class="product-note"><strong>Returns &amp; issues:</strong> For damaged items or order issues, review our return/refund guidance. <a href="https://help.printify.com/hc/en-us/articles/4483630299025-How-does-Printify-handle-refunds-and-returns" target="_blank" rel="noopener noreferrer">Return/refund details</a></div>
 
         </div>
       </div>
@@ -783,10 +826,164 @@ document.addEventListener("DOMContentLoaded", async () => {
     return div.innerHTML;
   }
 
-  function plainTextFromHtml(value = "") {
-    const div = document.createElement("div");
-    div.innerHTML = String(value);
-    return div.textContent.trim();
+  function hasHtmlMarkup(value = "") {
+    return /<\/?[a-z][\s\S]*>/i.test(String(value));
+  }
+
+  function isSafeDescriptionHref(value = "") {
+    try {
+      const url = new URL(value, window.location.origin);
+      return ["http:", "https:", "mailto:"].includes(url.protocol);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function appendInlineFormattedText(parent, text = "") {
+    const pattern = /(\*\*[^*]+\*\*|\*[^*]+\*)/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = pattern.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parent.append(document.createTextNode(text.slice(lastIndex, match.index)));
+      }
+
+      const token = match[0];
+      const isStrong = token.startsWith("**");
+      const element = document.createElement(isStrong ? "strong" : "em");
+      element.textContent = isStrong
+        ? token.slice(2, -2)
+        : token.slice(1, -1);
+      parent.append(element);
+      lastIndex = match.index + token.length;
+    }
+
+    if (lastIndex < text.length) {
+      parent.append(document.createTextNode(text.slice(lastIndex)));
+    }
+  }
+
+  function createDescriptionParagraph(text = "") {
+    const paragraph = document.createElement("p");
+    appendInlineFormattedText(paragraph, text.trim());
+    return paragraph;
+  }
+
+  function createDescriptionList(items = []) {
+    const list = document.createElement("ul");
+
+    items.forEach(item => {
+      const li = document.createElement("li");
+      appendInlineFormattedText(li, item.trim());
+      list.append(li);
+    });
+
+    return list;
+  }
+
+  function getPlainDescriptionFragment(value = "") {
+    const fragment = document.createDocumentFragment();
+    const normalized = String(value)
+      .replace(/\r\n/g, "\n")
+      .replace(/\s+\.:/g, "\n.:")
+      .trim();
+    const blocks = normalized.split(/\n{2,}/).map(block => block.trim()).filter(Boolean);
+
+    blocks.forEach(block => {
+      const lines = block.split(/\n/).map(line => line.trim()).filter(Boolean);
+      const bulletItems = [];
+      const paragraphLines = [];
+
+      lines.forEach(line => {
+        const bulletMatch = line.match(/^(?:[-*•]\s+|\.\:\s*)(.+)$/);
+
+        if (bulletMatch) {
+          bulletItems.push(bulletMatch[1]);
+        } else {
+          paragraphLines.push(line);
+        }
+      });
+
+      if (paragraphLines.length) {
+        fragment.append(createDescriptionParagraph(paragraphLines.join(" ")));
+      }
+
+      if (bulletItems.length) {
+        fragment.append(createDescriptionList(bulletItems));
+      }
+    });
+
+    return fragment;
+  }
+
+  function sanitizeDescriptionNode(node) {
+    const allowedTags = new Set(["P", "BR", "UL", "OL", "LI", "STRONG", "B", "EM", "I", "A"]);
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      return document.createTextNode(node.textContent || "");
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return document.createDocumentFragment();
+    }
+
+    const tagName = node.tagName;
+    const normalizedTag = /^H[1-6]$/.test(tagName) ? "P" : tagName;
+    const output = allowedTags.has(normalizedTag)
+      ? document.createElement(normalizedTag.toLowerCase())
+      : document.createDocumentFragment();
+
+    if (normalizedTag === "A" && output.nodeType === Node.ELEMENT_NODE) {
+      const href = node.getAttribute("href") || "";
+
+      if (isSafeDescriptionHref(href)) {
+        output.setAttribute("href", href);
+        output.setAttribute("target", "_blank");
+        output.setAttribute("rel", "noopener noreferrer");
+      }
+    }
+
+    Array.from(node.childNodes).forEach(child => {
+      output.append(sanitizeDescriptionNode(child));
+    });
+
+    return output;
+  }
+
+  function getSanitizedDescriptionFragment(value = "") {
+    const template = document.createElement("template");
+    const fragment = document.createDocumentFragment();
+    template.innerHTML = String(value);
+
+    Array.from(template.content.childNodes).forEach(node => {
+      fragment.append(sanitizeDescriptionNode(node));
+    });
+
+    return fragment;
+  }
+
+  function renderProductDescription(descriptionEl, productData = {}) {
+    const rawDescription = String(productData.description || productData.description_html || "").trim();
+    const fallback = "Official Big OG Wayne merch.";
+
+    descriptionEl.replaceChildren();
+
+    if (!rawDescription) {
+      descriptionEl.append(createDescriptionParagraph(fallback));
+      return;
+    }
+
+    const fragment = hasHtmlMarkup(rawDescription)
+      ? getSanitizedDescriptionFragment(rawDescription)
+      : getPlainDescriptionFragment(rawDescription);
+
+    if (!fragment.textContent.trim()) {
+      descriptionEl.append(createDescriptionParagraph(fallback));
+      return;
+    }
+
+    descriptionEl.append(fragment);
   }
 
   function findKnownCollection(value) {
@@ -1132,9 +1329,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (titleEl) titleEl.textContent = product.title;
     if (descriptionEl) {
-      descriptionEl.textContent =
-        plainTextFromHtml(product.description || product.description_html) ||
-        "Official Big OG Wayne merch.";
+      renderProductDescription(descriptionEl, product);
     }
     if (collectionLabel) {
       collectionLabel.textContent = formattedCollection;
