@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   square_order_id text,
   square_payment_id text,
   square_checkout_url text,
+  public_order_code text,
   printify_order_id text,
   printify_status text,
   printify_order_json jsonb,
@@ -28,6 +29,10 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   error_json jsonb
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS pending_orders_public_order_code_unique
+ON pending_orders (public_order_code)
+WHERE public_order_code IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS processed_square_events (
   event_id text PRIMARY KEY,
   pending_order_id uuid REFERENCES pending_orders(id),
@@ -45,7 +50,7 @@ CREATE TABLE IF NOT EXISTS processed_square_events (
 -- Fulfillment recovery checks
 --
 -- Recent pending orders:
--- select id, status, square_order_id, square_payment_id, printify_order_id, subtotal_cents, shipping_cents, total_cents, shipping_source, shipping_method, created_at, updated_at
+-- select id, public_order_code, status, square_order_id, square_payment_id, printify_order_id, subtotal_cents, shipping_cents, total_cents, shipping_source, shipping_method, created_at, updated_at
 -- from pending_orders
 -- order by created_at desc
 -- limit 20;

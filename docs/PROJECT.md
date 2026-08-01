@@ -184,8 +184,11 @@ Optional fulfillment environment variables:
 
 - `PRINTIFY_DEFAULT_SHIPPING_METHOD`: defaults to `1` for standard shipping. Checkout quotes this method from Printify before creating the Square payment link.
 - `PRINTIFY_SEND_SHIPPING_NOTIFICATION`: defaults to `true`; set to `false` to disable Printify shipment emails.
+- `SITE_BASE_URL`: public site origin used for Square checkout redirects and Square webhook notification URL fallbacks, for example `https://bigogwayne.com`.
 
 Checkout collects the buyer shipping address before payment, requests a live Printify shipping quote, stores that quote on the pending order, and charges the quoted shipping amount in Square as a `Shipping` service charge.
+
+Each new pending order also gets a customer-facing `public_order_code` such as `BOW-7KQ4M9`. Customers should use this code for confirmation and future order status lookup instead of internal database IDs.
 
 Deprecated fulfillment environment variables:
 

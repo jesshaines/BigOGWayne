@@ -39,6 +39,7 @@ Completed Scope
 
 - Homepage footer Shop section removed.
 - Redundant coming-soon support link list removed from the homepage footer.
+- Homepage footer brand block is centered with a single-line tagline and centered social links.
 - Essential footer content retained: branding, copyright, Olympic Embers Media credit, Privacy, and Terms.
 - Intentional TikTok and YouTube footer social links retained.
 
@@ -326,6 +327,25 @@ Completed Scope
 - Checkout summary now presents `+ shipping` as a smaller helper note beside the subtotal estimate.
 - Outdated `Orders ship within 4 weeks` copy was replaced with the current short shipping timeline.
 - Checkout page form, item rows, summary, loading state, and helper copy were tightened for a more customer-ready experience.
+
+#### SHOP-001O Public order numbers and confirmation redirect
+
+Status: Completed
+
+Description
+
+Phase 6A foundation for customer-facing order confirmation and future order lookup.
+
+Completed Scope
+
+- New pending orders receive a unique customer-facing `public_order_code` in the `BOW-XXXXXX` format.
+- Square payment links redirect customers back to `/order-confirmation.html?order=BOW-XXXXXX` after hosted checkout.
+- Added a branded order confirmation page that shows the public order number and concise shipping timing copy.
+- Internal pending order UUIDs remain used for Square reference and webhook matching, but are not shown as the customer order number.
+
+Future Enhancement
+
+- Phase 6B will add customer order status lookup by public order number.
 
 ### 📋 Backlog
 

@@ -1863,14 +1863,23 @@ button{font-family:inherit;cursor:pointer;border:none;}
   grid-template-columns:1fr;
   gap:2rem;
   align-items:start;
+  justify-items:center;
   min-width:0;
 }
 @media(max-width:768px){
   .footer-main{grid-template-columns:1fr;gap:2.5rem;}
 }
-.footer-brand{display:flex;flex-direction:column;gap:1rem;max-width:320px;}
+.footer-brand{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:1rem;
+  max-width:100%;
+  text-align:center;
+}
 .footer-logo{
-  height:20%;
+  width:min(180px,60vw);
+  height:auto;
   filter:drop-shadow(0 0 16px rgba(184,154,94,0.2));
 }
 .footer-tagline{
@@ -1878,11 +1887,9 @@ button{font-family:inherit;cursor:pointer;border:none;}
   color:#d8c59a;
   line-height:1.65;
   font-style:italic;
+  white-space:nowrap;
 }
-.footer-tagline span{
-  display:block;
-}
-.footer-social{display:flex;gap:0.625rem;margin-top:0.5rem;}
+.footer-social{display:flex;justify-content:center;gap:0.625rem;margin-top:0.25rem;}
 .footer-social-btn{
   display:flex;align-items:center;justify-content:center;
   width:34px;height:34px;
@@ -1900,6 +1907,9 @@ button{font-family:inherit;cursor:pointer;border:none;}
   border-color:#b89a5e;
   color:var(--white);
   box-shadow:0 0 14px rgba(184,154,94,0.24), 0 0 10px rgba(204,0,0,0.16);
+}
+@media(max-width:480px){
+  .footer-tagline{white-space:normal;}
 }
 .footer-bottom{
   border-top:1px solid rgba(184,154,94,0.16);
@@ -2554,14 +2564,10 @@ button{font-family:inherit;cursor:pointer;border:none;}
   <div class="footer-main">
     <div class="footer-brand">
       <img class="footer-logo" src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne Logo">
-      <p class="footer-tagline">
-        <span>More than merch.</span>
-        <span>Rep the music.</span>
-        <span>Follow the movement.</span>
-      </p>
+      <p class="footer-tagline">More than merch. Rep the music. Follow the movement.</p>
       <div class="footer-social">
-        <a href="https://www.tiktok.com/@wayneherr1" target="_blank" class="footer-social-btn" aria-label="TikTok">TT</a>
         <a href="https://www.youtube.com/@Big-OG-Wayne" target="_blank" class="footer-social-btn" aria-label="YouTube">YT</a>
+        <a href="https://www.tiktok.com/@wayneherr1" target="_blank" class="footer-social-btn" aria-label="TikTok">TT</a>
       </div>
     </div>
   </div>

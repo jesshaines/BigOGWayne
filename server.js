@@ -37,6 +37,9 @@ const DATABASE_SSL_ENABLED =
   Boolean(DATABASE_URL) &&
   !/localhost|127\.0\.0\.1/i.test(DATABASE_URL) &&
   process.env.DATABASE_SSL !== "false";
+const SITE_BASE_URL = process.env.SITE_BASE_URL
+  ? process.env.SITE_BASE_URL.replace(/\/+$/, "")
+  : "";
 
 console.log("Square environment:", SQUARE_RESOLVED_ENVIRONMENT);
 console.log("Square base URL:", SQUARE_BASE_URL);
@@ -70,6 +73,7 @@ CREATE TABLE IF NOT EXISTS pending_orders (
   square_order_id text,
   square_payment_id text,
   square_checkout_url text,
+  public_order_code text,
   printify_order_id text,
   printify_status text,
   printify_order_json jsonb,
@@ -92,6 +96,7 @@ CREATE TABLE IF NOT EXISTS pending_orders (
 );
 
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS square_payment_id text;
+ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS public_order_code text;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS paid_at timestamptz;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS payment_json jsonb;
 ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS shipping_cents integer;
@@ -125,6 +130,10 @@ ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS result text;
 ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS square_payment_id text;
 ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS square_order_id text;
 ALTER TABLE processed_square_events ADD COLUMN IF NOT EXISTS error_json jsonb;
+
+CREATE UNIQUE INDEX IF NOT EXISTS pending_orders_public_order_code_unique
+ON pending_orders (public_order_code)
+WHERE public_order_code IS NOT NULL;
 `;
 
 const FULFILLMENT_SCHEMA_SQL = `
@@ -172,6 +181,8 @@ function buildSquareShippingServiceCharge(shippingCents) {
 
 function buildSquarePaymentLinkRequest({
   pendingOrderId,
+  publicOrderCode,
+  redirectUrl,
   lineItems,
   shippingCents,
   addressTo = {}
@@ -182,12 +193,16 @@ function buildSquarePaymentLinkRequest({
       locationId: SQUARE_LOCATION_ID,
       referenceId: pendingOrderId,
       metadata: {
-        pending_order_id: pendingOrderId
+        pending_order_id: pendingOrderId,
+        public_order_code: publicOrderCode
       },
       lineItems,
       serviceCharges: [
         buildSquareShippingServiceCharge(shippingCents)
       ]
+    },
+    checkoutOptions: {
+      redirectUrl
     },
     prePopulatedData: buildSquarePrePopulatedData(addressTo)
   };
@@ -246,6 +261,7 @@ function logSquarePaymentLinkRequestShape({ request = {}, subtotalCents = 0, shi
     total_cents: totalCents,
     checkoutOptionsPresent: hasObjectData(checkoutOptions),
     askForShippingAddress: checkoutOptions.askForShippingAddress === true,
+    redirectUrlPresent: Boolean(checkoutOptions.redirectUrl),
     checkoutOptionsIncludesShippingFee: Boolean(checkoutOptions.shippingFee),
     prePopulatedDataPresent: hasObjectData(prePopulatedData),
     prePopulatedBuyerEmailPresent: Boolean(prePopulatedData.buyerEmail),
@@ -303,7 +319,7 @@ async function initializeDatabase() {
 
   await dbPool.query(PENDING_ORDER_SCHEMA_SQL);
   await dbPool.query(FULFILLMENT_SCHEMA_SQL);
-  console.log("Database initialized: pending_orders and fulfillment columns ready");
+  console.log("Database initialized: pending_orders, public order codes, and fulfillment columns ready");
 }
 
 function isVariantPurchasable(variant = {}) {
@@ -371,6 +387,37 @@ function createCustomerFromCheckoutAddress(addressTo = {}) {
     email: addressTo.email,
     phone: addressTo.phone
   };
+}
+
+function generatePublicOrderCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.randomBytes(6);
+  const suffix = Array.from(bytes, byte => alphabet[byte % alphabet.length]).join("");
+
+  return `BOW-${suffix}`;
+}
+
+function isUniqueConstraintError(error = {}) {
+  return error.code === "23505";
+}
+
+function getRequestBaseUrl(req) {
+  if (SITE_BASE_URL) return SITE_BASE_URL;
+
+  const forwardedProto = String(req.get("x-forwarded-proto") || "").split(",")[0].trim();
+  const protocol = forwardedProto || req.protocol || "http";
+  const host = req.get("host");
+
+  return host ? `${protocol}://${host}` : "";
+}
+
+function buildOrderConfirmationUrl(publicOrderCode, req) {
+  const baseUrl = getRequestBaseUrl(req);
+  const query = new URLSearchParams({ order: publicOrderCode });
+
+  if (!baseUrl) return `/order-confirmation.html?${query.toString()}`;
+
+  return `${baseUrl}/order-confirmation.html?${query.toString()}`;
 }
 
 function validateCheckoutAddress(addressTo = {}) {
@@ -1354,39 +1401,57 @@ async function createPendingOrder({
     throw new Error("DATABASE_URL is required for checkout pending order storage.");
   }
 
-  const pendingOrderId = crypto.randomUUID();
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const pendingOrderId = crypto.randomUUID();
+    const publicOrderCode = generatePublicOrderCode();
 
-  await dbPool.query(
-    `INSERT INTO pending_orders (
-      id,
-      status,
-      currency,
-      subtotal_cents,
-      shipping_cents,
-      total_cents,
-      shipping_quote_json,
-      shipping_source,
-      shipping_method,
-      line_items_json,
-      customer_json,
-      shipping_json
-    )
-    VALUES ($1, 'pending_payment', 'USD', $2, $3, $4, $5::jsonb, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb)`,
-    [
-      pendingOrderId,
-      subtotalCents,
-      shippingCents,
-      totalCents,
-      JSON.stringify(sanitizeLogBody(shippingQuote)),
-      shippingSource,
-      shippingMethod,
-      JSON.stringify(pendingLineItems),
-      JSON.stringify(sanitizeLogBody(customer)),
-      JSON.stringify(sanitizeLogBody(shipping))
-    ]
-  );
+    try {
+      await dbPool.query(
+        `INSERT INTO pending_orders (
+          id,
+          public_order_code,
+          status,
+          currency,
+          subtotal_cents,
+          shipping_cents,
+          total_cents,
+          shipping_quote_json,
+          shipping_source,
+          shipping_method,
+          line_items_json,
+          customer_json,
+          shipping_json
+        )
+        VALUES ($1, $2, 'pending_payment', 'USD', $3, $4, $5, $6::jsonb, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb)`,
+        [
+          pendingOrderId,
+          publicOrderCode,
+          subtotalCents,
+          shippingCents,
+          totalCents,
+          JSON.stringify(sanitizeLogBody(shippingQuote)),
+          shippingSource,
+          shippingMethod,
+          JSON.stringify(pendingLineItems),
+          JSON.stringify(sanitizeLogBody(customer)),
+          JSON.stringify(sanitizeLogBody(shipping))
+        ]
+      );
 
-  return pendingOrderId;
+      return {
+        pendingOrderId,
+        publicOrderCode
+      };
+    } catch (error) {
+      if (isUniqueConstraintError(error) && attempt < 4) {
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw new Error("Unable to generate a unique public order code.");
 }
 
 function getSquarePaymentLink(response = {}) {
@@ -2010,9 +2075,10 @@ app.post("/create-checkout", async (req, res) => {
 
     const totalCents = subtotalCents + shippingCents;
     let pendingOrderId;
+    let publicOrderCode;
 
     try {
-      pendingOrderId = await createPendingOrder({
+      const pendingOrder = await createPendingOrder({
         pendingLineItems,
         subtotalCents,
         shippingCents,
@@ -2023,6 +2089,8 @@ app.post("/create-checkout", async (req, res) => {
         shippingSource: "printify_calculated",
         shippingMethod
       });
+      pendingOrderId = pendingOrder.pendingOrderId;
+      publicOrderCode = pendingOrder.publicOrderCode;
     } catch (error) {
       console.error("PENDING ORDER CREATE ERROR", {
         message: error.message
@@ -2036,8 +2104,11 @@ app.post("/create-checkout", async (req, res) => {
     }
 
     let response;
+    const redirectUrl = buildOrderConfirmationUrl(publicOrderCode, req);
     const paymentLinkRequest = buildSquarePaymentLinkRequest({
       pendingOrderId,
+      publicOrderCode,
+      redirectUrl,
       lineItems,
       shippingCents,
       addressTo
