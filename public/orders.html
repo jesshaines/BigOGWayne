@@ -316,6 +316,7 @@
 
         <div class="orders-actions">
           <button class="btn-primary" type="submit" id="orderLookupButton">Check order status</button>
+          <a href="/contact.html" class="btn-secondary" id="contactSupportLink">Contact support</a>
           <a href="/shop/" class="btn-secondary">Continue shopping</a>
         </div>
       </form>
@@ -388,6 +389,7 @@ const resultStatusTitleEl = document.getElementById("resultStatusTitle");
 const resultStatusMessageEl = document.getElementById("resultStatusMessage");
 const orderSummaryEl = document.getElementById("orderSummary");
 const orderItemsEl = document.getElementById("orderItems");
+const contactSupportLink = document.getElementById("contactSupportLink");
 
 function formatMoneyFromCents(cents) {
   if (!Number.isFinite(Number(cents))) return "—";
@@ -519,8 +521,16 @@ const queryOrderCode = params.get("order");
 
 if (queryOrderCode) {
   orderCodeInput.value = queryOrderCode.trim().toUpperCase();
+  contactSupportLink.href = `/contact.html?order=${encodeURIComponent(orderCodeInput.value)}`;
   emailInput.focus();
 }
+
+orderCodeInput.addEventListener("input", () => {
+  const orderCode = orderCodeInput.value.trim().toUpperCase();
+  contactSupportLink.href = orderCode
+    ? `/contact.html?order=${encodeURIComponent(orderCode)}`
+    : "/contact.html";
+});
 
 form.addEventListener("submit", event => {
   event.preventDefault();

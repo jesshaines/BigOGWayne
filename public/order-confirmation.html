@@ -179,6 +179,7 @@
 
     <div class="confirmation-actions">
       <a href="/orders.html" class="btn-primary" id="orderStatusLink">Check order status</a>
+      <a href="/contact.html" class="btn-secondary" id="contactSupportLink">Contact support</a>
       <a href="/shop/" class="btn-secondary">Continue shopping</a>
     </div>
   </section>
@@ -226,12 +227,14 @@ const orderCode = new URLSearchParams(window.location.search).get("order");
 const orderCodeEl = document.getElementById("orderCode");
 const orderCodeBlock = document.getElementById("orderCodeBlock");
 const orderStatusLink = document.getElementById("orderStatusLink");
+const contactSupportLink = document.getElementById("contactSupportLink");
 const confirmationCopy = document.getElementById("confirmationCopy");
 
 if (orderCode) {
   orderCodeEl.textContent = orderCode;
   orderCodeBlock.hidden = false;
   orderStatusLink.href = `/orders.html?order=${encodeURIComponent(orderCode)}`;
+  contactSupportLink.href = `/contact.html?order=${encodeURIComponent(orderCode)}`;
 } else {
   confirmationCopy.textContent = "Your payment may still be processing. Check your Square receipt or contact us for help.";
 }

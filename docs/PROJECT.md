@@ -192,6 +192,14 @@ Each new pending order also gets a customer-facing `public_order_code` such as `
 
 Customer order lookup lives at `/orders.html` and uses `POST /api/order-status`. Lookup requires both the public order code and the customer email address, and returns only customer-safe order status details.
 
+Customer contact lives at `/contact.html` and uses `POST /api/contact` to send order, merch, and business inquiries through Resend.
+
+Contact email environment variables:
+
+- `RESEND_API_KEY`: server-side Resend API key for sending contact form email.
+- `CONTACT_TO_EMAIL`: support inbox receiving contact messages, for example `bigogwayne.merch@gmail.com`.
+- `CONTACT_FROM_EMAIL`: verified sender address used by Resend, for example `support@bigogwayne.com`.
+
 Deprecated fulfillment environment variables:
 
 - `PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS`: no longer used by active checkout. Shipping is calculated from Printify instead of a configured flat fee.

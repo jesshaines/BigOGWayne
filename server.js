@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
 import { SquareClient, WebhooksHelper } from "square";
+import { Resend } from "resend";
 import axios from "axios";
 import pg from "pg";
 
@@ -40,6 +41,9 @@ const DATABASE_SSL_ENABLED =
 const SITE_BASE_URL = process.env.SITE_BASE_URL
   ? process.env.SITE_BASE_URL.replace(/\/+$/, "")
   : "";
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL;
+const CONTACT_FROM_EMAIL = process.env.CONTACT_FROM_EMAIL;
 
 console.log("Square environment:", SQUARE_RESOLVED_ENVIRONMENT);
 console.log("Square base URL:", SQUARE_BASE_URL);
@@ -49,6 +53,7 @@ const squareClient = new SquareClient({
   token: process.env.SQUARE_ACCESS_TOKEN,
   baseUrl: SQUARE_BASE_URL,
 });
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 const { Pool } = pg;
 const dbPool = DATABASE_URL
@@ -63,6 +68,22 @@ const CHECKOUT_STALE_CART_MESSAGE =
   "Some items changed or are no longer available. Please refresh your Loot Bag and try again.";
 const CHECKOUT_TEMPORARY_UNAVAILABLE_MESSAGE =
   "Checkout is temporarily unavailable. Please try again in a few minutes.";
+const CONTACT_FAILURE_MESSAGE =
+  "Something went wrong sending your message. Please try again in a few minutes.";
+const CONTACT_SUCCESS_RESPONSE = {
+  success: true,
+  message: "Thanks — your message was sent. We'll get back to you soon."
+};
+const CONTACT_ALLOWED_REASONS = new Set([
+  "Order question",
+  "Shipping/status question",
+  "Damaged item or issue",
+  "Collab / booking / business",
+  "Other"
+]);
+const CONTACT_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const CONTACT_RATE_LIMIT_MAX = 5;
+const contactRateLimit = new Map();
 const PENDING_ORDER_SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS pending_orders (
   id uuid PRIMARY KEY,
@@ -426,6 +447,138 @@ function normalizePublicOrderCode(value = "") {
 
 function normalizeLookupEmail(value = "") {
   return String(value || "").trim().toLowerCase();
+}
+
+function normalizeContactOrderCode(value = "") {
+  return normalizePublicOrderCode(value);
+}
+
+function isValidEmail(value = "") {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[char]));
+}
+
+function getContactClientIp(req) {
+  return String(req.get("x-forwarded-for") || req.ip || "")
+    .split(",")[0]
+    .trim() || "unknown";
+}
+
+function isContactRateLimited(req) {
+  const ip = getContactClientIp(req);
+  const now = Date.now();
+  const entry = contactRateLimit.get(ip);
+
+  if (!entry || now - entry.startedAt > CONTACT_RATE_LIMIT_WINDOW_MS) {
+    contactRateLimit.set(ip, {
+      startedAt: now,
+      count: 1
+    });
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > CONTACT_RATE_LIMIT_MAX;
+}
+
+function validateContactPayload(body = {}) {
+  const payload = {
+    name: String(body.name || "").trim(),
+    email: normalizeLookupEmail(body.email),
+    orderCode: normalizeContactOrderCode(body.orderCode),
+    reason: String(body.reason || "").trim(),
+    message: String(body.message || "").trim(),
+    website: String(body.website || "").trim(),
+    company: String(body.company || "").trim()
+  };
+
+  if (!payload.name) {
+    return { error: "Please enter your name.", payload };
+  }
+
+  if (payload.name.length > 100) {
+    return { error: "Please keep your name under 100 characters.", payload };
+  }
+
+  if (!payload.email) {
+    return { error: "Please enter your email address.", payload };
+  }
+
+  if (payload.email.length > 254 || !isValidEmail(payload.email)) {
+    return { error: "Please enter a valid email address.", payload };
+  }
+
+  if (payload.orderCode.length > 32) {
+    return { error: "Please check your order number and try again.", payload };
+  }
+
+  if (!payload.reason || !CONTACT_ALLOWED_REASONS.has(payload.reason)) {
+    return { error: "Please choose a reason for your message.", payload };
+  }
+
+  if (!payload.message) {
+    return { error: "Please enter a message.", payload };
+  }
+
+  if (payload.message.length > 3000) {
+    return { error: "Please keep your message under 3000 characters.", payload };
+  }
+
+  return { payload };
+}
+
+function isContactEmailConfigured() {
+  return Boolean(resend && CONTACT_TO_EMAIL && CONTACT_FROM_EMAIL);
+}
+
+function buildContactEmailPayload(payload = {}) {
+  const timestamp = new Date().toISOString();
+  const orderLine = payload.orderCode ? `Order number: ${payload.orderCode}\n` : "";
+  const text = [
+    "Big OG Wayne contact form",
+    "",
+    `Name: ${payload.name}`,
+    `Customer email: ${payload.email}`,
+    orderLine.trim(),
+    `Reason: ${payload.reason}`,
+    `Timestamp: ${timestamp}`,
+    "Site/source: BigOGWayne.com contact form",
+    "",
+    "Message:",
+    payload.message
+  ].filter(Boolean).join("\n");
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;">
+      <h2>Big OG Wayne contact form</h2>
+      <p><strong>Name:</strong> ${escapeHtml(payload.name)}</p>
+      <p><strong>Customer email:</strong> ${escapeHtml(payload.email)}</p>
+      ${payload.orderCode ? `<p><strong>Order number:</strong> ${escapeHtml(payload.orderCode)}</p>` : ""}
+      <p><strong>Reason:</strong> ${escapeHtml(payload.reason)}</p>
+      <p><strong>Timestamp:</strong> ${escapeHtml(timestamp)}</p>
+      <p><strong>Site/source:</strong> BigOGWayne.com contact form</p>
+      <hr>
+      <p><strong>Message:</strong></p>
+      <p>${escapeHtml(payload.message).replace(/\n/g, "<br>")}</p>
+    </div>
+  `;
+
+  return {
+    from: `Big OG Wayne Support <${CONTACT_FROM_EMAIL}>`,
+    to: CONTACT_TO_EMAIL,
+    replyTo: payload.email,
+    subject: `Big OG Wayne contact form: ${payload.reason}`,
+    text,
+    html
+  };
 }
 
 function getFriendlyOrderStatus(status = "") {
@@ -2030,6 +2183,60 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
 });
 
 app.use(express.json());
+
+app.post("/api/contact", async (req, res) => {
+  const honeypotValue = String(req.body?.website || req.body?.company || "").trim();
+
+  if (honeypotValue) {
+    return res.json(CONTACT_SUCCESS_RESPONSE);
+  }
+
+  const { error, payload } = validateContactPayload(req.body || {});
+
+  if (error) {
+    return res.status(400).json({
+      error: "Validation failed",
+      message: error
+    });
+  }
+
+  if (isContactRateLimited(req)) {
+    return res.status(429).json({
+      error: "Too many contact attempts",
+      message: "Please wait a few minutes before sending another message."
+    });
+  }
+
+  if (!isContactEmailConfigured()) {
+    console.error("CONTACT EMAIL CONFIGURATION ERROR", {
+      resendApiKeyPresent: Boolean(RESEND_API_KEY),
+      contactToEmailPresent: Boolean(CONTACT_TO_EMAIL),
+      contactFromEmailPresent: Boolean(CONTACT_FROM_EMAIL)
+    });
+
+    return res.status(503).json({
+      error: "Contact email unavailable",
+      message: CONTACT_FAILURE_MESSAGE
+    });
+  }
+
+  try {
+    await resend.emails.send(buildContactEmailPayload(payload));
+    return res.json(CONTACT_SUCCESS_RESPONSE);
+  } catch (error) {
+    console.error("CONTACT EMAIL SEND ERROR", {
+      message: error.message,
+      status: error.response?.status || error.statusCode || null,
+      response: error.response?.data ? sanitizeLogBody(error.response.data) : null,
+      noResponseReceived: !error.response
+    });
+
+    return res.status(502).json({
+      error: "Contact email failed",
+      message: CONTACT_FAILURE_MESSAGE
+    });
+  }
+});
 
 app.post("/api/order-status", async (req, res) => {
   const orderCode = normalizePublicOrderCode(req.body?.orderCode);

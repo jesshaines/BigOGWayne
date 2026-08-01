@@ -364,6 +364,22 @@ Completed Scope
 - Internal pending order UUIDs, Square IDs, Printify IDs, raw JSON blobs, and error details are not exposed.
 - Existing Orders/Track Orders shell links now route to `/orders.html`.
 
+#### SHOP-001Q Customer contact form
+
+Status: Completed
+
+Description
+
+Add a customer-facing contact/support page using Resend email delivery.
+
+Completed Scope
+
+- Added `/contact.html` with a branded form for order, shipping, merch, business, and other messages.
+- Added `POST /api/contact` with server-side validation, honeypot spam protection, and lightweight IP rate limiting.
+- Contact emails are sent through Resend using `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, and `CONTACT_FROM_EMAIL`.
+- Contact form email uses the customer email as Reply-To and avoids exposing provider details to the browser.
+- Order confirmation and order lookup pages link to the contact form and can prefill the order number.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization
