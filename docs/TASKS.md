@@ -246,6 +246,23 @@ Completed Scope
 - Checkout now calculates standard shipping from Printify before Square payment link creation.
 - Square hosted checkout charges the calculated Printify shipping quote as a Square order service charge and webhook amount verification uses `total_cents`.
 
+#### SHOP-001L Product page fulfillment policy polish
+
+Status: Completed
+
+Description
+
+Clarify product-page fulfillment, cancellation, and returns policy copy now that checkout and Printify fulfillment are connected.
+
+Completed Scope
+
+- Product pages now show made-to-order cancellation copy with a customer-facing 12-hour cancellation window.
+- Product pages separate production/fulfillment timing from standard US shipping timing.
+- Product pages explain that delivery timing is estimated, not guaranteed.
+- Product pages note that made-to-order items cannot be returned or exchanged for wrong size, wrong color, or change of mind.
+- Product pages link to Printify refund and return policy guidance for damaged items or manufacturing issues.
+- Related-products grid background no longer creates a mismatched blank block when fewer related cards are shown.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

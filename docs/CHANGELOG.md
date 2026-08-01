@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Product pages now show clearer made-to-order, cancellation, shipping timeline, and returns/refunds information.
+- Fixed the related-products blank background mismatch on product pages with fewer related items.
 - Checkout now calculates standard shipping from Printify before creating Square payment links, stores the quote on the pending order, and charges the customer shipping as a Square order service charge.
 - Square payment links now prefill hosted checkout with the buyer email, phone, and shipping address entered on BigOGWayne.com.
 - Square payment links no longer ask Square to collect a separate shipping method, avoiding the confusing `Shipping Free` checkout display.

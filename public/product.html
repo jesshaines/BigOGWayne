@@ -333,6 +333,17 @@
   font-weight:600;
 }
 
+.product-note a{
+  color:var(--white);
+  text-decoration:underline;
+  text-decoration-color:var(--red);
+  text-underline-offset:3px;
+}
+
+.product-note a:hover{
+  color:var(--red);
+}
+
 .product-extra{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -433,6 +444,13 @@
   box-sizing:border-box;
 }
 
+#related-products.related-products-grid{
+  grid-template-columns:repeat(auto-fit,minmax(150px,220px));
+  justify-content:start;
+  background:transparent;
+  border:0;
+}
+
 .related-products-grid .shop-card{
   min-width:0;
 }
@@ -524,6 +542,10 @@
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 
+  #related-products.related-products-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
   .product-page {
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -535,6 +557,10 @@
 
 @media (max-width:520px){
   .related-products-grid{
+    grid-template-columns:1fr;
+  }
+
+  #related-products.related-products-grid{
     grid-template-columns:1fr;
   }
 }
@@ -646,9 +672,9 @@
         </div>
 
         <div class="product-notes">
-          <div class="product-note"><strong>Turnaround:</strong> Orders typically ship within 4 weeks.</div>
-          <div class="product-note"><strong>Cancellations:</strong> Orders may be cancelled within 12 hours.</div>
-          <div class="product-note"><strong>Returns:</strong> Unworn and unwashed items with tags may be returned within 30 days after pre-authorization.</div>
+          <div class="product-note"><strong>Made to order:</strong> Orders may be canceled within 12 hours of purchase. After that, your order may already be moving into production and can't be guaranteed cancelable.</div>
+          <div class="product-note"><strong>Shipping timeline:</strong> Most orders ship within 2-7 business days after production submission. Standard US shipping generally takes 2-5 business days after shipment. Delivery timing is estimated, not guaranteed.</div>
+          <div class="product-note"><strong>Returns &amp; issues:</strong> Because items are made to order, returns or exchanges aren't available for wrong size, wrong color, or change of mind. If your item arrives damaged or has a manufacturing issue, contact us within 30 days of delivery with clear photos so we can review replacement/refund options through Printify. <a href="https://help.printify.com/hc/en-us/articles/4483630299025-How-does-Printify-handle-refunds-and-returns" target="_blank" rel="noopener noreferrer">Printify refund &amp; return policy</a></div>
 
         </div>
       </div>
