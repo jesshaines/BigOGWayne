@@ -262,6 +262,22 @@ Completed Scope
 - Customer-facing product policy copy avoids internal fulfillment settings and overly long policy language.
 - Related-products grid background no longer creates a mismatched blank block when fewer related cards are shown.
 
+#### SHOP-001M Collections availability polish
+
+Status: Completed
+
+Description
+
+Hide collection cards from the Collections page when a collection has no currently purchasable Printify products.
+
+Completed Scope
+
+- Collections page now fetches the live `/products` list before rendering cards.
+- Collection cards render only when at least one matching product has a purchasable variant.
+- Product availability uses the same launch logic as shop/product pages: visible product plus a variant where `is_enabled !== false` and `is_available !== false`.
+- Collection matching uses the same title-prefix slug convention as shop filters.
+- Empty or failed product loading shows a friendly message instead of misleading shoppable collection cards.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

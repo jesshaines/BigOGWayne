@@ -60,6 +60,16 @@
   min-width:0;
 }
 
+.collections-status{
+  color:var(--mist);
+  background:var(--carbon);
+  border:1px solid var(--iron);
+  font-size:.92rem;
+  line-height:1.6;
+  max-width:620px;
+  padding:1rem;
+}
+
 .collection-card{
   width:100%;
   max-width:360px;
@@ -269,11 +279,84 @@ function collectionUrl(collection = {}) {
   return `/shop/?collection=${encodeURIComponent(collection.id || "")}`;
 }
 
-function renderCollections() {
+function getProductsFromResponse(json) {
+  if (Array.isArray(json)) return json;
+  if (Array.isArray(json?.data)) return json.data;
+  if (Array.isArray(json?.products)) return json.products;
+  return [];
+}
+
+function slugify(value = "") {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function splitProductTitle(product = {}) {
+  const title = String(product.title || product.name || "").trim();
+  const titleMatch = title.match(/^(.+?)\s+[—–-]\s+(.+)$/);
+
+  return {
+    collectionName: titleMatch ? titleMatch[1].trim() : "",
+    productTypeText: titleMatch ? titleMatch[2].trim() : title
+  };
+}
+
+function inferProductCollection(product = {}) {
+  const { collectionName } = splitProductTitle(product);
+  if (!collectionName) return null;
+
+  return {
+    slug: slugify(collectionName),
+    label: collectionName
+  };
+}
+
+function isProductVisible(product = {}) {
+  return product?.visible !== false && product?.is_deleted !== true && product?.deleted !== true;
+}
+
+function isVariantEnabled(variant = {}) {
+  return variant?.is_enabled !== false;
+}
+
+function isVariantAvailable(variant = {}) {
+  return variant?.is_available !== false;
+}
+
+function isVariantPurchasable(variant = {}) {
+  return isVariantEnabled(variant) && isVariantAvailable(variant);
+}
+
+function hasPurchasableVariant(product = {}) {
+  return Array.isArray(product.variants) && product.variants.some(isVariantPurchasable);
+}
+
+function isProductPurchasable(product = {}) {
+  return isProductVisible(product) && hasPurchasableVariant(product);
+}
+
+function getAvailableCollectionSlugs(products = []) {
+  return new Set(
+    products
+      .filter(isProductPurchasable)
+      .map(product => inferProductCollection(product)?.slug)
+      .filter(Boolean)
+  );
+}
+
+function renderCollections(collections = []) {
   const target = document.getElementById("collectionsGrid");
-  const collections = homepageConfig.collections || [];
 
   if (!target) return;
+
+  if (!collections.length) {
+    target.innerHTML = `<div class="collections-status">No shoppable collections are available right now. Check back soon.</div>`;
+    return;
+  }
 
   target.innerHTML = collections.map(collection => `
     <a class="collection-card" href="${collectionUrl(collection)}" aria-label="Shop ${escapeHtml(collection.name)} merch">
@@ -292,7 +375,42 @@ function renderCollections() {
   `).join("");
 }
 
-renderCollections();
+async function loadCollections() {
+  const target = document.getElementById("collectionsGrid");
+
+  if (target) {
+    target.innerHTML = `<div class="collections-status">Loading collections...</div>`;
+  }
+
+  try {
+    const response = await fetch("/products");
+    const json = await response.json();
+
+    if (!response.ok) {
+      console.error("Failed to load /products for collections:", {
+        status: response.status,
+        statusText: response.statusText,
+        response: json
+      });
+      renderCollections([]);
+      return;
+    }
+
+    const products = getProductsFromResponse(json);
+    const availableSlugs = getAvailableCollectionSlugs(products);
+    const configuredCollections = homepageConfig.collections || [];
+    const visibleCollections = configuredCollections.filter(collection =>
+      availableSlugs.has(slugify(collection.id || collection.name))
+    );
+
+    renderCollections(visibleCollections);
+  } catch (error) {
+    console.error("Unable to load collections:", error);
+    renderCollections([]);
+  }
+}
+
+loadCollections();
 </script>
 
 <script src="/assets/js/globalcart.js"></script>
