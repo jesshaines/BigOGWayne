@@ -5,7 +5,7 @@
 - Product descriptions now preserve readable formatting.
 - Product pages now show concise shipping, cancellation, and return/refund information.
 - Fixed the related-products blank background mismatch on product pages with fewer related items.
-- Collections page now hides collection cards that have no currently purchasable merch.
+- Homepage and Collections page now hide collection cards with no available merch.
 - Loot Bag no longer shows internal collection slugs.
 - Checkout page visual/customer experience improved.
 - Checkout shipping timeline copy updated.

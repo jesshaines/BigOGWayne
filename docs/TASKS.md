@@ -9,6 +9,22 @@
 - [x] Repository review
 - [x] Homepage implementation plan
 
+#### HP-006 Homepage collection availability polish
+
+Status: Completed
+
+Description
+
+Hide homepage collection cards when a collection has no currently purchasable Printify products.
+
+Completed Scope
+
+- Homepage collection cards now load after checking the live `/products` list.
+- Homepage and Collections page share the same collection availability helper.
+- Collection cards render only when at least one matching product has a purchasable variant.
+- Product availability uses visible product checks plus variants where `is_enabled !== false` and `is_available !== false`.
+- Homepage and Collections page now both avoid showing empty merch collections as shoppable.
+
 ---
 
 ### 🚧 In Progress

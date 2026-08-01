@@ -264,6 +264,10 @@
 
 <script type="module">
 import { homepageConfig } from "/assets/js/homepage.config.js";
+import {
+  filterCollectionsByPurchasableProducts,
+  getProductsFromResponse
+} from "/assets/js/collection-availability.js";
 
 function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, char => ({
@@ -277,75 +281,6 @@ function escapeHtml(value = "") {
 
 function collectionUrl(collection = {}) {
   return `/shop/?collection=${encodeURIComponent(collection.id || "")}`;
-}
-
-function getProductsFromResponse(json) {
-  if (Array.isArray(json)) return json;
-  if (Array.isArray(json?.data)) return json.data;
-  if (Array.isArray(json?.products)) return json.products;
-  return [];
-}
-
-function slugify(value = "") {
-  return String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function splitProductTitle(product = {}) {
-  const title = String(product.title || product.name || "").trim();
-  const titleMatch = title.match(/^(.+?)\s+[—–-]\s+(.+)$/);
-
-  return {
-    collectionName: titleMatch ? titleMatch[1].trim() : "",
-    productTypeText: titleMatch ? titleMatch[2].trim() : title
-  };
-}
-
-function inferProductCollection(product = {}) {
-  const { collectionName } = splitProductTitle(product);
-  if (!collectionName) return null;
-
-  return {
-    slug: slugify(collectionName),
-    label: collectionName
-  };
-}
-
-function isProductVisible(product = {}) {
-  return product?.visible !== false && product?.is_deleted !== true && product?.deleted !== true;
-}
-
-function isVariantEnabled(variant = {}) {
-  return variant?.is_enabled !== false;
-}
-
-function isVariantAvailable(variant = {}) {
-  return variant?.is_available !== false;
-}
-
-function isVariantPurchasable(variant = {}) {
-  return isVariantEnabled(variant) && isVariantAvailable(variant);
-}
-
-function hasPurchasableVariant(product = {}) {
-  return Array.isArray(product.variants) && product.variants.some(isVariantPurchasable);
-}
-
-function isProductPurchasable(product = {}) {
-  return isProductVisible(product) && hasPurchasableVariant(product);
-}
-
-function getAvailableCollectionSlugs(products = []) {
-  return new Set(
-    products
-      .filter(isProductPurchasable)
-      .map(product => inferProductCollection(product)?.slug)
-      .filter(Boolean)
-  );
 }
 
 function renderCollections(collections = []) {
@@ -397,11 +332,8 @@ async function loadCollections() {
     }
 
     const products = getProductsFromResponse(json);
-    const availableSlugs = getAvailableCollectionSlugs(products);
     const configuredCollections = homepageConfig.collections || [];
-    const visibleCollections = configuredCollections.filter(collection =>
-      availableSlugs.has(slugify(collection.id || collection.name))
-    );
+    const visibleCollections = filterCollectionsByPurchasableProducts(configuredCollections, products);
 
     renderCollections(visibleCollections);
   } catch (error) {

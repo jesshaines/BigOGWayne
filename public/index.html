@@ -1432,6 +1432,15 @@ button{font-family:inherit;cursor:pointer;border:none;}
   min-width:0;
 }
 
+.collections-status{
+  color:var(--mist);
+  background:#000;
+  border:1px solid rgba(184,154,94,0.22);
+  font-size:0.92rem;
+  line-height:1.6;
+  padding:1.25rem;
+}
+
 .collection-card{
   background:#000;
   aspect-ratio:4/5;
@@ -2617,6 +2626,10 @@ button{font-family:inherit;cursor:pointer;border:none;}
 
 <script type="module">
 import { homepageConfig } from "/assets/js/homepage.config.js";
+import {
+  filterCollectionsByPurchasableProducts,
+  getProductsFromResponse
+} from "/assets/js/collection-availability.js";
 
 function escapeHtml(value = "") {
   return String(value)
@@ -2679,7 +2692,12 @@ function renderFeaturedRelease(config) {
 
 function renderCollections(collections) {
   const target = document.querySelector("[data-homepage-collections]");
-  if (!target || !collections?.length) return;
+  if (!target) return;
+
+  if (!collections?.length) {
+    target.innerHTML = `<div class="collections-status">No shoppable collections are available right now. Check back soon.</div>`;
+    return;
+  }
 
   target.innerHTML = collections.map(collection => `
     <a href="${escapeHtml(collection.url)}" class="collection-card${collection.isFeatured ? " featured" : ""}">
@@ -2697,8 +2715,40 @@ function renderCollections(collections) {
   `).join("");
 }
 
+async function loadHomepageCollections() {
+  const target = document.querySelector("[data-homepage-collections]");
+
+  if (target) {
+    target.innerHTML = `<div class="collections-status">Loading collections...</div>`;
+  }
+
+  try {
+    const response = await fetch("/products");
+    const json = await response.json();
+
+    if (!response.ok) {
+      console.error("Failed to load /products for homepage collections:", {
+        status: response.status,
+        statusText: response.statusText,
+        response: json
+      });
+      renderCollections([]);
+      return;
+    }
+
+    const products = getProductsFromResponse(json);
+    const configuredCollections = homepageConfig.collections || [];
+    const visibleCollections = filterCollectionsByPurchasableProducts(configuredCollections, products);
+
+    renderCollections(visibleCollections);
+  } catch (error) {
+    console.error("Unable to load homepage collections:", error);
+    renderCollections([]);
+  }
+}
+
 renderFeaturedRelease(homepageConfig.featuredRelease);
-renderCollections(homepageConfig.collections);
+loadHomepageCollections();
 </script>
 
 <script>
@@ -2774,41 +2824,6 @@ mobileNavDrawer.querySelectorAll('.mobile-nav-link, .btn-secondary')
     mobileNavDrawer.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
   }));
-</script>
-<div id="products"></div>
-
-<script>
-async function loadProducts() {
-  const res = await fetch("/products");
-  const products = await res.json();
-
-  const container = document.getElementById("products");
-
-  products.forEach(product => {
-    const div = document.createElement("div");
-
-    const image = product.images?.[0]?.src || "";
-    const variant = product.variants?.[0];
-
-    div.innerHTML = `
-      <h2>${product.title}</h2>
-      <img src="${image}" width="200"/>
-      <p>$${(variant.price / 100).toFixed(2)}</p>
-      <button onclick='addToCart(${JSON.stringify({
-        product_id: product.id,
-        variant_id: variant.id,
-        price: variant.price / 100,
-        name: product.title
-      })})'>
-        Add to Cart
-      </button>
-    `;
-
-    container.appendChild(div);
-  });
-}
-
-loadProducts();
 </script>
 
 <!-- Loot Bag Drawer -->
