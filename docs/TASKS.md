@@ -27,6 +27,23 @@ Completed Scope
 
 ---
 
+#### HP-007 Footer simplification
+
+Status: Completed
+
+Description
+
+Simplify footer navigation and remove redundant shop links.
+
+Completed Scope
+
+- Homepage footer Shop section removed.
+- Redundant coming-soon support link list removed from the homepage footer.
+- Essential footer content retained: branding, copyright, Olympic Embers Media credit, Privacy, and Terms.
+- Intentional TikTok and YouTube footer social links retained.
+
+---
+
 ### 🚧 In Progress
 
 _None_

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Footer navigation simplified and redundant shop links removed.
 - Product descriptions now preserve readable formatting.
 - Product pages now show concise shipping, cancellation, and return/refund information.
 - Fixed the related-products blank background mismatch on product pages with fewer related items.

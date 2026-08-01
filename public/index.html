@@ -1860,15 +1860,15 @@ button{font-family:inherit;cursor:pointer;border:none;}
   margin:0 auto;
   padding:clamp(2.5rem,5vw,4rem) clamp(1rem,4vw,2rem);
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:4rem;
+  grid-template-columns:1fr;
+  gap:2rem;
   align-items:start;
   min-width:0;
 }
 @media(max-width:768px){
   .footer-main{grid-template-columns:1fr;gap:2.5rem;}
 }
-.footer-brand{display:flex;flex-direction:column;gap:1rem;max-width:280px;}
+.footer-brand{display:flex;flex-direction:column;gap:1rem;max-width:320px;}
 .footer-logo{
   height:20%;
   filter:drop-shadow(0 0 16px rgba(184,154,94,0.2));
@@ -1901,34 +1901,6 @@ button{font-family:inherit;cursor:pointer;border:none;}
   color:var(--white);
   box-shadow:0 0 14px rgba(184,154,94,0.24), 0 0 10px rgba(204,0,0,0.16);
 }
-.footer-links{display:flex;gap:3rem;flex-wrap:wrap;min-width:0;}
-.footer-group{display:flex;flex-direction:column;gap:1rem;min-width:120px;}
-.footer-group-heading{
-  font-family:var(--font-display);
-  font-weight:900;
-  font-size:0.6875rem;
-  letter-spacing:0.18em;
-  text-transform:uppercase;
-  color:#d8c59a;
-  padding-bottom:0.75rem;
-  border-bottom:1px solid rgba(184,154,94,0.18);
-  position:relative;
-}
-.footer-group-heading::after{
-  content:'';
-  position:absolute;bottom:-1px;left:0;
-  width:20px;height:1px;
-  background:linear-gradient(90deg, #b89a5e, var(--red));
-}
-.footer-group-list{display:flex;flex-direction:column;gap:0.625rem;padding-left:0.75rem}
-.footer-link{
-  font-size:0.875rem;
-  font-weight:400;
-  color:var(--fog);
-  line-height:1.45;
-  transition:color 0.15s;
-}
-.footer-link:hover{color:#d8c59a;}
 .footer-bottom{
   border-top:1px solid rgba(184,154,94,0.16);
   padding:1.125rem clamp(1rem,4vw,2rem);
@@ -2582,41 +2554,20 @@ button{font-family:inherit;cursor:pointer;border:none;}
   <div class="footer-main">
     <div class="footer-brand">
       <img class="footer-logo" src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne Logo">
-    </img>
-    <p class="footer-tagline">
-      <span>More than merch.</span>
-      <span>Rep the music.</span>
-      <span>Follow the movement.</span>
-    </p>
+      <p class="footer-tagline">
+        <span>More than merch.</span>
+        <span>Rep the music.</span>
+        <span>Follow the movement.</span>
+      </p>
       <div class="footer-social">
         <a href="https://www.tiktok.com/@wayneherr1" target="_blank" class="footer-social-btn" aria-label="TikTok">TT</a>
         <a href="https://www.youtube.com/@Big-OG-Wayne" target="_blank" class="footer-social-btn" aria-label="YouTube">YT</a>
       </div>
     </div>
-    <div class="footer-links">
-      <div class="footer-group">
-        <p class="footer-group-heading">Shop</p>
-        <ul class="footer-group-list">
-          <li><a href="/shop" class="footer-link">All Products</a></li>
-          <li><a href="/shop/?collection=streetwise" class="footer-link">Streetwise</a></li>
-          <li><a href="/shop/?collection=no-bluff" class="footer-link">No Bluff</a></li>
-          <li><a href="/shop/?collection=stinky-pinky" class="footer-link">Stinky Pinky</a></li>
-        </ul>
-      </div>
-      <div class="footer-group">
-        <p class="footer-group-heading">Support</p>
-        <ul class="footer-group-list">
-          <li><a href="/coming-soon/" class="footer-link">Track Order</a></li>
-          <li><a href="/coming-soon/" class="footer-link">FAQ</a></li>
-          <li><a href="/coming-soon/" class="footer-link">Contact</a></li>
-          <li><a href="/coming-soon/" class="footer-link">Returns</a></li>
-        </ul>
-      </div>
-    </div>
   </div>
   <div class="footer-bottom">
     <p class="footer-copy">© 2025 <strong>Big OG Wayne</strong>. All rights reserved.</p>
-    <p class="footer-copy">Designed and built by <strong><a href="https://www.olympicembers.com">Olympic Embers Media</strong></p>
+    <p class="footer-copy">Designed and built by <strong><a href="https://www.olympicembers.com">Olympic Embers Media</a></strong></p>
     <div class="footer-legal">
       <a href="/coming-soon/">Privacy</a>
       <a href="/coming-soon/">Terms</a>
