@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Customers can check order status using their order number and email.
 - Customer-facing order numbers and post-payment confirmation page added.
 - Footer simplified with centered brand tagline/social links and redundant shop links removed.
 - Product descriptions now preserve readable formatting.

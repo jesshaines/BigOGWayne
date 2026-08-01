@@ -190,6 +190,8 @@ Checkout collects the buyer shipping address before payment, requests a live Pri
 
 Each new pending order also gets a customer-facing `public_order_code` such as `BOW-7KQ4M9`. Customers should use this code for confirmation and future order status lookup instead of internal database IDs.
 
+Customer order lookup lives at `/orders.html` and uses `POST /api/order-status`. Lookup requires both the public order code and the customer email address, and returns only customer-safe order status details.
+
 Deprecated fulfillment environment variables:
 
 - `PRINTIFY_DEFAULT_SHIPPING_FEE_CENTS`: no longer used by active checkout. Shipping is calculated from Printify instead of a configured flat fee.

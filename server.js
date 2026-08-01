@@ -420,6 +420,94 @@ function buildOrderConfirmationUrl(publicOrderCode, req) {
   return `${baseUrl}/order-confirmation.html?${query.toString()}`;
 }
 
+function normalizePublicOrderCode(value = "") {
+  return String(value || "").trim().toUpperCase();
+}
+
+function normalizeLookupEmail(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getFriendlyOrderStatus(status = "") {
+  const statusMap = {
+    payment_link_created: {
+      title: "Checkout not completed",
+      message: "This order has been started, but payment has not been completed yet."
+    },
+    payment_link_failed: {
+      title: "Checkout issue",
+      message: "We couldn't complete checkout for this order. Please try again or contact us."
+    },
+    paid: {
+      title: "Payment received",
+      message: "Your payment was received. Your order status will update as it moves forward."
+    },
+    fulfillment_pending: {
+      title: "Preparing order",
+      message: "Your payment was received and your order is being prepared."
+    },
+    printify_submitted: {
+      title: "Submitted for production",
+      message: "Your order has been submitted for production."
+    },
+    fulfillment_failed: {
+      title: "Order needs review",
+      message: "Your order needs manual review. Please contact us if you have questions."
+    },
+    fulfillment_blocked: {
+      title: "Order needs review",
+      message: "Your order needs manual review. Please contact us if you have questions."
+    },
+    printify_address_missing: {
+      title: "Order needs review",
+      message: "Your order needs manual review. Please contact us if you have questions."
+    }
+  };
+
+  return statusMap[status] || {
+    title: "Order status unavailable",
+    message: "We found your order, but its current status needs review."
+  };
+}
+
+function getOrderLookupItems(lineItemsJson = []) {
+  let lineItems = [];
+
+  if (Array.isArray(lineItemsJson)) {
+    lineItems = lineItemsJson;
+  } else if (typeof lineItemsJson === "string") {
+    try {
+      const parsed = JSON.parse(lineItemsJson);
+      lineItems = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      lineItems = [];
+    }
+  }
+
+  return lineItems.map(item => ({
+    title: normalizeString(item.product_title || item.square_line_item_name || "Big OG Wayne Product"),
+    variant: normalizeString(item.variant_title),
+    quantity: Number.isSafeInteger(Number(item.quantity)) ? Number(item.quantity) : 0
+  }));
+}
+
+function buildSafeOrderLookupResponse(order = {}) {
+  const friendlyStatus = getFriendlyOrderStatus(order.status);
+
+  return {
+    publicOrderCode: order.public_order_code,
+    statusTitle: friendlyStatus.title,
+    statusMessage: friendlyStatus.message,
+    createdAt: order.created_at || null,
+    paidAt: order.paid_at || null,
+    printifySubmittedAt: order.printify_submitted_at || null,
+    subtotalCents: Number.isSafeInteger(Number(order.subtotal_cents)) ? Number(order.subtotal_cents) : null,
+    shippingCents: Number.isSafeInteger(Number(order.shipping_cents)) ? Number(order.shipping_cents) : null,
+    totalCents: Number.isSafeInteger(Number(order.total_cents)) ? Number(order.total_cents) : null,
+    items: getOrderLookupItems(order.line_items_json)
+  };
+}
+
 function validateCheckoutAddress(addressTo = {}) {
   const validation = validatePrintifyAddress(addressTo);
 
@@ -1942,6 +2030,96 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
 });
 
 app.use(express.json());
+
+app.post("/api/order-status", async (req, res) => {
+  const orderCode = normalizePublicOrderCode(req.body?.orderCode);
+  const email = normalizeLookupEmail(req.body?.email);
+  const notFoundBody = {
+    error: "Order not found",
+    message: "We couldn't find an order with that order number and email. Please check your details and try again."
+  };
+
+  if (!orderCode) {
+    return res.status(400).json({
+      error: "Validation failed",
+      message: "Please enter your order number."
+    });
+  }
+
+  if (orderCode.length > 32) {
+    return res.status(400).json({
+      error: "Validation failed",
+      message: "Please check your order number and try again."
+    });
+  }
+
+  if (!email) {
+    return res.status(400).json({
+      error: "Validation failed",
+      message: "Please enter your email address."
+    });
+  }
+
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({
+      error: "Validation failed",
+      message: "Please enter a valid email address."
+    });
+  }
+
+  if (!dbPool) {
+    console.error("ORDER LOOKUP DATABASE ERROR", {
+      message: "DATABASE_URL is missing; refusing to look up customer orders."
+    });
+
+    return res.status(503).json({
+      error: "Order lookup unavailable",
+      message: "Order lookup is temporarily unavailable. Please try again in a few minutes."
+    });
+  }
+
+  try {
+    const result = await dbPool.query(
+      `SELECT
+         public_order_code,
+         status,
+         created_at,
+         paid_at,
+         printify_submitted_at,
+         subtotal_cents,
+         shipping_cents,
+         total_cents,
+         line_items_json
+       FROM pending_orders
+       WHERE public_order_code = $1
+         AND (
+           lower(customer_json->>'email') = $2
+           OR lower(shipping_json->>'email') = $2
+         )
+       LIMIT 1`,
+      [orderCode, email]
+    );
+
+    const order = result.rows[0];
+
+    if (!order) {
+      return res.status(404).json(notFoundBody);
+    }
+
+    return res.json(buildSafeOrderLookupResponse(order));
+  } catch (error) {
+    console.error("ORDER LOOKUP ERROR", {
+      message: error.message,
+      orderCodePresent: Boolean(orderCode),
+      emailPresent: Boolean(email)
+    });
+
+    return res.status(500).json({
+      error: "Order lookup failed",
+      message: "Order lookup could not be completed. Please try again."
+    });
+  }
+});
 
 // ✅ API route
 app.post("/create-checkout", async (req, res) => {

@@ -347,6 +347,23 @@ Future Enhancement
 
 - Phase 6B will add customer order status lookup by public order number.
 
+#### SHOP-001P Customer order lookup
+
+Status: Completed
+
+Description
+
+Phase 6B customer-facing order status lookup by public order number and email.
+
+Completed Scope
+
+- Added `/orders.html` for customers to look up order status.
+- Added `POST /api/order-status`, requiring both `public_order_code` and matching customer/shipping email.
+- Order lookup maps internal order states to friendly customer-facing status titles and messages.
+- Lookup responses expose only safe fields: public order code, friendly status, dates, amounts, and item title/variant/quantity.
+- Internal pending order UUIDs, Square IDs, Printify IDs, raw JSON blobs, and error details are not exposed.
+- Existing Orders/Track Orders shell links now route to `/orders.html`.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization
