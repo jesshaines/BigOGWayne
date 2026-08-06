@@ -395,6 +395,21 @@ Completed Scope
 - Footer Privacy and Terms links now point to the real policy pages instead of the placeholder route.
 - Terms page includes the requested Return/refund details link opening in a new tab.
 
+#### SHOP-001S Navigation polish
+
+Status: Completed
+
+Description
+
+Improve customer navigation around checkout and support access.
+
+Completed Scope
+
+- Checkout logo now links back to the homepage.
+- Checkout keeps a focused layout while adding a compact footer.
+- Footer legal links now include Contact alongside Privacy and Terms.
+- Contact footer link points to `/contact.html` across public pages.
+
 ### 📋 Backlog
 
 #### SHOP-001 Shop and product stabilization

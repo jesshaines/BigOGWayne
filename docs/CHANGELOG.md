@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Checkout logo now links home and Contact is available from the footer.
 - Privacy Policy and Terms of Service pages added.
 - Contact page added for order, merch, and business inquiries.
 - Customers can check order status using their order number and email.

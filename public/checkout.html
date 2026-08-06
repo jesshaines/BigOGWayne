@@ -17,7 +17,19 @@
   background:linear-gradient(to bottom, rgba(255,0,0,0.05), transparent);
 }
 
-.checkout-header img{
+.checkout-home-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  line-height:0;
+}
+
+.checkout-home-link:focus-visible{
+  outline:1px solid var(--red);
+  outline-offset:8px;
+}
+
+.checkout-home-link img{
   width:140px;
   height:auto;
 
@@ -29,7 +41,7 @@
 }
 
 
-.checkout-header img:hover{
+.checkout-home-link:hover img{
   transform:scale(1.03);
 }
 
@@ -269,7 +281,9 @@
 
 
 <header class="checkout-header">
-  <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne">
+  <a href="/" class="checkout-home-link" aria-label="Big OG Wayne home">
+    <img src="/assets/images/logo/bow_logo.png" alt="Big OG Wayne">
+  </a>
 </header>
 
 
@@ -347,8 +361,20 @@
 </div>
 
     </div>
-  </div>
+</div>
 </main>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-footer-copy">© 2025 <strong>Big OG Wayne</strong>. All rights reserved.</p>
+    <p class="site-footer-copy">Designed and built by <strong><a href="https://www.olympicembers.com">Olympic Embers Media</a></strong></p>
+    <nav class="site-footer-legal" aria-label="Footer legal links">
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="/contact.html">Contact</a>
+    </nav>
+  </div>
+</footer>
 
 <script src="/assets/js/globalcart.js"></script>
 
