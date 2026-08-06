@@ -99,37 +99,23 @@ button{font-family:inherit;cursor:pointer;border:none;}
 }
 
 /* ── Logo ───────────────────────────────────────────────────── */
-/*
-  The logo is a square (1:1) circular badge.
-  We pin height on the <img> and let width scale automatically —
-  this is the only safe way to guarantee correct aspect ratio
-  across all browsers without needing an explicit wrapper height.
 
-  68px desktop / 48px mobile is the target range.
-
-  drop-shadow instead of box-shadow: drop-shadow follows the
-  actual alpha boundary of the PNG so it wraps the circle
-  rather than the bounding box — far cleaner result.
-*/
 .header-logo{
   display:flex;
   align-items:center;
   flex-shrink:0;
-  line-height:0; /* collapses inline gap beneath the image */
+  line-height:0; 
 }
 
 .header-logo img{
-  height:68px;          /* desktop — strong brand anchor */
-  width:auto;           /* never stretch; 1:1 respected  */
+  height:68px;         
+  width:auto;           
   object-fit:contain;
   display:block;
-  /* crisp-edges: prevent over-blurring at small sizes     */
   image-rendering:-webkit-optimize-contrast;
   image-rendering:crisp-edges;
-  /* drop-shadow hugs the circular outline, adds depth     */
   filter:drop-shadow(0 2px 8px rgba(0,0,0,0.75))
          drop-shadow(0 0 1px rgba(0,0,0,0.4));
-  /* hardware-accelerate the layer to avoid sub-pixel blur */
   transform:translateZ(0);
   will-change:transform;
 }
@@ -220,22 +206,19 @@ button{font-family:inherit;cursor:pointer;border:none;}
 /* ── Mobile overrides ───────────────────────────────────────── */
 @media(max-width:768px){
   :root{
-    --header-h: 68px;  /* 48px logo + ~10px breathing room */
+    --header-h: 68px;  
   }
 
   .hamburger-btn{display:flex;}
 
-  /* Hide "Orders" text link — it lives in the drawer */
+  
   .header-action.orders-link{display:none;}
 
-  /* Mobile logo: 48px — clear, prominent, not cramped */
   .header-logo img{height:48px;}
 
-  /* Reduce centre gap; logo + cart + burger must fit */
   .header-inner{gap:1.25rem;}
 }
 
-/* Tablet mid-range: keep logo large but adjust header height */
 @media(min-width:769px) and (max-width:1024px){
   .header-logo img{height:62px;}
 }
@@ -2035,15 +2018,7 @@ button{font-family:inherit;cursor:pointer;border:none;}
 <header class="header">
   <div class="header-inner">
 
-    <!--
-      Logo
-      ─────
-      • PNG with full transparency — renders crisply at any size
-      • width/height HTML attrs match the natural 1:1 ratio so the
-        browser allocates layout space before the image loads
-      • CSS height overrides to 68px desktop / 48px mobile
-      • width:auto ensures the circle is never squashed
-    -->
+    <!--LOGO-->
     <a href="/" class="header-logo" aria-label="Big OG Wayne — Home">
       <img
         src="/assets/images/logo/bow_logo.png"
