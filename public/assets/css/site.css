@@ -765,7 +765,7 @@ button{
 
 
 
-/* === CHECKOUT PAGE (BOW STYLE) === */
+/* Checkout page */
 
 .checkout-page{
   background:var(--obsidian);
@@ -796,7 +796,7 @@ button{
   align-items:start;
 }
 
-/* === LEFT: ITEMS === */
+/* Checkout items */
 
 .checkout-items{
   background:var(--carbon);
@@ -835,7 +835,7 @@ button{
   font-size:.9rem;
 }
 
-/* === RIGHT: SUMMARY === */
+/* Checkout summary */
 
 .checkout-summary{
   background:var(--carbon);
@@ -910,7 +910,7 @@ button{
   transform:translateY(-1px);
 }
 
-/* === MOBILE === */
+/* Mobile */
 
 @media (max-width:768px){
   .checkout-layout{

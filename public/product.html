@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<!-- Good Version 4.21.9.26Pm-->
 
 <style>
 .product-page{
@@ -284,11 +283,11 @@
   color:var(--chrome);
   font-family:var(--font-display);
   font-weight:900;
-  font-size:.6rem;            /* smaller text */
+  font-size:.6rem;
   letter-spacing:.1em;
   text-transform:uppercase;
-  padding:.45rem .6rem;       /* 🔥 smaller buttons */
-  min-width:42px;             /* keeps consistency */
+  padding:.45rem .6rem;
+  min-width:42px;
   text-align:center;
   transition:border-color .15s ease,color .15s ease,background .15s ease;
 }
@@ -1489,23 +1488,23 @@ mainImage.style.background = "#111";
       btn.classList.add("active");
 
       const img = btn.querySelector("img");
-if (img) {
-  mainImage.src = img.src;
-  mainImage.alt = img.alt || product.title || "Product image";
+      if (img) {
+        mainImage.src = img.src;
+        mainImage.alt = img.alt || product.title || "Product image";
 
-  mainImage.style.objectFit = "contain";
-  mainImage.style.background = "#111";
-}    });
+        mainImage.style.objectFit = "contain";
+        mainImage.style.background = "#111";
+      }
+    });
   });
 }
 
-   const colorGroup = document.getElementById("colorGroup");
+const colorGroup = document.getElementById("colorGroup");
 const sizeGroup = document.getElementById("sizeGroup");
 
-    const colorContainer = document.getElementById("colorOptions");
+const colorContainer = document.getElementById("colorOptions");
 const sizeContainer = document.getElementById("sizeOptions");
 
-    // COLORS
 if (colorContainer && colors.length) {
   colorGroup.style.display = "flex";
 
@@ -1526,12 +1525,11 @@ if (colorContainer && colors.length) {
       renderImages();
     });
   });
-    } else if (colorGroup) {
+} else if (colorGroup) {
   colorGroup.style.display = "none";
 }
 
-    // SIZES
-    function getAvailableSizes(color) {
+function getAvailableSizes(color) {
   return [...new Set(
     parsed
       .filter(v => v.color === color)
@@ -1577,8 +1575,8 @@ function renderSizes() {
     btn.addEventListener("click", () => {
       selectedSize = btn.dataset.size;
 
-       sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
+      sizeContainer.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
 
       updateVariant();
       renderImages();
@@ -1586,7 +1584,6 @@ function renderSizes() {
   });
 }
 
-// Update breadcrumb text
 const collectionEl = document.getElementById("breadcrumbCollection");
 const productEl = document.getElementById("breadcrumbProduct");
 
@@ -1621,44 +1618,10 @@ if (productEl) {
 });
 </script>
 
-<!-- <script>
-const thumbs = document.querySelectorAll('.product-thumb');
-const mainImage = document.getElementById('mainProductImage');
-thumbs.forEach(btn => {
-  btn.addEventListener('click', () => {
-    thumbs.forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    const img = btn.querySelector('img');
-    if (img && mainImage) {
-      mainImage.src = img.src;
-      mainImage.alt = img.alt.replace(' front', '').replace(' back', '').replace(' detail', '');
-    }
-  });
-});
-
-const qtyValue = document.getElementById('qtyValue');
-document.getElementById('qtyMinus').addEventListener('click', () => {
-  qtyValue.textContent = Math.max(1, parseInt(qtyValue.textContent, 10) - 1);
-});
-document.getElementById('qtyPlus').addEventListener('click', () => {
-  qtyValue.textContent = parseInt(qtyValue.textContent, 10) + 1;
-});
-
-document.querySelectorAll('.product-option-values').forEach(group => {
-  group.querySelectorAll('.product-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      group.querySelectorAll('.product-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-    });
-  });
-});
-</script> -->
-
-<!-- GLOBAL LOOT BAG -->
+<!-- Global loot bag -->
 <script src="/assets/js/globalcart.js"></script>
 <script src="/assets/js/site-shell.js"></script>
 
-<!-- BUTTON HOOK -->
 <script>
 document.querySelector(".product-page")?.classList.add("loaded");
 renderLootBag();
@@ -1667,7 +1630,7 @@ updateCartCount();
 
 
 
-<!-- LOOT BAG DRAWER -->
+<!-- Loot Bag drawer -->
 <aside class="lootbag-drawer" id="lootbagDrawer" aria-hidden="true">
   <div class="lootbag-backdrop" id="lootbagBackdrop"></div>
 

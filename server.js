@@ -15,10 +15,11 @@ const app = express();
 
 app.use(cors());
 
-// ✅ Fix __dirname for ES modules
+// Module paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Environment
 const SQUARE_ENVIRONMENT = String(process.env.SQUARE_ENVIRONMENT || "sandbox").toLowerCase();
 const SQUARE_RESOLVED_ENVIRONMENT =
   SQUARE_ENVIRONMENT === "production" ? "production" : "sandbox";
@@ -48,7 +49,7 @@ const CONTACT_FROM_EMAIL = process.env.CONTACT_FROM_EMAIL;
 console.log("Square environment:", SQUARE_RESOLVED_ENVIRONMENT);
 console.log("Square base URL:", SQUARE_BASE_URL);
 
-// ✅ Square client
+// Clients
 const squareClient = new SquareClient({
   token: process.env.SQUARE_ACCESS_TOKEN,
   baseUrl: SQUARE_BASE_URL,
@@ -830,7 +831,7 @@ function buildCheckoutLineItemsFromPrintify(cartItems = [], products = []) {
       name: lineItemName,
       quantity: String(item.quantity),
       basePriceMoney: {
-        // Printify variant.price is returned in cents, which is the unit Square expects.
+        // Printify returns variant prices in cents, which is also Square's money unit.
         amount: BigInt(priceCents),
         currency: "USD",
       },
@@ -2178,7 +2179,7 @@ app.post("/webhooks/square", express.raw({ type: "application/json" }), async (r
     return res.status(500).json({ error: "Pending order paid update failed" });
   }
 
-  // Phase 3 should create the Printify order only after a true first-time paid transition.
+  // Fulfillment only runs after a verified first-time paid transition.
   return res.status(200).json({ received: true, paid: true });
 });
 
@@ -2328,7 +2329,7 @@ app.post("/api/order-status", async (req, res) => {
   }
 });
 
-// ✅ API route
+// Square checkout
 app.post("/create-checkout", async (req, res) => {
   try {
     const { cart, customer = {}, shipping = {} } = req.body || {};
@@ -2577,7 +2578,7 @@ app.post("/create-checkout", async (req, res) => {
   }
 });
 
-// ✅ Serve frontend
+// Static routes
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
@@ -2612,7 +2613,7 @@ app.get("/products", async (req, res) => {
   }
 });
 
-// ✅ ONE listener only
+// Server startup
 const PORT = process.env.PORT || 3000;
 
 initializeDatabase()

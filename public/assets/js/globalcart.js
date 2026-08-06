@@ -285,12 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderLootBag();
 
-  /* Open cart */
   document.querySelectorAll('.cart-btn').forEach(btn => {
     btn.addEventListener('click', openLootBag);
   });
 
-  /* Close cart */
   document
     .getElementById('lootbagClose')
     ?.addEventListener('click', closeLootBag);
@@ -299,12 +297,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .getElementById('lootbagBackdrop')
     ?.addEventListener('click', closeLootBag);
 
-  /* Add to cart */
   document
     .getElementById('addToLootBagBtn')
     ?.addEventListener('click', addCurrentProductToLootBag);
 
-  /* Checkout */
   document
     .getElementById('lootbagCheckoutBtn')
     ?.addEventListener('click', goToCheckout);
